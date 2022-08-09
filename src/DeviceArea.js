@@ -16,19 +16,9 @@ import {
 import ReactJson from "react-json-view";
 import axios from "axios";
 import { GlobalContext } from "./GlobalContext";
-// import {
-//   ComposableMap,
-//   Geographies,
-//   Geography,
-//   Graticule,
-//   Marker,
-//   ZoomableGroup
-// } from "react-simple-maps";
+const winston = require('winston');
 
-import { Map, Marker, Overlay } from "pigeon-maps";
-
-const geoUrl =
-  "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
+//import { Map, Marker, Overlay } from "pigeon-maps";
 
 const { Content } = Layout;
 const { TextArea } = Input;
@@ -53,22 +43,22 @@ export class DeviceArea extends Component {
     this.columns = [
       {
         title: "Device ID",
-        dataIndex: "id",
+        dataIndex: "_thingId",
         width: 100,
         render: (text, record) =>
-          this.context.deviceTags[record.id].status === "failed" ? (
-            <span>
-              <Badge status="error" />
-              {record.id}
-            </span>
-          ) : (
+          //this.context.deviceTags[record.id].status === "failed" ? (
+          //  <span>
+          //    <Badge status="error" />
+          //    {record.id}
+          //  </span>
+          //) : (
             <span>
               <Badge status="success" />
-              {record.id}
+              {record._thingId}
             </span>
-          ),
+          //),
       },
-      {
+      /* {
         title: "Tags",
         dataIndex: "tags",
         render: (text, record) =>
@@ -88,7 +78,7 @@ export class DeviceArea extends Component {
             </Tag>
           )),
         width: 250,
-      },
+      }, */
       {
         title: "Actions",
         width: 150,
@@ -247,12 +237,12 @@ export class DeviceArea extends Component {
               >
                 <Tooltip title="Put device into ...">
                   <Button
-                    type={
-                      this.context.deviceTags[record.id] &&
-                      this.context.deviceTags[record.id].status === "failed"
-                        ? "danger"
-                        : "primary"
-                    }
+                    //type={
+                    //  this.context.deviceTags[record.id] &&
+                    //  this.context.deviceTags[record.id].status === "failed"
+                    //    ? "danger"
+                    //    : "primary"
+                    //}
                     icon="tag"
                     ghost
                   />
@@ -314,12 +304,12 @@ export class DeviceArea extends Component {
               >
                 <Tooltip title="Put all affected devices into ...">
                   <Button
-                    type={
-                      this.context.deviceTags[record.id] &&
-                      this.context.deviceTags[record.id].status === "failed"
-                        ? "danger"
-                        : "primary"
-                    }
+                    //type={
+                    //  this.context.deviceTags[record.id] &&
+                    //  this.context.deviceTags[record.id].status === "failed"
+                    //    ? "danger"
+                    //    : "primary"
+                    //}
                     icon="tags"
                     ghost
                   />
@@ -397,7 +387,7 @@ export class DeviceArea extends Component {
                 expandedRowRender={(record) => (
                   <span>
                     <ReactJson src={record} enableClipboard={false} />
-                    <Table
+                    {/* <Table
                       columns={this.nestedColumns}
                       dataSource={
                         this.context.activeDeployments[record.id]
@@ -407,12 +397,12 @@ export class DeviceArea extends Component {
                           : []
                       }
                       pagination={false}
-                    />
+                    /> */}
                   </span>
                 )}
               />
             </Col>
-            <Col
+            {/* <Col
               span={12}
               style={{ backgroundColor: "lightblue", height: "500px" }}
             >
@@ -436,83 +426,8 @@ export class DeviceArea extends Component {
                     />
                   ))}
               </Map>
-            </Col>
-          </Row>
-          {/* <Row>
-            <Col
-              span={24}
-              v
-              style={{ backgroundColor: "lightblue", height: "400px" }}
-            > */}
-              {/* <ComposableMap
-                projection="geoAzimuthalEqualArea"
-                projectionConfig={{
-                  rotate: [-20.0, -52.0, 0],
-                  scale: 700
-                }}
-              >
-                <ZoomableGroup zoom={1}>
-                <Geographies geography={geoUrl}>
-                  {({ geographies }) =>
-                    geographies.map(geo => (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill="#9998A3"
-                        stroke="#EAEAEC"
-                      />
-                    ))
-                  }
-                </Geographies>
-                {this.context.devices
-                  .filter((item) => { return 'properties.lat' in item.properties })
-                  .map(({ id, properties }) => (
-                    <Marker key={id} coordinates={[parseFloat(properties['properties.lon']), parseFloat(properties['properties.lat'])]}>
-                      <g
-                        fill="none"
-                        stroke="#FF5533"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        transform="translate(-12, -24)"
-                      >
-                        <circle cx="12" cy="10" r="3" />
-                        <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z" />
-                      </g>
-                      <text
-                        textAnchor="middle"
-                        y={15}
-                        style={{ fontSize: 10, fontFamily: "system-ui", fill: "#5D5A6D" }}
-                      >
-                        {id},{properties['properties.city']}
-                      </text>
-                    </Marker>
-                  ))
-              }
-              </ZoomableGroup>
-              </ComposableMap> */}
-              {/* <Map
-                defaultCenter={[59.913, 10.752]}
-                defaultZoom={10}
-                width={1000}
-                height={600}
-              >
-                {this.context.devices
-                  .filter((item) => {
-                    return "properties.lat" in item.properties;
-                  })
-                  .map(({ id, properties }) => (
-                    <Marker
-                      anchor={[
-                        parseFloat(properties["properties.lat"]),
-                        parseFloat(properties["properties.lon"]),
-                      ]}
-                      payload={2}
-                    />
-                  ))}
-              </Map>
-            </Col>
-          </Row> */}
+            </Col> */}
+          </Row>          
         </Content>
       </Layout>
     );

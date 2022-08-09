@@ -3,71 +3,82 @@ import "./App.css";
 import axios from "axios";
 import { Layout, Tabs, Icon } from "antd";
 
-import { TemplateArea2 } from "./TemplateArea2";
-import { VariantArea2 } from "./VariantArea2";
-import { DeploymentArea } from "./DeploymentArea";
+import { DittoDomClient, DomHttpBasicAuth, DefaultSearchOptions } from "@eclipse-ditto/ditto-javascript-client-dom";
+//import { TemplateArea2 } from "./TemplateArea2";
+//import { VariantArea2 } from "./VariantArea2";
+//import { DeploymentArea } from "./DeploymentArea";
 import { DeviceArea } from "./DeviceArea";
-import { ControlArea } from "./ControlArea";
-import { ModelArea } from "./ModelArea";
-import { DiversificationArea } from "./SMTDiversificationArea/DiversificationArea";
-import SingleDeploymentArea from "./ORDiversificationArea/SingleDeploymentArea";
-import MultipleDeploymentArea from "./ORDiversificationArea/MultipleDeploymentArea";
+//import { ControlArea } from "./ControlArea";
+//import { ModelArea } from "./ModelArea";
+//import { DiversificationArea } from "./SMTDiversificationArea/DiversificationArea";
+//import SingleDeploymentArea from "./ORDiversificationArea/SingleDeploymentArea";
+//import MultipleDeploymentArea from "./ORDiversificationArea/MultipleDeploymentArea";
 import { GlobalContext } from "./GlobalContext";
 
 const { Footer, Content } = Layout;
 const { TabPane } = Tabs;
 
-const PROPERTIES2SHOW = ['properties.arduino', 'properties.city'];
+//const PROPERTIES2SHOW = ['properties.arduino', 'properties.city'];
+
+const ditto_domain = 'localhost:8080';
+const ditto_username = 'ditto';
+const ditto_password = 'ditto';
+
+const ditto_client = DittoDomClient.newHttpClient()
+            .withoutTls()
+            .withDomain(ditto_domain)
+            .withAuthProvider(DomHttpBasicAuth.newInstance(ditto_username, ditto_password))
+            .build();
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       //area: AreaEnum.GLOBAL,
-      deployments: [],
-      templates: [],
-      variants: [],
+      //deployments: [],
+      //templates: [],
+      //variants: [],
       devices: [],
       //forEdit: null,
       //edited: null,
-      appliedDevices: {},
-      targetedDevices: {},
-      templateTags: {},
-      deviceTags: {},
-      deviceProperties: {},
-      activeDeployments: {},
+      //appliedDevices: {},
+      //targetedDevices: {},
+      //templateTags: {},
+      //deviceTags: {},
+      //deviceProperties: {},
+      //activeDeployments: {},
       activeTab: "1",
       handleTabChange: this.handleTabChange,
-      addVariant: this.addVariant,
-      addTemplate: this.addTemplate,
+      //addVariant: this.addVariant,
+      //addTemplate: this.addTemplate,
     };
     this.Tabs = React.createRef();
   }
 
   componentDidMount() {
-    this.getDeployments()
+    /* this.getDeployments()
       .then((result) => this.setState({ deployments: result }))
       .then(() => this.getAppliedDevices())
       .then((result) => this.setState({ appliedDevices: result }))
       .then(() => this.getTargetedDevices())
       .then((result) => this.setState({ targetedDevices: result }))
       .then(() => this.getActiveDeployments())
-      .then((result) => this.setState({ activeDeployments: result }));
+      .then((result) => this.setState({ activeDeployments: result })); */
     this.getDevices()
-      .then((result) => this.setState({ devices: result }))
-      .then(() => this.getDeviceTags())
-      .then((result) => this.setState({ deviceTags: result }))
-      .then(() => this.getDeviceProperties())
-      .then((result) => this.setState({ deviceProperties: result}));
-    this.getTemplates()
+      .then((result) => this.setState({ devices: result }));
+      //.then(() => this.getDeviceTags())
+      //.then((result) => this.setState({ deviceTags: result }))
+      //.then(() => this.getDeviceProperties())
+      //.then((result) => this.setState({ deviceProperties: result}));
+    /* this.getTemplates()
       .then((result) => {
         this.setState({ templates: result });
       })
       .then(() => this.getTemplateTags())
-      .then((result) => this.setState({ templateTags: result }));
-    this.getVariants().then((result) => {
+      .then((result) => this.setState({ templateTags: result })); */
+    /* this.getVariants().then((result) => {
       this.setState({ variants: result });
-    });
+    }); */
     //this.getActiveDeployments();
   }
 
@@ -77,15 +88,15 @@ class App extends Component {
 
   render() {
     const {
-      deployments,
+      //deployments,
       devices,
-      templates,
-      variants,
-      appliedDevices,
-      targetedDevices,
-      activeDeployments,
-      templateTags,
-      deviceTags,
+      //templates,
+      //variants,
+      //appliedDevices,
+      //targetedDevices,
+      //activeDeployments,
+      //templateTags,
+      //deviceTags,
       activeTab,
     } = this.state;
 
@@ -112,63 +123,14 @@ class App extends Component {
                     <span>
                       <img
                         style={{ height: "40px" }}
-                        src="https://enact-project.eu/img/logo-enact-blue2.png"
-                        alt="logo enact"
+                        src="https://eratosthenes-project.eu/wp-content/uploads/2021/09/eratosthenis_l14a-300x69.png"
+                        alt="logo eratosthenes"
                       />
                     </span>
                   }
                 ></TabPane>
                 <TabPane
                   key="1"
-                  tab={
-                    <span>
-                      <Icon type="book" />
-                      Templates
-                    </span>
-                  }
-                >
-                  <TemplateArea2
-                    //templates={templates}
-                    //variants={variants}
-                    //templateTags={templateTags}
-                    //callbackTabChange={this.handleTabChange}
-                    //callbackAddTemplate={this.addTemplate}
-                  />
-                </TabPane>
-                <TabPane
-                  key="2"
-                  tab={
-                    <span>
-                      <Icon type="branches" />
-                      Variants
-                    </span>
-                  }
-                >
-                  <VariantArea2
-                    //variants={variants}
-                    //templates={templates}
-                    //callbackTabChange={this.handleTabChange}
-                    //callbackAddVariant={this.addVariant}
-                  />
-                </TabPane>
-                <TabPane
-                  key="3"
-                  tab={
-                    <span>
-                      <Icon type="deployment-unit" />
-                      Deployments
-                    </span>
-                  }
-                >
-                  <DeploymentArea
-                    //deployments={deployments}
-                    //appliedDevices={appliedDevices}
-                    //targetedDevices={targetedDevices}
-                    //callbackTabChange={this.handleTabChange}
-                  />
-                </TabPane>
-                <TabPane
-                  key="4"
                   tab={
                     <span>
                       <Icon type="bulb" />
@@ -185,91 +147,18 @@ class App extends Component {
                     //callbackTabChange={this.handleTabChange}
                   />
                 </TabPane>
-                {/* <TabPane
-                  key="5"
-                  tab={
-                    <span>
-                      <Icon type="control" />
-                      Control
-                    </span>
-                  }
-                >
-                  <ControlArea />
-                </TabPane> */}
-               {/*  <TabPane
-                  key="6"
-                  tab={
-                    <span>
-                      <Icon type="profile" />
-                      Repository
-                    </span>
-                  }
-                >
-                  <ModelArea />
-                </TabPane> */}
-                <TabPane
-                  key="7"
-                  tab={
-                    <span>
-                      <Icon type="code" />
-                      Z3
-                    </span>
-                  }
-                >
-                  <DiversificationArea
-                    //callbackTabChange={this.handleTabChange}
-                  />
-                </TabPane>
-                {/* <TabPane
-                key="8"
-                tab={
-                  <span>
-                    <Icon type="control" />
-                    Single Deployment
-                  </span>
-                }
-              >
-                <SingleDeploymentArea
-                  //devices={devices}
-                  //variants={variants}
-                  //deployments={deployments}
-                  //activeDeployments={activeDeployments}
-                  //appliedDevices={appliedDevices}
-                  //deviceTags={deviceTags}
-                  //callbackTabChange={this.handleTabChange}
-                />
-              </TabPane> */}
-                {/* <TabPane
-                  key="9"
-                  tab={
-                    <span>
-                      <Icon type="control" />
-                      OR-Tools
-                    </span>
-                  }
-                >
-                  <MultipleDeploymentArea
-                    // devices={devices}
-                    // variants={variants}
-                    // deployments={deployments}
-                    // activeDeployments={activeDeployments}
-                    // appliedDevices={appliedDevices}
-                    // deviceTags={deviceTags}
-                    // callbackTabChange={this.handleTabChange}
-                  />
-                </TabPane> */}
               </Tabs>
             </Content>
 
             <Footer>
               <p>
                 This work is supported by{" "}
-                <a href="https://www.enact-project.eu/">ENACT</a>.
+                <a href="https://eratosthenes-project.eu/">ERATOSTHENES</a>.
               </p>
               <p>
                 {" "}
                 Please visit{" "}
-                <a href="https://github.com/SINTEF-9012/divenact">
+                <a href="https://github.com/SINTEF-9012/ditto-fleet">
                   <Icon type="github" />
                 </a>{" "}
                 for further details.
@@ -281,7 +170,7 @@ class App extends Component {
     );
   }
 
-  createDeployment = () => {
+  /* createDeployment = () => {
     const deployment = prompt("Enter your deployment: ");
     if (!deployment) return;
     axios
@@ -294,9 +183,9 @@ class App extends Component {
       .catch((err) =>
         alert(`Failed to create deployment\n${JSON.stringify(err)}`)
       );
-  };
+  }; */
 
-  deleteDeployments = () => {
+  /* deleteDeployments = () => {
     this.setState({ deployments: [] });
     const doDelete = window.confirm("Delete all deployments?");
     if (!doDelete) return;
@@ -306,54 +195,28 @@ class App extends Component {
       .catch((err) =>
         alert(`Failed to delete all deployments\n${JSON.stringify(err)}`)
       );
-  };
-
-  // seedDeployments = () => {
-  //   const doSeed = window.confirm('Do you want to seed random data?');
-  //   if (!doSeed) return;
-  //   axios
-  //     .post('/api/deployments/seed', {})
-  //     .then(() => {
-  //       axios
-  //         .get('/api/deployments/')
-  //         .then(res => this.setState({ deployments: res.data }))
-  //         .catch(alert);
-  //     })
-  //     .catch(alert);
-  // };
-
+  }; */
+  
   /**
-   * Get edge devices in the IoT Hub
+   * Get all devices in the managed fleet
    */
   getDevices = async () => {
-    return (await axios.get("api/device/")).data;
+    
+    const searchHandle = ditto_client.getSearchHandle();
+    
+    var options = DefaultSearchOptions.getInstance().withLimit(0,200);
+    options = options.withSort("+thingId");
+    //searchHandle.search(options).then(result => console.log("returned",result.items))
+    var devices = (await searchHandle.search(options)).items;
+    console.info(devices);
+    return devices;
   };
 
-  /**
-   * Get deployments in the IoT Hub
-   */
-  getDeployments = async () => {
-    return (await axios.get("api/deployment")).data;
-  };
-
-  /**
-   * Get variants stored in MongoDB
-   */
-  getVariants = async () => {
-    return (await axios.get("api/variant/")).data;
-  };
-
-  /**
-   * Get variants stored in MongoDB
-   */
-  getTemplates = async () => {
-    return (await axios.get("api/template/")).data;
-  };
-
+  
   /**
    * Get a map of devices and active deployments.
    */
-  getActiveDeployments = async () => {
+  /* getActiveDeployments = async () => {
     let result = {};
     //let deployments = (await axios.get('api/deployment')).data;
     this.state.deployments.forEach(async (deployment) => {
@@ -367,12 +230,12 @@ class App extends Component {
     });
     console.log(result);
     return result;
-  };
+  }; */
 
   /**
    * Get a map of deployments and devices to which they apply.
    */
-  getAppliedDevices = async () => {
+  /* getAppliedDevices = async () => {
     let result = {};
     //let deployments = (await axios.get('api/deployment')).data;
     this.state.deployments.forEach(async (deployment) => {
@@ -381,12 +244,12 @@ class App extends Component {
       ).data;
     });
     return result;
-  };
+  }; */
 
   /**
    * Get a map of deployments and devices at which they target (but not necessarily applied yet).
    */
-  getTargetedDevices = async () => {
+  /* getTargetedDevices = async () => {
     let result = {};
     //let deployments = (await axios.get('api/deployment')).data;
     this.state.deployments.forEach(async (deployment) => {
@@ -395,23 +258,23 @@ class App extends Component {
       ).data;
     });
     return result;
-  };
+  }; */
 
   /**
    * Get tags for each template in the MongoDB.
    */
-  getTemplateTags = async () => {
+  /* getTemplateTags = async () => {
     let result = {};
     this.state.templates.forEach((template) => {
       result[template.id] = template.property.predefinedtag;
     });
     return result;
-  };
+  }; */
 
   /**
    * Get tags for each device in the IoT hub.
    */
-  getDeviceTags = async () => {
+  /* getDeviceTags = async () => {
     let result = {};
     this.state.devices.forEach((device) => {
       console.log(device);
@@ -419,10 +282,9 @@ class App extends Component {
     });
     //console.log(result);
     return result;
-  };
+  }; */
 
-
-  getDeviceProperties = async () =>{
+  /* getDeviceProperties = async () =>{
     let result = {};
     this.state.devices.forEach((device) => {
       let toshow = {}
@@ -434,25 +296,25 @@ class App extends Component {
       result[device.id] = toshow
     });
     return result;
-  }
+  } */
 
   /**
    * Add new template (either by copying or creating a new one)
    */
-  addTemplate = async (newTemplate) => {
+  /* addTemplate = async (newTemplate) => {
     this.setState({
       templates: [...this.state.templates, newTemplate],
     });
-  };
+  }; */
 
   /**
    * Add new variant (either by copying or creating a new one)
    */
-  addVariant = async (newVariant) => {
+  /* addVariant = async (newVariant) => {
     this.setState({
       variants: [...this.state.variants, newVariant],
     });
-  };
+  }; */
 }
 
 export default App;
