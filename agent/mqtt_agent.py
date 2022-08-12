@@ -34,9 +34,7 @@ def connect_mqtt():
 def publish(client):
     
     while True:
-        # containers = docker_client.containers.list()
-        # print(json.dumps(containers))
-        msg = '{"version": 10, "status": "RUNNING!", "thingId": "' + device_id + '"}'
+        msg = '{"status": "' + get_trust_agent_status() + '", "version": "' + get_trust_agent_version() + '", "thingId": "' + device_id + '"}'
         result = client.publish(topic, msg)
         # result: [0, 1]
         status = result[0]
@@ -48,33 +46,24 @@ def publish(client):
         # send heart beat every 60 seconds
         time.sleep(60)
 
-def get_running_containers():
-    containers = docker_client.containers.list()
-    container_json = []
-    for container in containers:
-        container_json = container.__dict__
-        container_json.add
-
-    return docker_client.containers.list()
-
-def is_trust_agent_running():
+def get_trust_agent_status():
+    containers = docker_client.containers.list()    
     for container in docker_client.containers.list():
-        if ('trust_agent' in container.name.lower()):
-            return True
-    return False
+        if (container.name == 'trust-agent'):
+            return container.status
+    return "nan"
 
-def get_container_info():
-    pass
+def get_trust_agent_version():
+    containers = docker_client.containers.list()    
+    for container in docker_client.containers.list():
+        if (container.name == 'trust-agent'):
+            return container.image.tags[0]
+    return "nan"
 
-def run():
+def run():        
 
-    #containers = docker_client.containers.list()
-    #json_string = json.dumps([ob.__dict__ for ob in containers])
-    #print(json_string)
-    
-    #for container in docker_client.containers.list():
-        # print(container.__dict__)
-    #    pass
+    print(get_trust_agent_status())
+    print(get_trust_agent_version())
 
     client = connect_mqtt()
     client.loop_start()

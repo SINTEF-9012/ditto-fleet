@@ -373,7 +373,7 @@ export class DeviceArea extends Component {
       <Layout>
         <Content>
           <Row>
-            <Col span={12}>
+            <Col span={24}>
               <Table
                 //bordered
                 rowKey={(record) => record.id}
