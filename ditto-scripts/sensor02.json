@@ -1,0 +1,16 @@
+{
+    "policyId": "no.sintef.sct.giot:policy",
+    "attributes": {
+        "manufacturer": "Well known sensors producer",
+        "serial number": "200",
+        "location": "First floor"
+    },
+    "features": {
+        "measurements": {
+            "properties": {
+                "temperature": 0,
+                "humidity": 0
+            }
+        }
+    }
+}

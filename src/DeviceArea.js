@@ -16,7 +16,6 @@ import {
 import ReactJson from "react-json-view";
 import axios from "axios";
 import { GlobalContext } from "./GlobalContext";
-const winston = require('winston');
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
 
