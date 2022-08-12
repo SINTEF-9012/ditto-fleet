@@ -12,7 +12,7 @@
             "failoverEnabled": true,
             "uri": "tcp://mosquitto:1883",
             "sources": [{
-                "addresses": ["no.sintef.sct.giot.things/#"],
+                "addresses": ["things/#"],
                 "authorizationContext": ["nginx:ditto"],
                 "qos": 0,
                 "filters": []

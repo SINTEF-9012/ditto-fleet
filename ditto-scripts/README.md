@@ -85,7 +85,7 @@ Create policy.json file with the following content:
 ```
 
 Create policy in Ditto by running:
-`curl -X PUT 'http://localhost:8080/api/2/policies/no.sintef.sct.giot:default-policy' -u 'ditto:ditto' -H 'Content-Type: application/json' -d @default-policy.json`
+`curl -X PUT 'http://localhost:8080/api/2/policies/no.sintef.sct.giot:policy' -u 'ditto:ditto' -H 'Content-Type: application/json' -d @policy.json`
 
 ## Create things
 

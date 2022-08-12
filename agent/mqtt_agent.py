@@ -6,13 +6,13 @@ import paho.mqtt.client as mqtt
 import docker
 
 # MQTT config
-device_id = 'no.sintef.sct.giot:raspberry-c445'
+device_id = 'no.sintef.sct.giot:raspberry-c444'
 username = 'ditto'
 password = 'ditto'
 
 broker = 'localhost'
 port = 1883
-topic = 'gateways/' + device_id
+topic = 'things/' + device_id
 
 # Docker engine config 
 docker_client = docker.from_env()
@@ -36,7 +36,7 @@ def publish(client):
     while True:
         # containers = docker_client.containers.list()
         # print(json.dumps(containers))
-        msg = '{"temperature": 125, "humidity": 100, "version": 10, "isRunning": 10, "thingId": "' + device_id + '"}'
+        msg = '{"version": 10, "status": "RUNNING!", "thingId": "' + device_id + '"}'
         result = client.publish(topic, msg)
         # result: [0, 1]
         status = result[0]
