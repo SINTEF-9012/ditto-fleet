@@ -12,7 +12,7 @@
             "failoverEnabled": true,
             "uri": "tcp://mosquitto:1883",
             "targets": [{
-                "address": "no.sintef.sct.giot.notifications/{{ thing:id }}",
+                "address": "things.notifications/{{ thing:id }}",
                 "topics": [
                     "_/_/things/twin/events",
                     "_/_/things/live/messages"
