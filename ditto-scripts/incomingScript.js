@@ -1,28 +1,22 @@
 function mapToDittoProtocolMsg(headers, textPayload, bytePayload, contentType) {
-    // Get sent data
-    const jsonString = String.fromCharCode.apply(null, new Uint8Array(bytePayload));
-    // Parse received data
-    const jsonData = JSON.parse(jsonString);
-    // Get thing's namespace and ID
+    const jsonData = JSON.parse(textPayload);
     const thingId = jsonData.thingId.split(':');
-    // Prepare features to be set
-    const value = {
-            measurements: {
+    const value = {            
+            trustAgent: {
                 properties: {
-                    temperature: jsonData.temperature,
-                    humidity: jsonData.humidity
+                    version: jsonData.version,
+                    status: jsonData.status
                 }
             }
         };
-    // Return Ditto Protocol message
 	return Ditto.buildDittoProtocolMsg(
-        thingId[0], // your namespace
+        thingId[0],
         thingId[1],
-        'things', // we deal with a thing
-        'twin', // we want to update the twin
-        'commands', // create a command to update the twin
-        'modify', // modify the twin
-        '/features', // modify all features at once
+        'things',
+        'twin',
+        'commands',
+        'modify',
+        '/features',
         headers,
         value
     );

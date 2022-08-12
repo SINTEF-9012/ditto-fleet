@@ -1,5 +1,5 @@
 {
-    "policyId": "no.sintef.sct.giot:default-policy",
+    "policyId": "no.sintef.sct.giot:policy",
     "attributes": {
         "manufacturer": "Raspberry",
         "architecture": "arm",
@@ -9,7 +9,7 @@
         }        
     },
     "features": {
-        "trust-agent": {
+        "trustAgent": {
             "properties": {
                 "version": "1.0.0",
                 "status": "running"

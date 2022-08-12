@@ -381,7 +381,7 @@ export class DeviceArea extends Component {
                 dataSource={this.context.devices}
                 columns={this.columns}
                 pagination={{ pageSize: 50 }}
-                scroll={{ y: 500 }}
+                //scroll={{ y: 500 }}
                 //expandRowByClick={true}
                 expandedRowRender={(record) => (
                   <span>

@@ -1,5 +1,5 @@
 {
-    "policyId": "no.sintef.sct.giot:default-policy",
+    "policyId": "no.sintef.sct.giot:policy",
     "entries": {
         "owner": {
             "subjects": {
