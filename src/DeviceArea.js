@@ -12,13 +12,14 @@ import {
   Menu,
   Modal,
   Input,
+  Typography
 } from "antd";
 import ReactJson from "react-json-view";
 import axios from "axios";
 import { GlobalContext } from "./GlobalContext";
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
-
+const { Title } = Typography;
 const { Content } = Layout;
 const { TextArea } = Input;
 const ButtonGroup = Button.Group;
@@ -372,8 +373,14 @@ export class DeviceArea extends Component {
     return (
       <Layout>
         <Content>
+          <Row >
+            <Col offset={6} >
+              <Button type="primary" style={{ marginTop: 16, marginBottom: 16}}>Register new device</Button>
+            </Col>
+          </Row>
           <Row>
-            <Col span={24}>
+            <Col span={12} offset={6}>
+            
               <Table
                 //bordered
                 rowKey={(record) => record.id}

@@ -6,8 +6,9 @@ import { Layout, Tabs, Icon } from "antd";
 import { DittoDomClient, DomHttpBasicAuth, DefaultSearchOptions } from "@eclipse-ditto/ditto-javascript-client-dom";
 //import { TemplateArea2 } from "./TemplateArea2";
 //import { VariantArea2 } from "./VariantArea2";
-//import { DeploymentArea } from "./DeploymentArea";
+import { TrustAgentArea } from "./TrustAgentArea";
 import { DeviceArea } from "./DeviceArea";
+import { DashboardArea } from "./DashboardArea";
 //import { ControlArea } from "./ControlArea";
 //import { ModelArea } from "./ModelArea";
 //import { DiversificationArea } from "./SMTDiversificationArea/DiversificationArea";
@@ -34,11 +35,11 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      //area: AreaEnum.GLOBAL,
-      //deployments: [],
+      //area: AreaEnum.GLOBAL,      
       //templates: [],
       //variants: [],
       devices: [],
+      trust_agents: [],
       //forEdit: null,
       //edited: null,
       //appliedDevices: {},
@@ -118,7 +119,7 @@ class App extends Component {
               >
                 <TabPane
                   disabled
-                  key="logo"
+                  key="project-logo"
                   tab={
                     <span>
                       <img
@@ -128,7 +129,7 @@ class App extends Component {
                       />
                     </span>
                   }
-                ></TabPane>
+                ></TabPane>                
                 <TabPane
                   key="1"
                   tab={
@@ -147,13 +148,49 @@ class App extends Component {
                     //callbackTabChange={this.handleTabChange}
                   />
                 </TabPane>
+                <TabPane
+                  key="2"
+                  tab={
+                    <span>
+                      <Icon type="safety-certificate" />
+                      Trust Agents
+                    </span>
+                  }
+                >
+                  <TrustAgentArea
+                    //devices={devices}
+                    //deployments={deployments}
+                    //activeDeployments={activeDeployments}
+                    //appliedDevices={appliedDevices}
+                    //deviceTags={deviceTags}
+                    //callbackTabChange={this.handleTabChange}
+                  />
+                </TabPane>
+                <TabPane
+                  key="3"
+                  tab={
+                    <span>
+                      <Icon type="dashboard" />
+                      Dashboard
+                    </span>
+                  }
+                >
+                  <DashboardArea
+                    //devices={devices}
+                    //deployments={deployments}
+                    //activeDeployments={activeDeployments}
+                    //appliedDevices={appliedDevices}
+                    //deviceTags={deviceTags}
+                    //callbackTabChange={this.handleTabChange}
+                  />
+                </TabPane>
               </Tabs>
             </Content>
 
             <Footer>
               <p>
                 This work is supported by{" "}
-                <a href="https://eratosthenes-project.eu/">ERATOSTHENES</a>.
+                <a href="https://eratosthenes-project.eu/">ERATOSTHENES</a> and powered by <a href="https://www.eclipse.org/ditto/">Eclipse Ditto</a>.
               </p>
               <p>
                 {" "}

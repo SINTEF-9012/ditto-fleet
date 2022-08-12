@@ -6,14 +6,14 @@ import { GlobalContext } from "./GlobalContext";
 
 const { Content } = Layout;
 
-export class DeploymentArea extends Component {
+export class DashboardArea extends Component {
   static contextType = GlobalContext;
 
   constructor(props) {
     super(props);
     this.columns = [
       {
-        title: "Deployment ID",
+        title: "Trust Agent ID",
         dataIndex: "id",
         render: (record) =>
           this.context.appliedDevices[record] ? (
