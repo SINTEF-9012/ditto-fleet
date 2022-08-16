@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
-import axios from "axios";
+// import axios from "axios";
 import { Layout, Tabs, Icon, Row, Col } from "antd";
 
 import {
@@ -8,22 +8,13 @@ import {
   DomHttpBasicAuth,
   DefaultSearchOptions,
 } from "@eclipse-ditto/ditto-javascript-client-dom";
-//import { TemplateArea2 } from "./TemplateArea2";
-//import { VariantArea2 } from "./VariantArea2";
 import { TrustAgentArea } from "./TrustAgentArea";
 import { DeviceArea } from "./DeviceArea";
 import { SandboxArea } from "./SandboxArea";
-//import { ControlArea } from "./ControlArea";
-//import { ModelArea } from "./ModelArea";
-//import { DiversificationArea } from "./SMTDiversificationArea/DiversificationArea";
-//import SingleDeploymentArea from "./ORDiversificationArea/SingleDeploymentArea";
-//import MultipleDeploymentArea from "./ORDiversificationArea/MultipleDeploymentArea";
 import { GlobalContext } from "./GlobalContext";
 
 const { Footer, Content } = Layout;
 const { TabPane } = Tabs;
-
-//const PROPERTIES2SHOW = ['properties.arduino', 'properties.city'];
 
 const ditto_domain = "localhost:8080";
 const ditto_username = "ditto";

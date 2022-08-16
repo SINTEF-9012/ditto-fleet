@@ -7,35 +7,15 @@ import {
   Table,
   Tooltip,
   Badge,
-  Tag,
-  Dropdown,
-  Menu,
-  Modal,
-  Input,
-  Typography,
+  Modal
 } from "antd";
 import ReactJson from "react-json-view";
-import axios from "axios";
 import { GlobalContext } from "./GlobalContext";
-import { Thing, ThingsHandle } from "@eclipse-ditto/ditto-javascript-client-node";
-import { convertCompilerOptionsFromJson } from "typescript";
+import { Thing } from "@eclipse-ditto/ditto-javascript-client-node";
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
-const { Title } = Typography;
 const { Content } = Layout;
-const { TextArea } = Input;
 const ButtonGroup = Button.Group;
-const colors = [
-  "blue",
-  "red",
-  "green",
-  "blue",
-  "red",
-  "green",
-  "blue",
-  "red",
-  "green",
-];
 
 export class DeviceArea extends Component {
   static contextType = GlobalContext;
@@ -107,27 +87,14 @@ export class DeviceArea extends Component {
                   onClick={
                     () =>
                       Modal.confirm({
-                        title: "Deploy a trust agent on: " + record.id,
-                        content: (
-                          <TextArea
-                            rows={4}
-                            defaultValue={this.state.payload}
-                            onChange={(e) =>
-                              this.setState({ payload: e.target.value })
-                            }
-                          />
-                        ),
+                        title: "Deploy a trust agent on: " + record.id,                        
                         onOk: () => {
-                          this.deployTrustAgent(record._thingId, null);
+                          this.deployTrustAgent(record.id, null);
                         },
                         onCancel: () => {
                           this.setState({ payload: "Hello world!" });
                         },
                       })
-                    // this.invokeDirectMethod(record.id, {
-                    //   methodName: "invokeDirectMethod",
-                    //   payload: "Hello world!",
-                    // })
                   }
                   ghost
                 />
@@ -139,30 +106,14 @@ export class DeviceArea extends Component {
                   onClick={
                     () =>
                       Modal.confirm({
-                        title: "Start a trust agent on: " + record.id,
-                        content: (
-                          <TextArea
-                            rows={4}
-                            defaultValue={this.state.payload}
-                            onChange={(e) =>
-                              this.setState({ payload: e.target.value })
-                            }
-                          />
-                        ),
+                        title: "Start a trust agent on: " + record.id,                        
                         onOk: () => {
-                          this.invokeDirectMethod(record.id, {
-                            methodName: "invokeDirectMethod",
-                            payload: this.state.payload,
-                          });
+                          this.startTrustAgent(record.id);
                         },
                         onCancel: () => {
-                          this.setState({ payload: "Hello world!" });
+                          //this.setState({ payload: "Hello world!" });
                         },
-                      })
-                    // this.invokeDirectMethod(record.id, {
-                    //   methodName: "invokeDirectMethod",
-                    //   payload: "Hello world!",
-                    // })
+                      })                    
                   }
                   ghost
                 />
@@ -174,30 +125,14 @@ export class DeviceArea extends Component {
                   onClick={
                     () =>
                       Modal.confirm({
-                        title: "Stop the trust agent on: " + record.id,
-                        content: (
-                          <TextArea
-                            rows={4}
-                            defaultValue={this.state.payload}
-                            onChange={(e) =>
-                              this.setState({ payload: e.target.value })
-                            }
-                          />
-                        ),
+                        title: "Stop the trust agent on: " + record.id,                        
                         onOk: () => {
-                          this.invokeDirectMethod(record.id, {
-                            methodName: "invokeDirectMethod",
-                            payload: this.state.payload,
-                          });
+                          this.stopTrustAgent(record.id);
                         },
                         onCancel: () => {
-                          this.setState({ payload: "Hello world!" });
+                          //this.setState({ payload: "Hello world!" });
                         },
-                      })
-                    // this.invokeDirectMethod(record.id, {
-                    //   methodName: "invokeDirectMethod",
-                    //   payload: "Hello world!",
-                    // })
+                      })                    
                   }
                   ghost
                 />
@@ -208,36 +143,24 @@ export class DeviceArea extends Component {
                   icon="cloud-upload"
                   onClick={() =>
                     Modal.confirm({
-                      title: "Undeploy the trust agent from: " + record.id,
-                      content: (
-                        <TextArea
-                          rows={4}
-                          defaultValue={this.state.payload}
-                          onChange={(e) =>
-                            this.setState({ payload: e.target.value })
-                          }
-                        />
-                      ),
+                      title: "Undeploy the trust agent from: " + record.id,                      
                       onOk: () => {
-                        this.invokeDirectMethod(record.id, {
-                          methodName: "invokeDirectMethod",
-                          payload: this.state.payload,
-                        });
+                        this.rollbackTrustAgent(record.id)                        
                       },
                       onCancel: () => {
-                        this.setState({ payload: "Hello world!" });
+                        //this.setState({ payload: "Hello world!" });
                       },
                     })
                   }
                   ghost
                 />
-              </Tooltip>
-              <Tooltip title="Modify device twin">
+              </Tooltip>              
+              <Tooltip title="Delete device twin">
                 <Button
                   type="primary"
-                  icon="tool"
+                  icon="delete"
                   onClick={() =>
-                    this.tagDevice(record.id, { status: "running" })
+                    this.deleteThing(record.id)
                   }
                   ghost
                 />
@@ -313,11 +236,7 @@ export class DeviceArea extends Component {
                       onCancel: () => {
                         this.setState({ payload: "Hello world!" });
                       },
-                    })
-                  // this.invokeDirectMethod(record.id, {
-                  //   methodName: "invokeDirectMethod",
-                  //   payload: "Hello world!",
-                  // })
+                    })                  
                 }
               >
                 Register new device
@@ -399,7 +318,18 @@ export class DeviceArea extends Component {
           `Finished putting the new thing with result: ${JSON.stringify(result)}`
         )
       );    
-  };
+  }
+
+  deleteThing = async (thingId) => {
+    const thingsHandle = this.context.ditto_client.getThingsHandle();
+    thingsHandle
+      .deleteThing(thingId)
+      .then((result) =>
+        console.log(
+          `Finished deleting the thing with result: ${JSON.stringify(result)}`
+        )
+      );  
+  }
 
   deployTrustAgent = async (thingId, trust_agent) => {
     //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
@@ -413,7 +343,7 @@ export class DeviceArea extends Component {
     console.info("Sending a MQTT message to deploy a trust agent");
   };
 
-  startTrustAgent = async (thingId, trust_agent) => {
+  startTrustAgent = async (thingId) => {
     //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     //console.info(featuresHandle.getProperties("trustAgent"));
     //featuresHandle.putProperties("trustAgent", {
@@ -425,7 +355,7 @@ export class DeviceArea extends Component {
     console.info("Sending a MQTT message to start the trust agent");
   };
 
-  stopTrustAgent = async (thingId, trust_agent) => {
+  stopTrustAgent = async (thingId) => {
     //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     //console.info(featuresHandle.getProperties("trustAgent"));
     //featuresHandle.putProperties("trustAgent", {
@@ -437,7 +367,7 @@ export class DeviceArea extends Component {
     console.info("Sending a MQTT message to stop the trust agent");
   };
 
-  rollbackTrustAgent = async (thingId, trust_agent) => {
+  rollbackTrustAgent = async (thingId) => {
     //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     //console.info(featuresHandle.getProperties("trustAgent"));
     //featuresHandle.putProperties("trustAgent", {
