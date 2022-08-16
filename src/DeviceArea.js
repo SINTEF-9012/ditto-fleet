@@ -12,11 +12,13 @@ import {
   Menu,
   Modal,
   Input,
-  Typography
+  Typography,
 } from "antd";
 import ReactJson from "react-json-view";
 import axios from "axios";
 import { GlobalContext } from "./GlobalContext";
+import { Thing, ThingsHandle } from "@eclipse-ditto/ditto-javascript-client-node";
+import { convertCompilerOptionsFromJson } from "typescript";
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
 const { Title } = Typography;
@@ -45,18 +47,19 @@ export class DeviceArea extends Component {
         title: "Device ID",
         dataIndex: "_thingId",
         width: 100,
-        render: (text, record) =>
+        render: (text, record) => (
           //this.context.deviceTags[record.id].status === "failed" ? (
           //  <span>
           //    <Badge status="error" />
           //    {record.id}
           //  </span>
           //) : (
-            <span>
-              <Badge status="success" />
-              {record._thingId}
-            </span>
-          //),
+          <span>
+            <Badge status="success" />
+            {record._thingId}
+          </span>
+        ),
+        //),
       },
       /* {
         title: "Tags",
@@ -87,7 +90,7 @@ export class DeviceArea extends Component {
           <span style={{ float: "right" }}>
             <Modal
               mask={false}
-              title="Basic Modal"
+              title="Basic modal"
               visible={this.state.visible}
               onOk={this.handleOk}
               onCancel={this.handleCancel}
@@ -97,14 +100,46 @@ export class DeviceArea extends Component {
               <p>Some contents...</p>
             </Modal>
             <ButtonGroup size="small" type="dashed">
-              <Tooltip title="Invoke direct method">
+              <Tooltip title="Deploy trust agent">
                 <Button
                   type="primary"
-                  icon="api"
+                  icon="cloud-download"
                   onClick={
                     () =>
                       Modal.confirm({
-                        title: "Invoke direct method on: " + record.id,
+                        title: "Deploy a trust agent on: " + record.id,
+                        content: (
+                          <TextArea
+                            rows={4}
+                            defaultValue={this.state.payload}
+                            onChange={(e) =>
+                              this.setState({ payload: e.target.value })
+                            }
+                          />
+                        ),
+                        onOk: () => {
+                          this.deployTrustAgent(record._thingId, null);
+                        },
+                        onCancel: () => {
+                          this.setState({ payload: "Hello world!" });
+                        },
+                      })
+                    // this.invokeDirectMethod(record.id, {
+                    //   methodName: "invokeDirectMethod",
+                    //   payload: "Hello world!",
+                    // })
+                  }
+                  ghost
+                />
+              </Tooltip>
+              <Tooltip title="Start trust agent">
+                <Button
+                  type="primary"
+                  icon="play-circle"
+                  onClick={
+                    () =>
+                      Modal.confirm({
+                        title: "Start a trust agent on: " + record.id,
                         content: (
                           <TextArea
                             rows={4}
@@ -132,13 +167,48 @@ export class DeviceArea extends Component {
                   ghost
                 />
               </Tooltip>
-              <Tooltip title="Send a C2D message">
+              <Tooltip title="Stop trust agent">
                 <Button
                   type="primary"
-                  icon="cloud-download"
+                  icon="pause-circle"
+                  onClick={
+                    () =>
+                      Modal.confirm({
+                        title: "Stop the trust agent on: " + record.id,
+                        content: (
+                          <TextArea
+                            rows={4}
+                            defaultValue={this.state.payload}
+                            onChange={(e) =>
+                              this.setState({ payload: e.target.value })
+                            }
+                          />
+                        ),
+                        onOk: () => {
+                          this.invokeDirectMethod(record.id, {
+                            methodName: "invokeDirectMethod",
+                            payload: this.state.payload,
+                          });
+                        },
+                        onCancel: () => {
+                          this.setState({ payload: "Hello world!" });
+                        },
+                      })
+                    // this.invokeDirectMethod(record.id, {
+                    //   methodName: "invokeDirectMethod",
+                    //   payload: "Hello world!",
+                    // })
+                  }
+                  ghost
+                />
+              </Tooltip>
+              <Tooltip title="Roll back trust agent">
+                <Button
+                  type="primary"
+                  icon="cloud-upload"
                   onClick={() =>
                     Modal.confirm({
-                      title: "Send a C2D message to: " + record.id,
+                      title: "Undeploy the trust agent from: " + record.id,
                       content: (
                         <TextArea
                           rows={4}
@@ -149,7 +219,8 @@ export class DeviceArea extends Component {
                         />
                       ),
                       onOk: () => {
-                        this.sendC2DMessage(record.id, {
+                        this.invokeDirectMethod(record.id, {
+                          methodName: "invokeDirectMethod",
                           payload: this.state.payload,
                         });
                       },
@@ -161,17 +232,7 @@ export class DeviceArea extends Component {
                   ghost
                 />
               </Tooltip>
-              <Tooltip title="Emulate device failure">
-                <Button
-                  type="primary"
-                  icon="bug"
-                  onClick={() =>
-                    this.tagDevice(record.id, { status: "failed" })
-                  }
-                  ghost
-                />
-              </Tooltip>
-              <Tooltip title="Fix device">
+              <Tooltip title="Modify device twin">
                 <Button
                   type="primary"
                   icon="tool"
@@ -181,145 +242,6 @@ export class DeviceArea extends Component {
                   ghost
                 />
               </Tooltip>
-
-              <Dropdown
-                overlay={
-                  <Menu>
-                    <Menu.Item key="0">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevice(record.id, {
-                            environment: "production",
-                          })
-                        }
-                      >
-                        Production
-                      </Button>
-                    </Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item key="1">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevice(record.id, { environment: "preview" })
-                        }
-                      >
-                        Preview
-                      </Button>
-                    </Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item key="3">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevice(record.id, { environment: "testing" })
-                        }
-                      >
-                        Testing
-                      </Button>
-                    </Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item key="4">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevice(record.id, {
-                            environment: "safe-mode",
-                          })
-                        }
-                      >
-                        Safe mode
-                      </Button>
-                    </Menu.Item>
-                  </Menu>
-                }
-              >
-                <Tooltip title="Put device into ...">
-                  <Button
-                    //type={
-                    //  this.context.deviceTags[record.id] &&
-                    //  this.context.deviceTags[record.id].status === "failed"
-                    //    ? "danger"
-                    //    : "primary"
-                    //}
-                    icon="tag"
-                    ghost
-                  />
-                </Tooltip>
-              </Dropdown>
-
-              <Dropdown
-                overlay={
-                  <Menu>
-                    <Menu.Item key="0">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevices(record.id, {
-                            environment: "production",
-                          })
-                        }
-                      >
-                        Production
-                      </Button>
-                    </Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item key="1">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevices(record.id, { environment: "preview" })
-                        }
-                      >
-                        Preview
-                      </Button>
-                    </Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item key="3">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevices(record.id, { environment: "testing" })
-                        }
-                      >
-                        Testing
-                      </Button>
-                    </Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item key="4">
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          this.tagDevices(record.id, {
-                            environment: "safe-mode",
-                          })
-                        }
-                      >
-                        Safe mode
-                      </Button>
-                    </Menu.Item>
-                  </Menu>
-                }
-              >
-                <Tooltip title="Put all affected devices into ...">
-                  <Button
-                    //type={
-                    //  this.context.deviceTags[record.id] &&
-                    //  this.context.deviceTags[record.id].status === "failed"
-                    //    ? "danger"
-                    //    : "primary"
-                    //}
-                    icon="tags"
-                    ghost
-                  />
-                </Tooltip>
-              </Dropdown>
-
-              {/* <Tooltip title="Copy"><Button type="primary" icon="copy" ghost /></Tooltip>
-              <Tooltip title="Save"><Button type="primary" icon="save" onClick={()=>{this.saveDeployment()}} ghost /></Tooltip>
-              <Tooltip title="Delete"><Popconfirm title="Sure to delete?" onConfirm={() => this.deleteDeployment(record.id)}><Button type="primary" icon="delete" ghost /></Popconfirm></Tooltip> */}
-              {/* <Tooltip title="Push variant"><Button type="primary" icon="rocket" onClick={()=>{this.pushVariant()}} ghost /></Tooltip> */}
             </ButtonGroup>
           </span>
         ),
@@ -373,14 +295,37 @@ export class DeviceArea extends Component {
     return (
       <Layout>
         <Content>
-          <Row >
-            <Col offset={6} >
-              <Button type="primary" style={{ marginTop: 16, marginBottom: 16}}>Register new device</Button>
+          <Row type="flex" justify="end">
+            <Col>
+              <Button
+                type="primary"
+                style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
+                onClick={
+                  () =>
+                    Modal.confirm({
+                      title: "Create a new thing in Eclipse Ditto",
+                      content: (
+                        <ReactJson src={{'thingId':'no.sintef.sct.giot:newThing', 'policyId': 'no.sintef.sct.giot:policy'}} enableClipboard={true} />
+                      ),
+                      onOk: () => {
+                        this.createNewThing({thingId:'no.sintef.sct.giot:newThing', policyId: 'no.sintef.sct.giot:policy'});
+                      },
+                      onCancel: () => {
+                        this.setState({ payload: "Hello world!" });
+                      },
+                    })
+                  // this.invokeDirectMethod(record.id, {
+                  //   methodName: "invokeDirectMethod",
+                  //   payload: "Hello world!",
+                  // })
+                }
+              >
+                Register new device
+              </Button>
             </Col>
           </Row>
           <Row>
-            <Col span={12} offset={6}>
-            
+            <Col>
               <Table
                 //bordered
                 rowKey={(record) => record.id}
@@ -433,56 +378,74 @@ export class DeviceArea extends Component {
                   ))}
               </Map>
             </Col> */}
-          </Row>          
+          </Row>
         </Content>
       </Layout>
     );
   }
 
   componentDidMount() {
-    //add if needed
+    //add something if needed
   }
 
-  /**
-   * Invoke a direct method on a device (synchronous)
-   */
-  invokeDirectMethod = async (device, payload) => {
-    // TODO:
-    //await axios.put("api/device/" + device, tags);
-    console.log("Direct method invoked on: " + device, payload);
-    await axios.put("api/device/" + device + "/invoke", payload);
+  createNewThing = async (thingJson) => {
+    const thing = Thing.fromObject(thingJson);
+    console.log(thing);
+    const thingsHandle = this.context.ditto_client.getThingsHandle();
+    thingsHandle
+      .putThing(thing)
+      .then((result) =>
+        console.log(
+          `Finished putting the new thing with result: ${JSON.stringify(result)}`
+        )
+      );    
   };
 
-  /**
-   * Send a message to a device from the cloud (asynchronous)
-   */
-  sendC2DMessage = async (device, payload) => {
-    // TODO:
-    //await axios.put("api/device/" + device, tags);
-    console.log("C2D message sent to: " + device, payload);
-    await axios.put("api/device/" + device + "/c2d", payload);
+  deployTrustAgent = async (thingId, trust_agent) => {
+    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+    //console.info(featuresHandle.getProperties("trustAgent"));
+    //featuresHandle.putProperties("trustAgent", {
+    //  version: "hi there!",
+    //  status: "oh no",
+    //});
+
+    // TODO: send an MQTT message to an adapter
+    console.info("Sending a MQTT message to deploy a trust agent");
   };
 
-  /**
-   * Tag selected device (e.g. to put it into a safe mode)
-   */
-  tagDevice = async (device, tags) => {
-    await axios.put("api/device/" + device, tags);
+  startTrustAgent = async (thingId, trust_agent) => {
+    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+    //console.info(featuresHandle.getProperties("trustAgent"));
+    //featuresHandle.putProperties("trustAgent", {
+    //  version: "hi there!",
+    //  status: "oh no",
+    //});
+
+    // TODO: send an MQTT message to an adapter
+    console.info("Sending a MQTT message to start the trust agent");
   };
 
-  /**
-   * Tag all devices affected by a deployment (e.g. to put it into a safe mode)
-   */
-  tagDevices = async (device, tags) => {
-    let faultyDeployments = this.context.activeDeployments[device];
-    console.log("deployments" + JSON.stringify(faultyDeployments));
-    faultyDeployments.forEach((deployment) => {
-      let faultyDevices = this.context.appliedDevices[deployment];
-      console.log(this.context.appliedDevices[deployment]);
-      faultyDevices.forEach((fDevice) => {
-        console.log(fDevice.deviceId);
-        this.tagDevice(fDevice.deviceId, tags);
-      });
-    });
+  stopTrustAgent = async (thingId, trust_agent) => {
+    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+    //console.info(featuresHandle.getProperties("trustAgent"));
+    //featuresHandle.putProperties("trustAgent", {
+    //  version: "hi there!",
+    //  status: "oh no",
+    //});
+
+    // TODO: send an MQTT message to an adapter
+    console.info("Sending a MQTT message to stop the trust agent");
+  };
+
+  rollbackTrustAgent = async (thingId, trust_agent) => {
+    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+    //console.info(featuresHandle.getProperties("trustAgent"));
+    //featuresHandle.putProperties("trustAgent", {
+    //  version: "hi there!",
+    //  status: "oh no",
+    //});
+
+    // TODO: send an MQTT message to an adapter
+    console.info("Sending a MQTT message to roll back the trust agent");
   };
 }

@@ -6,7 +6,7 @@ import { GlobalContext } from "./GlobalContext";
 
 const { Content } = Layout;
 
-export class DashboardArea extends Component {
+export class SandboxArea extends Component {
   static contextType = GlobalContext;
 
   constructor(props) {
