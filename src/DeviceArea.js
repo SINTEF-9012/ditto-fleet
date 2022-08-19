@@ -19,7 +19,8 @@ export class DeviceArea extends Component {
       {
         title: "Device ID",
         dataIndex: "_thingId",
-        width: 100,
+        align: "left",
+        //width: 100,
         render: (text, record) => (
           //this.context.deviceTags[record.id].status === "failed" ? (
           //  <span>
@@ -60,7 +61,7 @@ export class DeviceArea extends Component {
         width: 150,
         align: "center",
         render: (text, record) => (
-          <span style={{ float: "right" }}>
+          <span style={{ float: "center" }}>
             <Modal
               mask={false}
               title="Basic modal"
@@ -149,7 +150,7 @@ export class DeviceArea extends Component {
                 <Button
                   type="primary"
                   icon="delete"
-                  onClick={() => this.deleteThing(record.id)}
+                  onClick={() => this.deleteDevice(record.id)}
                   ghost
                 />
               </Tooltip>
@@ -177,7 +178,7 @@ export class DeviceArea extends Component {
       //add if needed
       visible: false,
       payload: "Hello world!",
-      new_thing_json: require('./resources/thing_template.json')
+      new_device_json: require('./resources/device_template.json')
     };
     this.editor = React.createRef();
   }
@@ -214,13 +215,12 @@ export class DeviceArea extends Component {
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new thing in Eclipse Ditto",
+                    title: "Create a new device in Eclipse Ditto",
                     content: (
-                      // <ReactJson src={{'thingId':'no.sintef.sct.giot:newThing', 'policyId': 'no.sintef.sct.giot:policy'}} enableClipboard={true} />
-                      <Editor value={this.state.new_thing_json} onChange={this.handleChange} />
+                      <Editor value={this.state.new_device_json} onChange={this.handleChange} />
                     ),
                     onOk: () => {
-                      this.createNewThing(this.state.new_thing_json);
+                      this.createDevice(this.state.new_device_json);
                     },
                     onCancel: () => {
                       this.setState({ payload: "Hello world!" });
@@ -297,32 +297,31 @@ export class DeviceArea extends Component {
   }
 
   handleChange = value => {
-    this.setState({ new_thing_json: value });
+    this.setState({ new_device_json: value });
   };
 
-  createNewThing = async () => {
-    //var json = require("./resources/thing_template.json");
-    const thing = Thing.fromObject(this.state.new_thing_json);
-    console.log(thing);
+  createDevice = async () => {
+    const device = Thing.fromObject(this.state.new_device_json);
+    console.log(device);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
-      .putThing(thing)
+      .putThing(device)
       .then((result) =>
         console.log(
-          `Finished putting the new thing with result: ${JSON.stringify(
+          `Finished putting the new device with result: ${JSON.stringify(
             result
           )}`
         )
       );
   };
 
-  deleteThing = async (thingId) => {
+  deleteDevice = async (thingId) => {
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .deleteThing(thingId)
       .then((result) =>
         console.log(
-          `Finished deleting the thing with result: ${JSON.stringify(result)}`
+          `Finished deleting the device with result: ${JSON.stringify(result)}`
         )
       );
   };

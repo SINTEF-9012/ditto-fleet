@@ -64,7 +64,8 @@ class App extends Component {
       .then((result) => this.setState({ targetedDevices: result }))
       .then(() => this.getActiveDeployments())
       .then((result) => this.setState({ activeDeployments: result })); */
-    this.getDevices().then((result) => this.setState({ devices: result }));
+    this.getAllDevices().then((result) => this.setState({ devices: result }));
+    this.getAllTrustAgents().then((result) => this.setState({ trust_agents: result }));
     //.then(() => this.getDeviceTags())
     //.then((result) => this.setState({ deviceTags: result }))
     //.then(() => this.getDeviceProperties())
@@ -201,18 +202,34 @@ class App extends Component {
   }
 
   /**
-   * Get all devices from Ditto
+   * Get all things from Ditto
    */
-  getDevices = async () => {
+  getAllDevices = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
-    var options = DefaultSearchOptions.getInstance().withLimit(0, 200);
-    options = options.withSort("+thingId");
+    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"device")').withSort("+thingId").withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
     console.info(devices);
     return devices;
   };
+
+  /**
+   * Get all trust agents from Ditto
+   */
+   getAllTrustAgents = async () => {
+    const searchHandle = ditto_client.getSearchHandle();
+
+    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"trust_agent")').withSort("+thingId").withLimit(0, 200);
+    //searchHandle.search(options).then(result => console.log("returned",result.items))
+    var trust_agents = (await searchHandle.search(options)).items;
+    console.info(trust_agents);
+    return trust_agents;
+  };
+
+  getAllTrustAgent = async () => {
+
+  }
 
   getTrustAgents = async () => {
     //TODO: fetch available trust agents from somewhere

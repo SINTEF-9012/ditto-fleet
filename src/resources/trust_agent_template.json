@@ -1,0 +1,9 @@
+{
+    "thingId": "no.sintef.sct.giot:REPLACE_WITH_TRUST_AGENT_ID",
+    "policyId": "no.sintef.sct.giot:policy",
+    "attributes": {
+        "type": "trust_agent",
+        "developer": "SINTEF",
+        "version": "1.0.0"
+    }
+}

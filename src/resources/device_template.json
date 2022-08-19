@@ -1,7 +1,8 @@
 {
-    "thingId": "no.sintef.sct.giot:REPLACE_WITH_THING_ID",
+    "thingId": "no.sintef.sct.giot:REPLACE_WITH_DEVICE_ID",
     "policyId": "no.sintef.sct.giot:policy",
     "attributes": {
+        "type": "device",
         "manufacturer": "Raspberry",
         "architecture": "arm",
         "os": { 
