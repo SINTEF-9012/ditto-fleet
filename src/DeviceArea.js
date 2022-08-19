@@ -1,17 +1,10 @@
 import React, { Component } from "react";
-import {
-  Button,
-  Layout,
-  Col,
-  Row,
-  Table,
-  Tooltip,
-  Badge,
-  Modal
-} from "antd";
+import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
 import { Thing } from "@eclipse-ditto/ditto-javascript-client-node";
+import { JsonEditor as Editor } from "jsoneditor-react";
+import "jsoneditor-react/es/editor.min.css";
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
 const { Content } = Layout;
@@ -84,17 +77,16 @@ export class DeviceArea extends Component {
                 <Button
                   type="primary"
                   icon="cloud-download"
-                  onClick={
-                    () =>
-                      Modal.confirm({
-                        title: "Deploy a trust agent on: " + record.id,                        
-                        onOk: () => {
-                          this.deployTrustAgent(record.id, null);
-                        },
-                        onCancel: () => {
-                          this.setState({ payload: "Hello world!" });
-                        },
-                      })
+                  onClick={() =>
+                    Modal.confirm({
+                      title: "Deploy a trust agent on: " + record.id,
+                      onOk: () => {
+                        this.deployTrustAgent(record.id, null);
+                      },
+                      onCancel: () => {
+                        this.setState({ payload: "Hello world!" });
+                      },
+                    })
                   }
                   ghost
                 />
@@ -103,17 +95,16 @@ export class DeviceArea extends Component {
                 <Button
                   type="primary"
                   icon="play-circle"
-                  onClick={
-                    () =>
-                      Modal.confirm({
-                        title: "Start a trust agent on: " + record.id,                        
-                        onOk: () => {
-                          this.startTrustAgent(record.id);
-                        },
-                        onCancel: () => {
-                          //this.setState({ payload: "Hello world!" });
-                        },
-                      })                    
+                  onClick={() =>
+                    Modal.confirm({
+                      title: "Start a trust agent on: " + record.id,
+                      onOk: () => {
+                        this.startTrustAgent(record.id);
+                      },
+                      onCancel: () => {
+                        //this.setState({ payload: "Hello world!" });
+                      },
+                    })
                   }
                   ghost
                 />
@@ -122,17 +113,16 @@ export class DeviceArea extends Component {
                 <Button
                   type="primary"
                   icon="pause-circle"
-                  onClick={
-                    () =>
-                      Modal.confirm({
-                        title: "Stop the trust agent on: " + record.id,                        
-                        onOk: () => {
-                          this.stopTrustAgent(record.id);
-                        },
-                        onCancel: () => {
-                          //this.setState({ payload: "Hello world!" });
-                        },
-                      })                    
+                  onClick={() =>
+                    Modal.confirm({
+                      title: "Stop the trust agent on: " + record.id,
+                      onOk: () => {
+                        this.stopTrustAgent(record.id);
+                      },
+                      onCancel: () => {
+                        //this.setState({ payload: "Hello world!" });
+                      },
+                    })
                   }
                   ghost
                 />
@@ -143,9 +133,9 @@ export class DeviceArea extends Component {
                   icon="cloud-upload"
                   onClick={() =>
                     Modal.confirm({
-                      title: "Undeploy the trust agent from: " + record.id,                      
+                      title: "Undeploy the trust agent from: " + record.id,
                       onOk: () => {
-                        this.rollbackTrustAgent(record.id)                        
+                        this.rollbackTrustAgent(record.id);
                       },
                       onCancel: () => {
                         //this.setState({ payload: "Hello world!" });
@@ -154,14 +144,12 @@ export class DeviceArea extends Component {
                   }
                   ghost
                 />
-              </Tooltip>              
+              </Tooltip>
               <Tooltip title="Delete device twin">
                 <Button
                   type="primary"
                   icon="delete"
-                  onClick={() =>
-                    this.deleteThing(record.id)
-                  }
+                  onClick={() => this.deleteThing(record.id)}
                   ghost
                 />
               </Tooltip>
@@ -189,6 +177,7 @@ export class DeviceArea extends Component {
       //add if needed
       visible: false,
       payload: "Hello world!",
+      new_thing_json: require('./resources/thing_template.json')
     };
     this.editor = React.createRef();
   }
@@ -223,20 +212,20 @@ export class DeviceArea extends Component {
               <Button
                 type="primary"
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
-                onClick={
-                  () =>
-                    Modal.confirm({
-                      title: "Create a new thing in Eclipse Ditto",
-                      content: (
-                        <ReactJson src={{'thingId':'no.sintef.sct.giot:newThing', 'policyId': 'no.sintef.sct.giot:policy'}} enableClipboard={true} />
-                      ),
-                      onOk: () => {
-                        this.createNewThing({thingId:'no.sintef.sct.giot:newThing', policyId: 'no.sintef.sct.giot:policy'});
-                      },
-                      onCancel: () => {
-                        this.setState({ payload: "Hello world!" });
-                      },
-                    })                  
+                onClick={() =>
+                  Modal.confirm({
+                    title: "Create a new thing in Eclipse Ditto",
+                    content: (
+                      // <ReactJson src={{'thingId':'no.sintef.sct.giot:newThing', 'policyId': 'no.sintef.sct.giot:policy'}} enableClipboard={true} />
+                      <Editor value={this.state.new_thing_json} onChange={this.handleChange} />
+                    ),
+                    onOk: () => {
+                      this.createNewThing(this.state.new_thing_json);
+                    },
+                    onCancel: () => {
+                      this.setState({ payload: "Hello world!" });
+                    },
+                  })
                 }
               >
                 Register new device
@@ -307,18 +296,25 @@ export class DeviceArea extends Component {
     //add something if needed
   }
 
-  createNewThing = async (thingJson) => {
-    const thing = Thing.fromObject(thingJson);
+  handleChange = value => {
+    this.setState({ new_thing_json: value });
+  };
+
+  createNewThing = async () => {
+    //var json = require("./resources/thing_template.json");
+    const thing = Thing.fromObject(this.state.new_thing_json);
     console.log(thing);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .putThing(thing)
       .then((result) =>
         console.log(
-          `Finished putting the new thing with result: ${JSON.stringify(result)}`
+          `Finished putting the new thing with result: ${JSON.stringify(
+            result
+          )}`
         )
-      );    
-  }
+      );
+  };
 
   deleteThing = async (thingId) => {
     const thingsHandle = this.context.ditto_client.getThingsHandle();
@@ -328,8 +324,8 @@ export class DeviceArea extends Component {
         console.log(
           `Finished deleting the thing with result: ${JSON.stringify(result)}`
         )
-      );  
-  }
+      );
+  };
 
   deployTrustAgent = async (thingId, trust_agent) => {
     //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
