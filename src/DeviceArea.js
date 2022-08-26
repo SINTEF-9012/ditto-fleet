@@ -2,9 +2,10 @@ import React, { Component } from "react";
 import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
-import { Thing } from "@eclipse-ditto/ditto-javascript-client-node";
+import { Feature, Thing } from "@eclipse-ditto/ditto-javascript-client-node";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
+import { DesiredPropertyFeaturesHandle } from "./extensions/DesiredPropertyFeaturesHandle";
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
 const { Content } = Layout;
@@ -296,12 +297,13 @@ export class DeviceArea extends Component {
     //add something if needed
   }
 
-  handleChange = value => {
+  handleChange = value => {    
     this.setState({ new_device_json: value });
   };
 
   createDevice = async () => {
-    const device = Thing.fromObject(this.state.new_device_json);
+    console.log(this.state.new_device_json);
+    var device = Thing.fromObject(this.state.new_device_json);
     console.log(device);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
@@ -327,8 +329,12 @@ export class DeviceArea extends Component {
   };
 
   deployTrustAgent = async (thingId, trust_agent) => {
-    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    //console.info(featuresHandle.getProperties("trustAgent"));
+    //var test_handle = new DesiredPropertyFeaturesHandle();
+    //console.info(test_handle.constructor.name);
+    var test = Feature.fromObject({"desiredProperties": {}});
+    console.info(test);
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+    console.info(featuresHandle.constructor.name);
     //featuresHandle.putProperties("trustAgent", {
     //  version: "hi there!",
     //  status: "oh no",
