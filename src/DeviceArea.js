@@ -2,10 +2,9 @@ import React, { Component } from "react";
 import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
-import { Feature, Thing } from "@eclipse-ditto/ditto-javascript-client-node";
+import { Feature, Thing, Features } from "@eclipse-ditto/ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
-import { DesiredPropertyFeaturesHandle } from "./extensions/DesiredPropertyFeaturesHandle";
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
 const { Content } = Layout;
@@ -63,30 +62,53 @@ export class DeviceArea extends Component {
         align: "center",
         render: (text, record) => (
           <span style={{ float: "center" }}>
-            <Modal
-              mask={false}
-              title="Basic modal"
-              visible={this.state.visible}
-              onOk={this.handleOk}
-              onCancel={this.handleCancel}
-            >
-              <p>Some contents...</p>
-              <p>Some contents...</p>
-              <p>Some contents...</p>
-            </Modal>
             <ButtonGroup size="small" type="dashed">
-              <Tooltip title="Deploy trust agent">
+            <Tooltip title="Edit device twin">
+                <Button
+                  type="primary"
+                  icon="edit"
+                  onClick={ () =>                    
+                    Modal.confirm({
+                      title: "Edit device twin: " + record.id,
+                      width: 800,
+                      height: 800,
+                      content: (
+                        <Editor
+                          value={record}
+                          onChange={this.handleEdit}
+                        />
+                      ),
+                      onOk: () => {
+                        this.updateDeviceTwin(this.state.edited_device);
+                      },
+                      onCancel: () => {
+                        //this.setState({ payload: "Hello world!" });
+                      },
+                    })
+                  }
+                  ghost
+                />
+              </Tooltip>
+              {/* <Tooltip title="Deploy trust agent">
                 <Button
                   type="primary"
                   icon="cloud-download"
-                  onClick={() =>
+                  onClick={ () =>
                     Modal.confirm({
                       title: "Deploy a trust agent on: " + record.id,
+                      width: 800,
+                      height: 800,
+                      content: (
+                        <Editor
+                          value={this.state.new_device_json}
+                          onChange={this.handleChange}
+                        />
+                      ),
                       onOk: () => {
-                        this.deployTrustAgent(record.id, null);
+                        this.startTrustAgent(record.id);
                       },
                       onCancel: () => {
-                        this.setState({ payload: "Hello world!" });
+                        //this.setState({ payload: "Hello world!" });
                       },
                     })
                   }
@@ -97,9 +119,17 @@ export class DeviceArea extends Component {
                 <Button
                   type="primary"
                   icon="play-circle"
-                  onClick={() =>
+                  onClick={ () =>
                     Modal.confirm({
                       title: "Start a trust agent on: " + record.id,
+                      width: 800,
+                      height: 800,
+                      content: (
+                        <Editor
+                          value={this.state.new_device_json}
+                          onChange={this.handleChange}
+                        />
+                      ),
                       onOk: () => {
                         this.startTrustAgent(record.id);
                       },
@@ -146,7 +176,7 @@ export class DeviceArea extends Component {
                   }
                   ghost
                 />
-              </Tooltip>
+              </Tooltip> */}
               <Tooltip title="Delete device twin">
                 <Button
                   type="primary"
@@ -179,7 +209,8 @@ export class DeviceArea extends Component {
       //add if needed
       visible: false,
       payload: "Hello world!",
-      new_device_json: require('./resources/device_template.json')
+      new_device_json: require("./resources/device_template.json"),
+      edited_device: {}
     };
     this.editor = React.createRef();
   }
@@ -217,8 +248,13 @@ export class DeviceArea extends Component {
                 onClick={() =>
                   Modal.confirm({
                     title: "Create a new device in Eclipse Ditto",
+                    width: 800,
+                    height: 800,
                     content: (
-                      <Editor value={this.state.new_device_json} onChange={this.handleChange} />
+                      <Editor
+                        value={this.state.new_device_json}
+                        onChange={this.handleChange}
+                      />
                     ),
                     onOk: () => {
                       this.createDevice(this.state.new_device_json);
@@ -297,8 +333,28 @@ export class DeviceArea extends Component {
     //add something if needed
   }
 
-  handleChange = value => {    
+  handleChange = (value) => {
     this.setState({ new_device_json: value });
+  };
+
+  handleEdit = (value) => {
+    this.setState({ edited_device: value });
+  }
+
+  showModalEditor = (caption, thing_json) => {
+    Modal.confirm({
+      title: caption,
+      width: 800,
+      height: 800,
+      content: <Editor value={thing_json} onChange={this.handleChange} />,
+      onOk: () => {
+        this.createDevice(this.state.new_device_json);
+        this.setState({});
+      },
+      onCancel: () => {
+        this.setState({});
+      },
+    });
   };
 
   createDevice = async () => {
@@ -331,7 +387,7 @@ export class DeviceArea extends Component {
   deployTrustAgent = async (thingId, trust_agent) => {
     //var test_handle = new DesiredPropertyFeaturesHandle();
     //console.info(test_handle.constructor.name);
-    var test = Feature.fromObject({"desiredProperties": {}});
+    var test = Feature.fromObject({ desiredProperties: {} });
     console.info(test);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     console.info(featuresHandle.constructor.name);
@@ -343,6 +399,21 @@ export class DeviceArea extends Component {
     // TODO: send an MQTT message to an adapter
     console.info("Sending a MQTT message to deploy a trust agent");
   };
+
+  updateDeviceTwin = async () => {
+    console.log(this.state.edited_device.features);
+    var features = Features.fromObject(this.state.edited_device._features);
+    console.log('DEVICE FEATURES: ', features);
+    console.log('DEVICE ID: ', this.state.edited_device._thingId);
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(this.state.edited_device._thingId);
+    featuresHandle
+      .putFeatures(features, )
+      .then((result) =>
+        console.log(
+          `Finished updating the device with result: ${JSON.stringify(result)}`
+        )
+      );
+  }
 
   startTrustAgent = async (thingId) => {
     //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);

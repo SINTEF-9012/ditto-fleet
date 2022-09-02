@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
-import { Thing } from "@eclipse-ditto/ditto-javascript-client-node";
+import { Thing } from "@eclipse-ditto/ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 

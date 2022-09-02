@@ -16,6 +16,7 @@ import { GlobalContext } from "./GlobalContext";
 const { Footer, Content } = Layout;
 const { TabPane } = Tabs;
 
+// Ditto connection config
 const ditto_domain = "localhost:8080";
 const ditto_username = "ditto";
 const ditto_password = "ditto";
