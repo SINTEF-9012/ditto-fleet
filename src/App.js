@@ -228,16 +228,6 @@ class App extends Component {
     return trust_agents;
   };
 
-  getAllTrustAgent = async () => {
-
-  }
-
-  getTrustAgents = async () => {
-    //TODO: fetch available trust agents from somewhere
-    var trust_agents = {};
-    return trust_agents;
-  };
-
   initDittoClient = async () => {
     const ditto_client = DittoDomClient.newHttpClient()
       .withoutTls()

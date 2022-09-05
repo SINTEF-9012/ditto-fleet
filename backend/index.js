@@ -18,8 +18,9 @@ const mqtt_host = "localhost";
 const mqtt_port = "1883";
 const clientId = "ditto-fleet-backend";
 
-const connectUrl = "mqtt://localhost:1883";
-const mqtt_topic = "things.notifications";
+const connectUrl = "mqtt://test.mosquitto.org:1883";
+const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
+const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 
 const mqtt_client = mqtt.connect(connectUrl, {
   clientId,
@@ -30,8 +31,8 @@ const mqtt_client = mqtt.connect(connectUrl, {
 
 mqtt_client.on("connect", () => {
   console.log("Connected to MQTT broker!");
-  mqtt_client.subscribe([mqtt_topic], () => {
-    console.log(`Subscribe to topic '${mqtt_topic}'`);
+  mqtt_client.subscribe([upstream_mqtt_topic], () => {
+    console.log(`Subscribe to topic '${upstream_mqtt_topic}'`);
   });
 });
 
@@ -61,7 +62,7 @@ async function sendDeviceTwinMessage(thingId) {
   console.info(JSON.stringify(thing));
   //TODO: send an MQTT message to Hui
   mqtt_client.publish(
-    mqtt_topic,
+    downstream_mqtt_topic,
     JSON.stringify(thing),
     { qos: 0, retain: false },
     (error) => {
