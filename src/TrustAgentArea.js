@@ -142,7 +142,8 @@ export class TrustAgentArea extends Component {
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new trust agent in Eclipse Ditto",
+                    title: "Create a new trust agent twin in Eclipse Ditto",
+                    width: 800,
                     content: (
                       <Editor
                         value={this.state.new_trust_agent_json}

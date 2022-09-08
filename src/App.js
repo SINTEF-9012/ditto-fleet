@@ -221,7 +221,7 @@ class App extends Component {
    getAllTrustAgents = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
-    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"trust_agent")').withSort("+thingId").withLimit(0, 200);
+    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"software_artifact")').withSort("+thingId").withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var trust_agents = (await searchHandle.search(options)).items;
     console.info(trust_agents);
