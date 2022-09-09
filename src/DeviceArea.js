@@ -128,7 +128,7 @@ export class DeviceArea extends Component {
       visible: false,
       trust_agent: { value: "" },
       active_device: "",
-      new_device_json: require("./resources/device_template.json"),
+      new_device: require("./resources/device_template.json"),
       edited_device: "",
     };
     //this.editor = React.createRef();
@@ -167,6 +167,10 @@ export class DeviceArea extends Component {
     });
   };
 
+  handleChange = (value) => {
+    this.setState({new_device: value});
+  }
+
   render() {
     return (
       <Layout>
@@ -178,23 +182,23 @@ export class DeviceArea extends Component {
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new twin in Eclipse Ditto",
+                    title: "Create a new device twin in Eclipse Ditto",
                     width: 800,
                     height: 800,
                     content: (
                       <Editor
-                        value={this.state.new_device_json}
+                        value={this.state.new_device}
                         onChange={this.handleChange}
                       />
                     ),
                     onOk: () => {
-                      this.createDeviceTwin(this.state.new_device_json);
+                      this.createDeviceTwin(this.state.new_device);
                     },
                     onCancel: () => {},
                   })
                 }
               >
-                Register new twin
+                Register new device
               </Button>
             </Col>
           </Row>
@@ -225,8 +229,8 @@ export class DeviceArea extends Component {
   }
 
   createDeviceTwin = async () => {
-    console.log(this.state.new_device_json);
-    var device = Thing.fromObject(this.state.new_device_json);
+    console.log(this.state.new_device);
+    var device = Thing.fromObject(this.state.new_device);
     console.log(device);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
@@ -257,13 +261,13 @@ export class DeviceArea extends Component {
     var test = Feature.fromObject({ desiredProperties: {} });
     console.info(test);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    featuresHandle.putDesiredProperties("trustAgent", desired_agent).then((result) =>
+    featuresHandle.putDesiredProperties("agent", desired_agent).then((result) =>
     console.log(
       `Finished updating the device twin with result: ${JSON.stringify(result)}`
     )
   );
     //var desired_agent = 
-    //featuresHandle.putProperties("trustAgent", {
+    //featuresHandle.putProperties("agent", {
     //  version: "hi there!",
     //  status: "oh no",
     //});

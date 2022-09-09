@@ -84,7 +84,7 @@ socket.onopen = function (e) {
     events_handle.requestEvents().then(() => {
       events_handle.subscribeToAllEvents((event) => {
         console.info(event);
-        if (event.action == "modified" && event.path == "/features") {
+        if (event.action === "modified") {
           const name_array = event.topic.split("/");
           console.info("Device Id: " + name_array[0] + ":" + name_array[1]);
           console.info("Feature changed: " + JSON.stringify(event.value));
