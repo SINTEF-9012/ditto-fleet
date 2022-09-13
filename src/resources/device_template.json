@@ -1,5 +1,6 @@
 {
     "thingId": "no.sintef.sct.giot:REPLACE_WITH_UNIQUE_DEVICE_ID",
+    "policyId": "no.sintef.sct.giot:policy",
     "attributes": {
         "type": "device",
         "arch": "amd64",

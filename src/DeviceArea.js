@@ -150,13 +150,13 @@ export class DeviceArea extends Component {
   handleOkEdit = (e) => {
     //console.log(e);
     //TODO: edit the twin
-    console.log(this.state.active_device);
-    console.log(this.state.trust_agent);
     let thingId = this.state.active_device;
     let desired_agent = this.state.trust_agent
     this.deployTrustAgent(thingId, desired_agent._attributes);
     this.setState({
       visible: false,
+      active_device: {},
+      trust_agent: {},
     });
   };
 
@@ -258,8 +258,11 @@ export class DeviceArea extends Component {
   deployTrustAgent = async (thingId, desired_agent) => {
     //var test_handle = new DesiredPropertyFeaturesHandle();
     //console.info(test_handle.constructor.name);
-    var test = Feature.fromObject({ desiredProperties: {} });
-    console.info(test);
+    
+    //var test = Feature.fromObject({ desiredProperties: {} });
+    //console.info(test);
+    desired_agent.status = "running";
+    console.info(desired_agent);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     featuresHandle.putDesiredProperties("agent", desired_agent).then((result) =>
     console.log(

@@ -1,0 +1,38 @@
+{
+  "thingId": "no.sintef.sct.giot:tets_device",
+  "policyId": "no.sintef.sct.giot:policy",
+  "attributes": {
+    "arch": "amd64",
+    "info": "Docker Engine 20.10.17 on amd64 with linux, API 1.41"
+  },
+  "features": {
+    "execEnv": {
+      "properties": {
+        "name": "docker_engine",
+        "port": 2375
+      }
+    },
+    "agent": {
+      "properties": {
+        "type": "software_artifact",
+        "url": "",
+        "localFile": "",
+        "remoteFile": "",
+        "developer": "",
+        "signature": "",
+        "image": "",
+        "cmd": "",
+        "cwd": "",
+        "status": "unloaded"
+      }
+    },
+    "meta": {
+      "properties": {
+        "latestState": "connected",
+        "lastOperation": "info",
+        "lastTried": "2022-09-12T13:45:47.122Z",
+        "lastSeen": "2022-09-12T13:45:47.251Z"
+      }
+    }
+  }
+}
