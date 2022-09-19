@@ -3,6 +3,9 @@
 import {
   DittoNodeClient,
   NodeWebSocketBasicAuth,
+  NodeHttpBasicAuth,
+  DefaultSearchOptions,
+  Features,
   Thing,
 } from "@eclipse-ditto/ditto-javascript-client-node";
 import WebSocket from "ws";
@@ -22,6 +25,7 @@ const clientId = "ditto-fleet-backend";
 const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
 const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
+const request_mqtt_topic = "no.sintef.sct.giot.things/request";
 
 const mqtt_client = mqtt.connect(connectUrl, {
   clientId,
@@ -32,15 +36,26 @@ const mqtt_client = mqtt.connect(connectUrl, {
 
 mqtt_client.on("connect", () => {
   console.log("Connected to MQTT broker!");
-  mqtt_client.subscribe([upstream_mqtt_topic], () => {
-    console.log(`Subscribe to topic '${upstream_mqtt_topic}'`);
+  mqtt_client.subscribe([upstream_mqtt_topic, request_mqtt_topic], () => {
+    console.log(
+      `Subscribed to topics: '${upstream_mqtt_topic}', '${request_mqtt_topic}'`
+    );
   });
 });
 
 mqtt_client.on("message", (topic, payload) => {
   console.log("Received MQTT message:", topic, payload.toString());
-  updateDeviceTwin(JSON.parse(payload));
-  //TODO: receive the device twin json and send it to Ditto. Make sure that this does not trigger an event to interfer with the change made via GUI.
+  if (topic === upstream_mqtt_topic) {
+    //console.log("topic ok")
+    //console.log(payload)
+    //console.log(payload.toString())
+    updateDeviceTwinProperties(JSON.parse(payload));
+    //TODO: receive the device twin json and send it to Ditto. Make sure that this does not trigger an event to interfer with the change made via GUI.
+  }
+  if (topic === request_mqtt_topic) {
+    //TODO: send all twins at once
+    getAllDeviceTwins();
+  }
 });
 
 //Ditto connection config
@@ -50,7 +65,7 @@ const ditto_password = "ditto";
 
 let socket = new WebSocket("ws://ditto:ditto@localhost:8080/ws/2");
 
-const ditto_client = DittoNodeClient.newWebSocketClient()
+const ws_ditto_client = DittoNodeClient.newWebSocketClient()
   .withoutTls()
   .withDomain(ditto_domain)
   .withAuthProvider(
@@ -60,10 +75,19 @@ const ditto_client = DittoNodeClient.newWebSocketClient()
   .twinChannel()
   .build();
 
+const http_ditto_client = DittoNodeClient.newHttpClient()
+  .withoutTls()
+  .withDomain(ditto_domain)
+  .withAuthProvider(
+    NodeHttpBasicAuth.newInstance(ditto_username, ditto_password)
+  )
+  //.withBuffer(15)
+  //.twinChannel()
+  .build();
+
 async function sendDeviceTwin(thingId) {
-  const thing = await ditto_client.getThingsHandle().getThing(thingId);
-  console.info(JSON.stringify(thing));
-  //TODO: send an MQTT message to Hui
+  const thing = await ws_ditto_client.getThingsHandle().getThing(thingId);
+  //console.info(JSON.stringify(thing));
   mqtt_client.publish(
     downstream_mqtt_topic,
     JSON.stringify(thing),
@@ -76,23 +100,40 @@ async function sendDeviceTwin(thingId) {
   );
 }
 
-async function updateDeviceTwin(twin) {
-  
-  console.log(twin);
-  const thing = Thing.fromObject(twin);  
-  await ditto_client.getThingsHandle().putThing(thing);
-  //console.info(JSON.stringify(thing));
-  //TODO: send an MQTT message to Hui
-  //mqtt_client.publish(
-  //  downstream_mqtt_topic,
-  //  JSON.stringify(thing),
-  //  { qos: 0, retain: false },
-  //  (error) => {
-  //    if (error) {
-  //      console.error(error);
-  //    }
-  //  }
-  //);
+async function updateDeviceTwinProperties(twin) {
+  Object.entries(twin.features).forEach(([key, value]) => {
+    console.log(JSON.stringify(key));
+    console.log(JSON.stringify(value.properties));
+    http_ditto_client
+      .getFeaturesHandle(twin.thingId)
+      .putProperties(key, value.properties); //value.properties
+  });
+}
+
+async function getAllDeviceTwins() {
+  //TODO: better structure the code!
+  const searchHandle = http_ditto_client.getSearchHandle();
+
+  var options = DefaultSearchOptions.getInstance()
+    .withFilter('eq(attributes/type,"device")')
+    .withSort("+thingId")
+    .withLimit(0, 200);
+  //searchHandle.search(options).then(result => console.log("returned",result.items))
+  var devices = (await searchHandle.search(options)).items;
+  //console.info("DEVICES: ", devices);
+  devices.forEach((device) => {
+    //console.info(JSON.stringify(device));
+    mqtt_client.publish(
+      downstream_mqtt_topic,
+      JSON.stringify(device),
+      { qos: 0, retain: false },
+      (error) => {
+        if (error) {
+          console.error(error);
+        }
+      }
+    );
+  });
 }
 
 socket.onopen = function (e) {
@@ -100,13 +141,13 @@ socket.onopen = function (e) {
   console.info("Sending to server");
   socket.send("START-SEND-EVENTS");
 
-  const events_handle = ditto_client.getEventsHandle();
+  const events_handle = ws_ditto_client.getEventsHandle();
 
   try {
     events_handle.requestEvents().then(() => {
       events_handle.subscribeToAllEvents((event) => {
         console.info("Message received via Ditto event handler", event);
-        if (event.action === "modified") {
+        if (event.action === "modified" && event.path.includes("desiredProperties")) {
           const name_array = event.topic.split("/");
           console.info("Device Id: " + name_array[0] + ":" + name_array[1]);
           console.info("Feature changed: " + JSON.stringify(event.value));

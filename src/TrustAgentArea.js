@@ -34,27 +34,6 @@ export class TrustAgentArea extends Component {
         ),
         //),
       },
-      /* {
-        title: "Tags",
-        dataIndex: "tags",
-        render: (text, record) =>
-          this.context.deviceTags[record.id] &&
-          Object.keys({
-            ...this.context.deviceTags[record.id],
-            ...this.context.deviceProperties[record.id],
-          }).map((key, i) => (
-            <Tag color={colors[i]}>
-              {key}:{" "}
-              {
-                {
-                  ...this.context.deviceTags[record.id],
-                  ...this.context.deviceProperties[record.id],
-                }[key]
-              }
-            </Tag>
-          )),
-        width: 250,
-      }, */
       {
         title: "Actions",
         width: 100,
@@ -72,7 +51,23 @@ export class TrustAgentArea extends Component {
               <p>Some contents...</p>
               <p>Some contents...</p>
             </Modal>
-            <ButtonGroup size="small" type="dashed">                          
+            <ButtonGroup size="small" type="dashed">
+              <Tooltip title="Deploy on all suitable devices">
+                <Button
+                  type="primary"
+                  icon="deployment-unit"
+                  onClick={() => this.deployTrustAgentToAll(record.id)}
+                  ghost
+                />
+              </Tooltip>
+              <Tooltip title="Deploy on selected devices">
+                <Button
+                  type="primary"
+                  icon="deployment-unit"
+                  onClick={() => this.deployTrustAgentToSelected(record.id, record.id)}
+                  ghost
+                />
+              </Tooltip>
               <Tooltip title="Delete trust agent">
                 <Button
                   type="primary"
@@ -154,7 +149,7 @@ export class TrustAgentArea extends Component {
                       this.createTrustAgent(this.state.new_trust_agent_json);
                     },
                     onCancel: () => {
-                      this.setState({ payload: "Hello world!" });
+                      //this.setState({ payload: "Hello world!" });
                     },
                   })
                 }
@@ -191,32 +186,7 @@ export class TrustAgentArea extends Component {
                   </span>
                 )}
               />
-            </Col>
-            {/* <Col
-              span={12}
-              style={{ backgroundColor: "lightblue", height: "500px" }}
-            >
-              <Map
-                defaultCenter={[59.913, 10.752]}
-                defaultZoom={10}
-                width={1000}
-                height={600}
-              >
-                {this.context.devices
-                  .filter((item) => {
-                    return "properties.lat" in item.properties;
-                  })
-                  .map(({ id, properties }) => (
-                    <Marker
-                      anchor={[
-                        parseFloat(properties["properties.lat"]),
-                        parseFloat(properties["properties.lon"]),
-                      ]}
-                      payload={2}
-                    />
-                  ))}
-              </Map>
-            </Col> */}
+            </Col>            
           </Row>
         </Content>
       </Layout>
@@ -258,5 +228,23 @@ export class TrustAgentArea extends Component {
           )}`
         )
       );
+  };
+
+  deployTrustAgentToAll = async (trustAgentId) => {
+    //TODO: basic logic to check for suitable devicves in the fleet, and then modify desired propoerties one by one
+    //const thingsHandle = this.context.ditto_client.getThingsHandle();
+    //thingsHandle
+    //  .deleteThing(trustAgentId)
+    //  .then((result) =>
+    //    console.log(
+    //      `Finished deleting the trust agent with result: ${JSON.stringify(
+    //        result
+    //      )}`
+    //    )
+    //  );
+  };
+
+  deployTrustAgentToSelected = async (trustAgentId, deviceId) => {
+    //TODO: modify desired properties of that device. Maybe check if it is suitable in the first place.    
   };
 }

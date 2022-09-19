@@ -24,6 +24,7 @@ const clientId = "ditto-fleet-mockup";
 const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
 //const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
+const request_mqtt_topic = "no.sintef.sct.giot.things/request";
 
 const mqtt_client = mqtt.connect(connectUrl, {
   clientId,
