@@ -7,7 +7,12 @@ import {
   DittoDomClient,
   DomHttpBasicAuth,
   DefaultSearchOptions,
-} from "@eclipse-ditto/ditto-javascript-client-dom";
+} from "@eclipse-ditto/ditto-javascript-client-dom"; //"../ditto-client-extensions/lib/api/dist/model/things.model.js"; 
+
+//import { DomHttpBasicAuth } from "./build/dom/src/dom-auth.js";
+//import { DefaultSearchOptions } from "./build/options/request.options.js";
+//import { DittoDomClient } from "./build/dom/src/ditto-dom-client.js";
+
 import { TrustAgentArea } from "./TrustAgentArea";
 import { DeviceArea } from "./DeviceArea";
 import { SandboxArea } from "./SandboxArea";
@@ -208,7 +213,9 @@ class App extends Component {
   getAllDevices = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
-    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"device")').withSort("+thingId").withLimit(0, 200);
+    var options = DefaultSearchOptions.getInstance()
+    .withFilter('eq(attributes/type,"device")')
+    .withSort("+thingId").withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
     console.info(devices);
