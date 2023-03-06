@@ -5,6 +5,18 @@
 //import { DefaultSearchOptions } from "../build/api/src/options/request.options.js"
 //import { Features, Thing } from "../build/model/things.model.js"
 
+//import {
+//  DittoNodeClient,
+//  NodeWebSocketBasicAuth,
+//  NodeHttpBasicAuth,
+//  DefaultSearchOptions,
+//  Features,
+//  Thing,
+//  connectionLostError
+//} from "@eclipse-ditto/ditto-javascript-client-node";
+
+//const DittoNodeClient = require("@eclipse-ditto/ditto-javascript-client-node").DittoNodeClient;
+
 import {
   DittoNodeClient,
   NodeWebSocketBasicAuth,
@@ -12,8 +24,10 @@ import {
   DefaultSearchOptions,
   Features,
   Thing,
-  connectionLostError
+  connectionLostError,
 } from "@eclipse-ditto/ditto-javascript-client-node";
+//import {  } from "../dist/node/dist/node/src/node-auth.js";
+//"@eclipse-ditto/ditto-javascript-client-dom";
 
 import WebSocket from "ws";
 import mqtt from "mqtt";
@@ -99,8 +113,11 @@ async function sendDeviceTwin(thingId) {
   console.log("REPORTED PROPERTIES: ", thing.features.agent.properties);
   console.log("DESIRED PROPERTIES: ", thing.features.agent.desiredProperties);
   //TODO: this is an ugly fix
-  if ((thing.features.agent.desiredProperties.status !== "") && (thing.features.agent.properties.status !==
-    thing.features.agent.desiredProperties.status)) {
+  if (
+    thing.features.agent.desiredProperties.status !== "" &&
+    thing.features.agent.properties.status !==
+      thing.features.agent.desiredProperties.status
+  ) {
     mqtt_client.publish(
       downstream_mqtt_topic,
       JSON.stringify(thing),

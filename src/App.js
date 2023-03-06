@@ -7,7 +7,9 @@ import {
   DittoDomClient,
   DomHttpBasicAuth,
   DefaultSearchOptions,
-} from "@eclipse-ditto/ditto-javascript-client-dom"; //"../ditto-client-extensions/lib/api/dist/model/things.model.js"; 
+} from "@eclipse-ditto/ditto-javascript-client-dom";
+
+//"@eclipse-ditto/ditto-javascript-client-dom"; //"../ditto-client-extensions/lib/api/dist/model/things.model.js";
 
 //import { DomHttpBasicAuth } from "./build/dom/src/dom-auth.js";
 //import { DefaultSearchOptions } from "./build/options/request.options.js";
@@ -61,7 +63,9 @@ class App extends Component {
   }
 
   componentDidMount() {
-    this.initDittoClient().then((result) => this.setState({ ditto_client: result}))
+    this.initDittoClient().then((result) =>
+      this.setState({ ditto_client: result })
+    );
     /* this.getDeployments()
       .then((result) => this.setState({ deployments: result }))
       .then(() => this.getAppliedDevices())
@@ -71,7 +75,9 @@ class App extends Component {
       .then(() => this.getActiveDeployments())
       .then((result) => this.setState({ activeDeployments: result })); */
     this.getAllDevices().then((result) => this.setState({ devices: result }));
-    this.getAllTrustAgents().then((result) => this.setState({ trust_agents: result }));
+    this.getAllTrustAgents().then((result) =>
+      this.setState({ trust_agents: result })
+    );
     //.then(() => this.getDeviceTags())
     //.then((result) => this.setState({ deviceTags: result }))
     //.then(() => this.getDeviceProperties())
@@ -214,8 +220,9 @@ class App extends Component {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-    .withFilter('eq(attributes/type,"device")')
-    .withSort("+thingId").withLimit(0, 200);
+      .withFilter('eq(attributes/type,"device")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
     console.info(devices);
@@ -225,10 +232,13 @@ class App extends Component {
   /**
    * Get all trust agents from Ditto
    */
-   getAllTrustAgents = async () => {
+  getAllTrustAgents = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
-    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"software")').withSort("+thingId").withLimit(0, 200);
+    var options = DefaultSearchOptions.getInstance()
+      .withFilter('eq(attributes/type,"software")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var trust_agents = (await searchHandle.search(options)).items;
     console.info(trust_agents);
@@ -243,7 +253,7 @@ class App extends Component {
         DomHttpBasicAuth.newInstance(ditto_username, ditto_password)
       )
       .build();
-      return ditto_client;
+    return ditto_client;
   };
 }
 
