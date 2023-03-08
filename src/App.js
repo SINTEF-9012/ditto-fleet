@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
+import winston_logger from "./logger";
 // import axios from "axios";
 import { Layout, Tabs, Icon, Row, Col } from "antd";
 
@@ -27,6 +28,8 @@ const { TabPane } = Tabs;
 const ditto_domain = "localhost:8080";
 const ditto_username = "ditto";
 const ditto_password = "ditto";
+
+const logger = winston_logger.child({ source: 'App.js' });
 
 const ditto_client = DittoDomClient.newHttpClient()
   .withoutTls()
@@ -225,7 +228,8 @@ class App extends Component {
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
-    console.info(devices);
+    //console.info(devices);
+    logger.debug(JSON.stringify(devices));
     return devices;
   };
 
@@ -241,7 +245,7 @@ class App extends Component {
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var trust_agents = (await searchHandle.search(options)).items;
-    console.info(trust_agents);
+    logger.debug(JSON.stringify(trust_agents));
     return trust_agents;
   };
 
