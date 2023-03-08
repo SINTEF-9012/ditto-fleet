@@ -1,4 +1,4 @@
-// server/index.js
+// server/backend.js
 
 //import { DittoNodeClient } from "../build/node/src/ditto-node-client.js"
 //import { NodeWebSocketBasicAuth, NodeHttpBasicAuth } from "@eclipse-ditto/ditto-javascript-client-node"
@@ -41,7 +41,7 @@ const PORT = process.env.PORT || 3001;
 
 const app = express();
 
-const logger = winston_logger.child({ source: 'Backend' });
+const logger = winston_logger.child({ source: 'backend.js' });
 
 //MQTT connection config
 const mqtt_host = "localhost";

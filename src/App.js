@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
-import winston_logger from "./logger";
+import winston_logger from "./logger.js";
 // import axios from "axios";
 import { Layout, Tabs, Icon, Row, Col } from "antd";
 

@@ -20,10 +20,11 @@
     "react-simple-code-editor": "^0.11.0",
     "react-simple-maps": "2.0.0",
     "read-yaml": "^1.1.0",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "winston-react": "^1.0.0-RC.0"
   },
   "scripts": {
-    "start": "react-scripts start && node ./src/backend/index.js",
+    "start": "react-scripts start && node ./src/backend/backend.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
