@@ -1,0 +1,25 @@
+{
+  "name": "backend",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./src/backend.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ./src/backend.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@eclipse-ditto/ditto-javascript-client-dom": "0.0.4",
+    "@eclipse-ditto/ditto-javascript-client-node": "0.0.4",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^18.14.1",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "express": "^4.18.1",
+    "mqtt": "^4.3.7",
+    "ws": "^8.8.1"
+  }
+}

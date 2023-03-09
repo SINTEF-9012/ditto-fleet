@@ -29,7 +29,12 @@ const ditto_domain = "localhost:8080";
 const ditto_username = "ditto";
 const ditto_password = "ditto";
 
+const PROJECT = process.env.REACT_APP_PROJECT;
+const PROJECT_URL = process.env["REACT_APP_" + PROJECT + "_URL"]
+const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png"
+
 const logger = winston_logger.child({ source: 'App.js' });
+logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
 
 const ditto_client = DittoDomClient.newHttpClient()
   .withoutTls()
@@ -129,8 +134,8 @@ class App extends Component {
                         <span>
                           <img
                             style={{ height: "40px" }}
-                            src="https://eratosthenes-project.eu/wp-content/uploads/2021/09/eratosthenis_l14a-300x69.png"
-                            alt="logo eratosthenes"
+                            src={PROJECT_LOGO}
+                            alt="Project logo"
                           />
                         </span>
                       }
@@ -196,8 +201,8 @@ class App extends Component {
 
             <Footer>
               <p>
-                This work is supported by{" "}
-                <a href="https://eratosthenes-project.eu/">ERATOSTHENES</a> and
+                This work is supported by{" "}                
+                <a href={PROJECT_URL}>{PROJECT}</a> and
                 powered by{" "}
                 <a href="https://www.eclipse.org/ditto/">Eclipse Ditto</a>.
               </p>
