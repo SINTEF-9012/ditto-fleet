@@ -114,7 +114,7 @@ const http_ditto_client = DittoNodeClient.newHttpClient()
 async function sendDeviceTwin(thingId) {
   const thing = await ws_ditto_client.getThingsHandle().getThing(thingId);
   //logger.info(JSON.stringify(thing));
-  logger.info("[Ditto] Reportted properties: ", thing.features.agent.properties);
+  logger.info("[Ditto] Reported properties: ", thing.features.agent.properties);
   logger.info("[Ditto] Desired properties: ", thing.features.agent.desiredProperties);
   //TODO: this is an ugly fix
   if (

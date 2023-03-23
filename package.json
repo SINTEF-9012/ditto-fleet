@@ -20,8 +20,7 @@
     "react-simple-code-editor": "^0.11.0",
     "react-simple-maps": "2.0.0",
     "read-yaml": "^1.1.0",
-    "winston": "^3.8.2",
-    "winston-react": "^1.0.0-RC.0"
+    "winston": "^3.8.2"
   },
   "scripts": {
     "start": "react-scripts start",
