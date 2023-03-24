@@ -1,4 +1,4 @@
-This project is a Digital Twin platform for software management on a fleet of devices within the IoT-Edge-Cloud continuum. The backbone of the platform is [https://www.eclipse.org/ditto/](Eclipse Ditto). The platform also comes with a back-end, which listens for changes in the managed digital twins.
+This project is a Digital Twin platform for software management on a fleet of devices within the IoT-Edge-Cloud continuum. The backbone of the platform is [Eclipse Ditto](https://www.eclipse.org/ditto/). The platform also comes with a back-end, which listens for changes in the managed digital twins.
 
 ## Docker
 
