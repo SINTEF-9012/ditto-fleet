@@ -4,12 +4,12 @@ This project is a Digital Twin platform for software management on a fleet of de
 
 ### Stand-alone Docker container
 
-To run the GUI please pull the latest version of the `dautov:ditto-fleet-gui` image and run the following command:
+To run the GUI please pull the latest version of the `dautov:ditto-fleet-backend` image and run the following command:
 
-`docker run -it -p 3000:3000 rdautov:ditto-fleet-gui`
+`docker run --network="host" -it rdautov:ditto-fleet-backend`
 
-This will run the `npm start` script and launch the React application. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+This will run the `npm start` script and launch the NodeJS application.
 
-### Together with Eclipse Ditto and back-end via Docker-Compose (recommended)
+### Together with Eclipse Ditto and GUI via Docker-Compose (recommended)
 
 TODO
