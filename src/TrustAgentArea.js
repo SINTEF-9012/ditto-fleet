@@ -1,10 +1,13 @@
 import React, { Component } from "react";
-import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal } from "antd";
+import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal, Popconfirm } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
 import { Thing } from "@eclipse-ditto/ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
+import winston_logger from "./logger.js";
+
+const logger = winston_logger.child({ source: 'TrustAgentArea.js' });
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
 const { Content } = Layout;
@@ -100,27 +103,27 @@ export class TrustAgentArea extends Component {
       //add if needed
       visible: false,
       payload: "Hello world!",
-      new_trust_agent_json: require("./resources/trust_agent_template.json"),
+      new_trust_agent_json: require("./resources/cps_agent_template.json"),
     };
     this.editor = React.createRef();
   }
 
   showModal = () => {
-    console.log("showModal");
+    logger.info("showModal");
     this.setState({
       visible: true,
     });
   };
 
   handleOk = (e) => {
-    console.log(e);
+    logger.info(e);
     this.setState({
       visible: false,
     });
   };
 
   handleCancel = (e) => {
-    console.log(e);
+    logger.info(e);
     this.setState({
       visible: false,
     });
@@ -154,8 +157,21 @@ export class TrustAgentArea extends Component {
                   })
                 }
               >
-                Register new trust agent
+                New trust agent
               </Button>
+              <Popconfirm
+                title="Delete all trust agents?"
+                onConfirm={this.deleteAllTrustAgents}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button
+                  type="danger"
+                  style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
+                >
+                  Delete all
+                </Button>
+              </Popconfirm>
             </Col>
           </Row>
           <Row>
@@ -204,12 +220,12 @@ export class TrustAgentArea extends Component {
   createTrustAgent = async () => {
     //var json = require("./resources/thing_template.json");
     const trust_agent = Thing.fromObject(this.state.new_trust_agent_json);
-    console.log(trust_agent);
+    logger.info(trust_agent);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .putThing(trust_agent)
       .then((result) =>
-        console.log(
+      logger.info(
           `Finished putting the new trust agent with result: ${JSON.stringify(
             result
           )}`
@@ -222,13 +238,20 @@ export class TrustAgentArea extends Component {
     thingsHandle
       .deleteThing(trustAgentId)
       .then((result) =>
-        console.log(
+      logger.info(
           `Finished deleting the trust agent with result: ${JSON.stringify(
             result
           )}`
         )
       );
   };
+
+  deleteAllTrustAgents = async () => {    
+    this.context.trust_agents.forEach(agent => {
+      //logger.info(agent.id); 
+      this.deleteTrustAgent(agent.id);        
+    });    
+  }
 
   deployTrustAgentToAll = async (trustAgentId) => {
     //TODO: basic logic to check for suitable devicves in the fleet, and then modify desired propoerties one by one

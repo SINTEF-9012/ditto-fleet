@@ -101,8 +101,8 @@ export class SandboxArea extends Component {
   }
 
   onDelete = async () => {
-    let result = await Axios.delete("api/deployment");
-    return result;    
+    //let result = await Axios.delete("api/deployment");
+    //return result;    
   };
 
   componentDidMount() {

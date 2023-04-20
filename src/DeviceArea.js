@@ -9,6 +9,7 @@ import {
   Badge,
   Modal,
   Select,
+  Popconfirm,
 } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
@@ -19,6 +20,9 @@ import {
 } from "@eclipse-ditto/ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
+import winston_logger from "./logger.js";
+
+const logger = winston_logger.child({ source: 'DeviceArea.js' });
 
 const { Content } = Layout;
 const ButtonGroup = Button.Group;
@@ -80,7 +84,7 @@ export class DeviceArea extends Component {
                   type="primary"
                   icon="edit"
                   onClick={() => {
-                    this.setState({active_device: record.id})
+                    this.setState({ active_device: record.id });
                     this.showModal();
                   }}
                   ghost
@@ -128,7 +132,7 @@ export class DeviceArea extends Component {
       visible: false,
       trust_agent: { value: "" },
       active_device: "",
-      new_device: require("./resources/device_template.json"),
+      new_device: require("./resources/cps_device_template.json"),
       edited_device: "",
     };
     //this.editor = React.createRef();
@@ -141,17 +145,17 @@ export class DeviceArea extends Component {
   };
 
   handleDropdownChange = (value) => {
-    console.log("value", value);
-    console.log(this.state.trust_agent);
+    logger.info("value", value);
+    logger.info(this.state.trust_agent);
     this.setState({ trust_agent: JSON.parse(value) });
-    console.log("trust_agent", this.state.trust_agent);
+    logger.info("trust_agent", this.state.trust_agent);
   };
 
   handleOkEdit = (e) => {
-    //console.log(e);
+    //logger.info(e);
     //TODO: edit the twin
     let thingId = this.state.active_device;
-    let desired_agent = this.state.trust_agent
+    let desired_agent = this.state.trust_agent;
     this.deployTrustAgent(thingId, desired_agent._attributes);
     this.setState({
       visible: false,
@@ -161,15 +165,15 @@ export class DeviceArea extends Component {
   };
 
   handleCancelEdit = (e) => {
-    console.log(e);
+    logger.info(e);
     this.setState({
       visible: false,
     });
   };
 
   handleChange = (value) => {
-    this.setState({new_device: value});
-  }
+    this.setState({ new_device: value });
+  };
 
   render() {
     return (
@@ -198,8 +202,21 @@ export class DeviceArea extends Component {
                   })
                 }
               >
-                Register new device
+                New device twin
               </Button>
+              <Popconfirm
+                title="Delete all device twins?"
+                onConfirm={this.deleteAllTwins}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button
+                  type="danger"
+                  style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
+                >
+                  Delete all
+                </Button>
+              </Popconfirm>
             </Col>
           </Row>
           <Row>
@@ -227,17 +244,17 @@ export class DeviceArea extends Component {
   componentDidMount() {
     //add something if needed
   }
-
+ 
   createDeviceTwin = async () => {
-    console.log(this.state.new_device);
+    logger.info(this.state.new_device);
     var device = Thing.fromObject(this.state.new_device);
-    console.log(device);
+    logger.info(device);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .putThing(device)
       .then((result) =>
-        console.log(
-          `Finished putting the new device with result: ${JSON.stringify(
+      logger.info(
+          `Finished putting the new device twin with the result: ${JSON.stringify(
             result
           )}`
         )
@@ -249,48 +266,59 @@ export class DeviceArea extends Component {
     thingsHandle
       .deleteThing(thingId)
       .then((result) =>
-        console.log(
-          `Finished deleting the device with result: ${JSON.stringify(result)}`
+      logger.info(
+          `Finished deleting the device twin with the result: ${JSON.stringify(result)}`
         )
       );
   };
 
+  deleteAllTwins = async () => {    
+    this.context.devices.forEach(device => {
+      //logger.info(device.id); 
+      this.deleteDeviceTwin(device.id);        
+    });    
+  };
+
   deployTrustAgent = async (thingId, desired_agent) => {
     //var test_handle = new DesiredPropertyFeaturesHandle();
-    //console.info(test_handle.constructor.name);
-    
+    //logger.info(test_handle.constructor.name);
+
     //var test = Feature.fromObject({ desiredProperties: {} });
-    //console.info(test);
+    //logger.info(test);
     desired_agent.status = "running";
-    console.info(desired_agent);
+    logger.info(desired_agent);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    featuresHandle.putDesiredProperties("agent", desired_agent).then((result) =>
-    console.log(
-      `Finished updating the device twin with result: ${JSON.stringify(result)}`
-    )
-  );
-    //var desired_agent = 
+    featuresHandle
+      .putDesiredProperties("agent", desired_agent)
+      .then((result) =>
+      logger.info(
+          `Finished updating the device twin with result: ${JSON.stringify(
+            result
+          )}`
+        )
+      );
+    //var desired_agent =
     //featuresHandle.putProperties("agent", {
     //  version: "hi there!",
     //  status: "oh no",
     //});
 
     // TODO: send an MQTT message to an adapter
-    console.info("Sending a MQTT message to deploy a trust agent");
+    logger.info("Sending a MQTT message to deploy a trust agent");
   };
 
   updateDeviceTwin = async () => {
-    console.log(this.state.edited_device.features);
+    logger.info(this.state.edited_device.features);
     var features = Features.fromObject(this.state.edited_device._features);
-    console.log("DEVICE FEATURES: ", features);
-    console.log("DEVICE ID: ", this.state.edited_device._thingId);
+    logger.info("DEVICE FEATURES: ", features);
+    logger.info("DEVICE ID: ", this.state.edited_device._thingId);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(
       this.state.edited_device._thingId
     );
     featuresHandle
       .putFeatures(features)
       .then((result) =>
-        console.log(
+      logger.info(
           `Finished updating the device with result: ${JSON.stringify(result)}`
         )
       );

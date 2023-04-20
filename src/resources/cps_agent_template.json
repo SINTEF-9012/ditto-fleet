@@ -1,0 +1,66 @@
+{
+  "thingId": "no.sintef.sct.giot:REPLACE_WITH_UNIQUE_AGENT_ID",
+  "policyId": "no.sintef.sct.giot:policy",
+  "attributes": {
+    "type": "software",
+    "url": "",
+    "localFile": "",
+    "remoteFile": "mockupAgent",
+    "developer": "",
+    "signature": "",
+    "image": "",
+    "cmd": "",
+    "cwd": "",
+    "manufacturer": "Raspberry",
+    "architecture": "arm",
+    "os": {
+      "name": "Raspberry Pi OS",
+      "version": "5.15"
+    }
+  },
+  "features": {
+    "cyber": {
+      "properties": {
+        "docker": {
+          "version": "containerd.io_1.2.0-1_arm64.deb",
+          "url": "https://download.docker.com/linux/debian/dists/buster/pool/stable/arm64/containerd.io_1.2.0-1_arm64.deb",
+          "status": ""
+        },
+        "proxy": {
+          "enabled": false,
+          "host": "",
+          "port": ""
+        },
+        "ssh": {
+          "enabled": false,
+          "port": 443
+        },
+        "meta": {
+          "latestState": "",
+          "lastOperation": "",
+          "lastTried": "",
+          "lastSeen": ""
+        }
+      }
+    },
+    "physical": {
+      "properties": {
+        "powerSupply": {
+          "source": "constant_power_supply"
+        },
+        "location": {
+          "latitude": "",
+          "longitude": ""
+        }
+      }
+    },
+    "social": {
+      "properties": {
+        "subscription": {
+          "type": "premium",
+          "expires": ""
+        }
+      }
+    }
+  }
+}
