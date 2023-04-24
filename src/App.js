@@ -18,7 +18,7 @@ import {
 
 import { TrustAgentArea } from "./TrustAgentArea";
 import { DeviceArea } from "./DeviceArea";
-import { SandboxArea } from "./SandboxArea";
+import { AssignmentArea } from "./AssignmentArea";
 import { GlobalContext } from "./GlobalContext";
 
 const { Footer, Content } = Layout;
@@ -181,11 +181,11 @@ class App extends Component {
                       tab={
                         <span>
                           <Icon type="code-sandbox" />
-                          Sandbox
+                          Assignments
                         </span>
                       }
                     >
-                      <SandboxArea
+                      <AssignmentArea
                       //devices={devices}
                       //deployments={deployments}
                       //activeDeployments={activeDeployments}
@@ -245,13 +245,29 @@ class App extends Component {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-      .withFilter('eq(attributes/type,"software")')
+      .withFilter('eq(attributes/type,"agent")')
       .withSort("+thingId")
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var trust_agents = (await searchHandle.search(options)).items;
     logger.debug(JSON.stringify(trust_agents));
     return trust_agents;
+  };
+
+  /**
+   * Get all trust agents from Ditto
+   */
+  getAllAssignments = async () => {
+    const searchHandle = ditto_client.getSearchHandle();
+
+    var options = DefaultSearchOptions.getInstance()
+      .withFilter('eq(attributes/type,"assignment")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
+    //searchHandle.search(options).then(result => console.log("returned",result.items))
+    var assignments = (await searchHandle.search(options)).items;
+    logger.debug(JSON.stringify(assignments));
+    return assignments;
   };
 
   initDittoClient = async () => {
