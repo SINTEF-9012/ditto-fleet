@@ -70,21 +70,20 @@ export class DeviceArea extends Component {
                       //width: 600,
                       //height: 300,
                       content: (
-                        <div>
-                          <Select
-                            style={{ width: 310 }}
-                            onSelect={this.handleDropdownChange}
-                          >
-                            {this.context.trust_agents.map((item) => (
-                              <Option
-                                key={item._thingId}
-                                value={JSON.stringify(item)}
-                              >
-                                {item._thingId}
-                              </Option>
-                            ))}
-                          </Select>
-                        </div>
+                        <Select
+                          style={{ width: '100%' }}
+                          align="middle"
+                          onSelect={this.handleDropdownChange}
+                        >
+                          {this.context.trust_agents.map((item) => (
+                            <Option
+                              key={item._thingId}
+                              value={JSON.stringify(item)}
+                            >
+                              {item._thingId}
+                            </Option>
+                          ))}
+                        </Select>
                       ),
                       onOk: () => {
                         this.deployTrustAgent(

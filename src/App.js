@@ -30,10 +30,10 @@ const ditto_username = "ditto";
 const ditto_password = "ditto";
 
 const PROJECT = process.env.REACT_APP_PROJECT;
-const PROJECT_URL = process.env["REACT_APP_" + PROJECT + "_URL"]
-const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png"
+const PROJECT_URL = process.env["REACT_APP_" + PROJECT + "_URL"];
+const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png";
 
-const logger = winston_logger.child({ source: 'App.js' });
+const logger = winston_logger.child({ source: "App.js" });
 logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
 
 const ditto_client = DittoDomClient.newHttpClient()
@@ -53,6 +53,7 @@ class App extends Component {
       //variants: [],
       devices: [],
       trust_agents: [],
+      cyber_properties: [],
       //forEdit: null,
       //edited: null,
       //appliedDevices: {},
@@ -82,7 +83,13 @@ class App extends Component {
       .then((result) => this.setState({ targetedDevices: result }))
       .then(() => this.getActiveDeployments())
       .then((result) => this.setState({ activeDeployments: result })); */
-    this.getAllDevices().then((result) => this.setState({ devices: result }));
+    this.getAllDevices()
+      .then((result) => this.setState({ devices: result }))
+      .then(() =>
+        this.populatePropertyTags().then((result) =>
+          this.setState({ cyber_properties: result })
+        )
+      );
     this.getAllTrustAgents().then((result) =>
       this.setState({ trust_agents: result })
     );
@@ -107,7 +114,7 @@ class App extends Component {
   };
 
   render() {
-    const { devices, trust_agents, activeTab } = this.state;
+    const { activeTab } = this.state;
 
     return (
       <GlobalContext.Provider value={this.state}>
@@ -201,9 +208,8 @@ class App extends Component {
 
             <Footer>
               <p>
-                This work is supported by{" "}                
-                <a href={PROJECT_URL}>{PROJECT}</a> and
-                powered by{" "}
+                This work is supported by <a href={PROJECT_URL}>{PROJECT}</a>{" "}
+                and powered by{" "}
                 <a href="https://www.eclipse.org/ditto/">Eclipse Ditto</a>.
               </p>
               <p>
@@ -269,6 +275,26 @@ class App extends Component {
     logger.debug(JSON.stringify(assignments));
     return assignments;
   };
+
+  populatePropertyTags = async () => {
+    logger.info(this.state.devices)
+    let cyber_properties = new Set();
+    this.state.devices.forEach((device) => {
+      if (device._features.hasOwnProperty("cyber")) {
+        Object.entries(device._features.cyber._properties).forEach(
+          ([key, value]) => {
+            cyber_properties.add(key);
+            //logger.info(key);
+          }
+        );
+      }
+    });
+    cyber_properties.forEach(function (entry) {
+      logger.info(entry);
+    });
+    let a = Array.from(cyber_properties)
+    return a;
+  }
 
   initDittoClient = async () => {
     const ditto_client = DittoDomClient.newHttpClient()
