@@ -207,7 +207,9 @@ class App extends Component {
   getAllDevices = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
-    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"device")').withSort("+thingId").withLimit(0, 200);
+    var options = DefaultSearchOptions.getInstance()
+    .withFilter('eq(attributes/type,"device")')
+    .withSort("+thingId").withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
     console.info(devices);

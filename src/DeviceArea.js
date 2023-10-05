@@ -21,7 +21,7 @@ export class DeviceArea extends Component {
         title: "Device ID",
         dataIndex: "_thingId",
         align: "left",
-        //width: 100,
+        //width: 100, 
         render: (text, record) => (
           //this.context.deviceTags[record.id].status === "failed" ? (
           //  <span>
