@@ -1,14 +1,15 @@
 {
     "thingId": "no.sintef.sct.giot:SINTEF9977",    
     "attributes": {
-        "arch": "x86-64"
+        "type": "device",
+        "arch": "x86-64",
+        "host": "localhost",
+        "info": ""
     },
     "features": {
         "execEnv": {
             "properties": {
-                "_type": "exec_env",
-                "name": "docker_engine",
-                "host": "localhost",
+                "name": "docker_engine",                
                 "port": "2375"
             }
         },

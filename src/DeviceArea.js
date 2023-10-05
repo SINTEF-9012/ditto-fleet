@@ -1,15 +1,33 @@
 import React, { Component } from "react";
-import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal } from "antd";
+import {
+  Button,
+  Layout,
+  Col,
+  Row,
+  Table,
+  Tooltip,
+  Badge,
+  Modal,
+  Select,
+  Popconfirm,
+} from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
-import { Feature, Thing } from "@eclipse-ditto/ditto-javascript-client-node";
+import {
+  Feature,
+  Thing,
+  Features,
+} from "@eclipse-ditto/ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
-import { DesiredPropertyFeaturesHandle } from "./extensions/DesiredPropertyFeaturesHandle";
+import winston_logger from "./logger.js";
 
-//import { Map, Marker, Overlay } from "pigeon-maps";
+const logger = winston_logger.child({ source: "DeviceArea.js" });
+
 const { Content } = Layout;
 const ButtonGroup = Button.Group;
+const { Option } = Select;
+//const { confirm } = Modal;
 
 export class DeviceArea extends Component {
   static contextType = GlobalContext;
@@ -34,113 +52,77 @@ export class DeviceArea extends Component {
             {record._thingId}
           </span>
         ),
-        //),
       },
-      /* {
-        title: "Tags",
-        dataIndex: "tags",
-        render: (text, record) =>
-          this.context.deviceTags[record.id] &&
-          Object.keys({
-            ...this.context.deviceTags[record.id],
-            ...this.context.deviceProperties[record.id],
-          }).map((key, i) => (
-            <Tag color={colors[i]}>
-              {key}:{" "}
-              {
-                {
-                  ...this.context.deviceTags[record.id],
-                  ...this.context.deviceProperties[record.id],
-                }[key]
-              }
-            </Tag>
-          )),
-        width: 250,
-      }, */
       {
         title: "Actions",
         width: 150,
-        align: "center",
+        align: "right",
         render: (text, record) => (
           <span style={{ float: "center" }}>
-            <Modal
-              mask={false}
-              title="Basic modal"
-              visible={this.state.visible}
-              onOk={this.handleOk}
-              onCancel={this.handleCancel}
-            >
-              <p>Some contents...</p>
-              <p>Some contents...</p>
-              <p>Some contents...</p>
-            </Modal>
             <ButtonGroup size="small" type="dashed">
-              <Tooltip title="Deploy trust agent">
+              <Tooltip title="Deploy a trust agent">
                 <Button
                   type="primary"
-                  icon="cloud-download"
+                  icon="safety-certificate"
                   onClick={() =>
                     Modal.confirm({
-                      title: "Deploy a trust agent on: " + record.id,
+                      title: "Deploy a trust agent",
+                      //width: 600,
+                      //height: 300,
+                      content: (
+                        <Select
+                          style={{ width: '100%' }}
+                          align="middle"
+                          onSelect={this.handleDropdownChange}
+                        >
+                          {this.context.trust_agents.map((item) => (
+                            <Option
+                              key={item._thingId}
+                              value={JSON.stringify(item)}
+                            >
+                              {item._thingId}
+                            </Option>
+                          ))}
+                        </Select>
+                      ),
                       onOk: () => {
-                        this.deployTrustAgent(record.id, null);
+                        this.deployTrustAgent(
+                          this.state.active_device._thingId,
+                          this.state.trust_agent
+                        );
                       },
                       onCancel: () => {
-                        this.setState({ payload: "Hello world!" });
+                        this.handleCancelEdit();
                       },
                     })
                   }
                   ghost
                 />
               </Tooltip>
-              <Tooltip title="Start trust agent">
+              <Tooltip title="Edit digital twin">
                 <Button
                   type="primary"
-                  icon="play-circle"
+                  icon="edit"
                   onClick={() =>
                     Modal.confirm({
-                      title: "Start a trust agent on: " + record.id,
+                      title: "Edit device twin",
+                      width: 800,
+                      height: 600,
+                      content: (
+                        <Editor
+                          value={this.state.active_device}
+                          onChange={this.handleExistingTwinChange}
+                        />
+                      ),
                       onOk: () => {
-                        this.startTrustAgent(record.id);
+                        //TODO: update the digital twin
+                        //this.deployTrustAgent(
+                        //  this.state.active_device,
+                        //  this.state.trust_agent
+                        //);
                       },
                       onCancel: () => {
-                        //this.setState({ payload: "Hello world!" });
-                      },
-                    })
-                  }
-                  ghost
-                />
-              </Tooltip>
-              <Tooltip title="Stop trust agent">
-                <Button
-                  type="primary"
-                  icon="pause-circle"
-                  onClick={() =>
-                    Modal.confirm({
-                      title: "Stop the trust agent on: " + record.id,
-                      onOk: () => {
-                        this.stopTrustAgent(record.id);
-                      },
-                      onCancel: () => {
-                        //this.setState({ payload: "Hello world!" });
-                      },
-                    })
-                  }
-                  ghost
-                />
-              </Tooltip>
-              <Tooltip title="Roll back trust agent">
-                <Button
-                  type="primary"
-                  icon="cloud-upload"
-                  onClick={() =>
-                    Modal.confirm({
-                      title: "Undeploy the trust agent from: " + record.id,
-                      onOk: () => {
-                        this.rollbackTrustAgent(record.id);
-                      },
-                      onCancel: () => {
-                        //this.setState({ payload: "Hello world!" });
+                        this.handleCancelEdit();
                       },
                     })
                   }
@@ -151,7 +133,18 @@ export class DeviceArea extends Component {
                 <Button
                   type="primary"
                   icon="delete"
-                  onClick={() => this.deleteDevice(record.id)}
+                  onClick={() =>
+                    Modal.confirm({
+                      title: "Delete device twin: " + record.id,
+                      width: 800,
+                      onOk: () => {
+                        this.deleteDeviceTwin(record.id);
+                      },
+                      onCancel: () => {
+                        this.handleCancelEdit();
+                      },
+                    })
+                  }
                   ghost
                 />
               </Tooltip>
@@ -177,32 +170,64 @@ export class DeviceArea extends Component {
     ];
     this.state = {
       //add if needed
-      visible: false,
-      payload: "Hello world!",
-      new_device_json: require('./resources/device_template.json')
+      trust_agent: { value: "" },
+      active_device: "",
+      new_device: require("./resources/cps_device_template.json"),
+      edited_device: "",
     };
-    this.editor = React.createRef();
   }
 
-  showModal = () => {
-    console.log("showModal");
+  /* showModal = (thingId) => {
+    Modal.confirm({
+      title: "Deploy a trust agent",
+      //width: 600,
+      //height: 300,
+      content: (
+        <div>
+          <Select style={{ width: 310 }} onSelect={this.handleDropdownChange}>
+            {this.context.trust_agents.map((item) => (
+              <Option key={item._thingId} value={JSON.stringify(item)}>
+                {item._thingId}
+              </Option>
+            ))}
+          </Select>
+        </div>
+      ),
+      onOk: () => {
+        this.createDeviceTwin(this.state.new_device);
+      },
+      onCancel: () => {},
+    });
+  }; */
+
+  handleDropdownChange = (value) => {
+    //logger.info("value", value);
+    //logger.info("trust_agent", this.state.trust_agent);
+    this.setState({ trust_agent: JSON.parse(value) });
+  };
+
+  handleOkEdit = (e) => {
+    //logger.info(e);
+    //TODO: edit the whole twin, not just the trust agent
+    let thingId = this.state.active_device._thingId;
+    let desired_agent = this.state.trust_agent;
+    this.deployTrustAgent(thingId, desired_agent._attributes);
     this.setState({
-      visible: true,
+      active_device: {},
+      trust_agent: {},
     });
   };
 
-  handleOk = (e) => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
+  handleCancelEdit = (e) => {
+    logger.info(e);
   };
 
-  handleCancel = (e) => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
+  handleNewTwinChange = (value) => {
+    this.setState({ new_device: value });
+  };
+
+  handleExistingTwinChange = (value) => {
+    this.setState({ new_device: value });
   };
 
   render() {
@@ -216,21 +241,39 @@ export class DeviceArea extends Component {
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new device in Eclipse Ditto",
+                    title: "Create a new device twin",
+                    width: 800,
+                    height: 800,
                     content: (
-                      <Editor value={this.state.new_device_json} onChange={this.handleChange} />
+                      <Editor
+                        value={this.state.new_device}
+                        onChange={this.handleNewTwinChange}
+                      />
                     ),
                     onOk: () => {
-                      this.createDevice(this.state.new_device_json);
+                      this.createDeviceTwin(this.state.new_device);
                     },
                     onCancel: () => {
-                      this.setState({ payload: "Hello world!" });
+                      this.handleCancelEdit();
                     },
                   })
                 }
               >
-                Register new device
+                New device twin
               </Button>
+              <Popconfirm
+                title="Delete all device twins?"
+                onConfirm={this.deleteAllTwins}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button
+                  type="danger"
+                  style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
+                >
+                  Delete all
+                </Button>
+              </Popconfirm>
             </Col>
           </Row>
           <Row>
@@ -242,51 +285,20 @@ export class DeviceArea extends Component {
                 dataSource={this.context.devices}
                 columns={this.columns}
                 pagination={{ pageSize: 50 }}
+                onRow={(record) => {
+                  return {
+                    onClick: (event) => {
+                      this.setState({ active_device: record });
+                    }, // click row
+                  };
+                }}
                 //scroll={{ y: 500 }}
                 //expandRowByClick={true}
                 expandedRowRender={(record) => (
-                  <span>
-                    <ReactJson src={record} enableClipboard={false} />
-                    {/* <Table
-                      columns={this.nestedColumns}
-                      dataSource={
-                        this.context.activeDeployments[record.id]
-                          ? Object.values(
-                              this.context.activeDeployments[record.id]
-                            )
-                          : []
-                      }
-                      pagination={false}
-                    /> */}
-                  </span>
+                  <ReactJson src={record} enableClipboard={false} />
                 )}
               />
             </Col>
-            {/* <Col
-              span={12}
-              style={{ backgroundColor: "lightblue", height: "500px" }}
-            >
-              <Map
-                defaultCenter={[59.913, 10.752]}
-                defaultZoom={10}
-                width={1000}
-                height={600}
-              >
-                {this.context.devices
-                  .filter((item) => {
-                    return "properties.lat" in item.properties;
-                  })
-                  .map(({ id, properties }) => (
-                    <Marker
-                      anchor={[
-                        parseFloat(properties["properties.lat"]),
-                        parseFloat(properties["properties.lon"]),
-                      ]}
-                      payload={2}
-                    />
-                  ))}
-              </Map>
-            </Col> */}
           </Row>
         </Content>
       </Layout>
@@ -297,86 +309,82 @@ export class DeviceArea extends Component {
     //add something if needed
   }
 
-  handleChange = value => {    
-    this.setState({ new_device_json: value });
-  };
-
-  createDevice = async () => {
-    console.log(this.state.new_device_json);
-    var device = Thing.fromObject(this.state.new_device_json);
-    console.log(device);
+  createDeviceTwin = async () => {
+    logger.info(this.state.new_device);
+    var device = Thing.fromObject(this.state.new_device);
+    logger.info(device);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .putThing(device)
       .then((result) =>
-        console.log(
-          `Finished putting the new device with result: ${JSON.stringify(
+        logger.info(
+          `Finished putting the new device twin with the result: ${JSON.stringify(
             result
           )}`
         )
       );
   };
 
-  deleteDevice = async (thingId) => {
+  deleteDeviceTwin = async (thingId) => {
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .deleteThing(thingId)
       .then((result) =>
-        console.log(
-          `Finished deleting the device with result: ${JSON.stringify(result)}`
+        logger.info(
+          `Finished deleting the device twin with the result: ${JSON.stringify(
+            result
+          )}`
         )
       );
   };
 
-  deployTrustAgent = async (thingId, trust_agent) => {
-    //var test_handle = new DesiredPropertyFeaturesHandle();
-    //console.info(test_handle.constructor.name);
-    var test = Feature.fromObject({"desiredProperties": {}});
-    console.info(test);
+  deleteAllTwins = async () => {
+    this.context.devices.forEach((device) => {
+      //logger.info(device.id);
+      this.deleteDeviceTwin(device.id);
+    });
+  };
+
+  deployTrustAgent = async (thingId, desired_agent) => {
+    //FIXME: this overwrites all of desired properties under some feature! Solution: read the desired propoerties first, append some new value and put them back.
+    //FIXME: do not include features in desired trust agents, only attributes!
+    desired_agent.status = "running";
+    logger.info("Desired agent", desired_agent);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    console.info(featuresHandle.constructor.name);
-    //featuresHandle.putProperties("trustAgent", {
+    featuresHandle
+      .putDesiredProperties("cyber", { trustAgent: desired_agent })
+      .then((result) =>
+        logger.info(
+          `Finished updating the device twin with result: ${JSON.stringify(
+            result
+          )}`
+        )
+      );
+    //var desired_agent =
+    //featuresHandle.putProperties("agent", {
     //  version: "hi there!",
     //  status: "oh no",
     //});
 
     // TODO: send an MQTT message to an adapter
-    console.info("Sending a MQTT message to deploy a trust agent");
+    logger.info("Sending a MQTT message to deploy a trust agent");
   };
 
-  startTrustAgent = async (thingId) => {
-    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    //console.info(featuresHandle.getProperties("trustAgent"));
-    //featuresHandle.putProperties("trustAgent", {
-    //  version: "hi there!",
-    //  status: "oh no",
-    //});
-
-    // TODO: send an MQTT message to an adapter
-    console.info("Sending a MQTT message to start the trust agent");
-  };
-
-  stopTrustAgent = async (thingId) => {
-    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    //console.info(featuresHandle.getProperties("trustAgent"));
-    //featuresHandle.putProperties("trustAgent", {
-    //  version: "hi there!",
-    //  status: "oh no",
-    //});
-
-    // TODO: send an MQTT message to an adapter
-    console.info("Sending a MQTT message to stop the trust agent");
-  };
-
-  rollbackTrustAgent = async (thingId) => {
-    //const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    //console.info(featuresHandle.getProperties("trustAgent"));
-    //featuresHandle.putProperties("trustAgent", {
-    //  version: "hi there!",
-    //  status: "oh no",
-    //});
-
-    // TODO: send an MQTT message to an adapter
-    console.info("Sending a MQTT message to roll back the trust agent");
+  updateDeviceTwin = async () => {
+    //TODO: sort out how it is different from deployTrustAgent()
+    logger.info(this.state.edited_device.features);
+    var features = Features.fromObject(this.state.edited_device._features);
+    logger.info("DEVICE FEATURES: ", features);
+    logger.info("DEVICE ID: ", this.state.edited_device._thingId);
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(
+      this.state.edited_device._thingId
+    );
+    featuresHandle
+      .putFeatures(features)
+      .then((result) =>
+        logger.info(
+          `Finished updating the device with result: ${JSON.stringify(result)}`
+        )
+      );
   };
 }

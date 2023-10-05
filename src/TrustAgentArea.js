@@ -1,10 +1,13 @@
 import React, { Component } from "react";
-import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal } from "antd";
+import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal, Popconfirm } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
-import { Thing } from "@eclipse-ditto/ditto-javascript-client-node";
+import { Thing } from "@eclipse-ditto/ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
+import winston_logger from "./logger.js";
+
+const logger = winston_logger.child({ source: 'TrustAgentArea.js' });
 
 //import { Map, Marker, Overlay } from "pigeon-maps";
 const { Content } = Layout;
@@ -34,27 +37,6 @@ export class TrustAgentArea extends Component {
         ),
         //),
       },
-      /* {
-        title: "Tags",
-        dataIndex: "tags",
-        render: (text, record) =>
-          this.context.deviceTags[record.id] &&
-          Object.keys({
-            ...this.context.deviceTags[record.id],
-            ...this.context.deviceProperties[record.id],
-          }).map((key, i) => (
-            <Tag color={colors[i]}>
-              {key}:{" "}
-              {
-                {
-                  ...this.context.deviceTags[record.id],
-                  ...this.context.deviceProperties[record.id],
-                }[key]
-              }
-            </Tag>
-          )),
-        width: 250,
-      }, */
       {
         title: "Actions",
         width: 100,
@@ -72,7 +54,23 @@ export class TrustAgentArea extends Component {
               <p>Some contents...</p>
               <p>Some contents...</p>
             </Modal>
-            <ButtonGroup size="small" type="dashed">                          
+            <ButtonGroup size="small" type="dashed">
+              <Tooltip title="Deploy on all suitable devices">
+                <Button
+                  type="primary"
+                  icon="deployment-unit"
+                  onClick={() => this.deployTrustAgentToAll(record.id)}
+                  ghost
+                />
+              </Tooltip>
+              {/* <Tooltip title="Deploy on selected devices">
+                <Button
+                  type="primary"
+                  icon="deployment-unit"
+                  onClick={() => this.deployTrustAgentToSelected(record.id, record.id)}
+                  ghost
+                />
+              </Tooltip> */}
               <Tooltip title="Delete trust agent">
                 <Button
                   type="primary"
@@ -105,27 +103,27 @@ export class TrustAgentArea extends Component {
       //add if needed
       visible: false,
       payload: "Hello world!",
-      new_trust_agent_json: require("./resources/trust_agent_template.json"),
+      new_trust_agent_json: require("./resources/cps_agent_template.json"),
     };
     this.editor = React.createRef();
   }
 
   showModal = () => {
-    console.log("showModal");
+    logger.info("showModal");
     this.setState({
       visible: true,
     });
   };
 
   handleOk = (e) => {
-    console.log(e);
+    logger.info(e);
     this.setState({
       visible: false,
     });
   };
 
   handleCancel = (e) => {
-    console.log(e);
+    logger.info(e);
     this.setState({
       visible: false,
     });
@@ -142,7 +140,8 @@ export class TrustAgentArea extends Component {
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new trust agent in Eclipse Ditto",
+                    title: "Create a new trust agent",
+                    width: 800,
                     content: (
                       <Editor
                         value={this.state.new_trust_agent_json}
@@ -153,13 +152,26 @@ export class TrustAgentArea extends Component {
                       this.createTrustAgent(this.state.new_trust_agent_json);
                     },
                     onCancel: () => {
-                      this.setState({ payload: "Hello world!" });
+                      //this.setState({ payload: "Hello world!" });
                     },
                   })
                 }
               >
-                Register new trust agent
+                New trust agent
               </Button>
+              <Popconfirm
+                title="Delete all trust agents?"
+                onConfirm={this.deleteAllTrustAgents}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button
+                  type="danger"
+                  style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
+                >
+                  Delete all
+                </Button>
+              </Popconfirm>
             </Col>
           </Row>
           <Row>
@@ -190,32 +202,7 @@ export class TrustAgentArea extends Component {
                   </span>
                 )}
               />
-            </Col>
-            {/* <Col
-              span={12}
-              style={{ backgroundColor: "lightblue", height: "500px" }}
-            >
-              <Map
-                defaultCenter={[59.913, 10.752]}
-                defaultZoom={10}
-                width={1000}
-                height={600}
-              >
-                {this.context.devices
-                  .filter((item) => {
-                    return "properties.lat" in item.properties;
-                  })
-                  .map(({ id, properties }) => (
-                    <Marker
-                      anchor={[
-                        parseFloat(properties["properties.lat"]),
-                        parseFloat(properties["properties.lon"]),
-                      ]}
-                      payload={2}
-                    />
-                  ))}
-              </Map>
-            </Col> */}
+            </Col>            
           </Row>
         </Content>
       </Layout>
@@ -233,12 +220,12 @@ export class TrustAgentArea extends Component {
   createTrustAgent = async () => {
     //var json = require("./resources/thing_template.json");
     const trust_agent = Thing.fromObject(this.state.new_trust_agent_json);
-    console.log(trust_agent);
+    logger.info(trust_agent);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .putThing(trust_agent)
       .then((result) =>
-        console.log(
+      logger.info(
           `Finished putting the new trust agent with result: ${JSON.stringify(
             result
           )}`
@@ -251,11 +238,40 @@ export class TrustAgentArea extends Component {
     thingsHandle
       .deleteThing(trustAgentId)
       .then((result) =>
-        console.log(
+      logger.info(
           `Finished deleting the trust agent with result: ${JSON.stringify(
             result
           )}`
         )
       );
   };
+
+  deleteAllTrustAgents = async () => {    
+    this.context.trust_agents.forEach(agent => {
+      //logger.info(agent.id); 
+      this.deleteTrustAgent(agent.id);        
+    });    
+  }
+
+  deployTrustAgentToAll = async (trustAgentId) => {
+    //TODO: basic logic to check for suitable devicves in the fleet, and then modify desired propoerties one by one
+    //const thingsHandle = this.context.ditto_client.getThingsHandle();
+    //thingsHandle
+    //  .deleteThing(trustAgentId)
+    //  .then((result) =>
+    //    console.log(
+    //      `Finished deleting the trust agent with result: ${JSON.stringify(
+    //        result
+    //      )}`
+    //    )
+    //  );
+  };
+
+  deployTrustAgentToSelected = async (trustAgentId, deviceId) => {
+    //TODO: modify desired properties of that device. Maybe check if it is suitable in the first place.    
+  };
+
+  checkSuitability(trustAgent, devices) {
+    //TODO: check if main attributes of the trust agent are satisfied by all available devices. 
+  }
 }

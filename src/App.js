@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
+import winston_logger from "./logger.js";
 // import axios from "axios";
 import { Layout, Tabs, Icon, Row, Col } from "antd";
 
@@ -8,17 +9,32 @@ import {
   DomHttpBasicAuth,
   DefaultSearchOptions,
 } from "@eclipse-ditto/ditto-javascript-client-dom";
+
+//"@eclipse-ditto/ditto-javascript-client-dom"; //"../ditto-client-extensions/lib/api/dist/model/things.model.js";
+
+//import { DomHttpBasicAuth } from "./build/dom/src/dom-auth.js";
+//import { DefaultSearchOptions } from "./build/options/request.options.js";
+//import { DittoDomClient } from "./build/dom/src/ditto-dom-client.js";
+
 import { TrustAgentArea } from "./TrustAgentArea";
 import { DeviceArea } from "./DeviceArea";
-import { SandboxArea } from "./SandboxArea";
+import { AssignmentArea } from "./AssignmentArea";
 import { GlobalContext } from "./GlobalContext";
 
 const { Footer, Content } = Layout;
 const { TabPane } = Tabs;
 
+// Ditto connection config
 const ditto_domain = "localhost:8080";
 const ditto_username = "ditto";
 const ditto_password = "ditto";
+
+const PROJECT = process.env.REACT_APP_PROJECT;
+const PROJECT_URL = process.env["REACT_APP_" + PROJECT + "_URL"];
+const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png";
+
+const logger = winston_logger.child({ source: "App.js" });
+logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
 
 const ditto_client = DittoDomClient.newHttpClient()
   .withoutTls()
@@ -37,6 +53,7 @@ class App extends Component {
       //variants: [],
       devices: [],
       trust_agents: [],
+      cyber_properties: [],
       //forEdit: null,
       //edited: null,
       //appliedDevices: {},
@@ -55,7 +72,9 @@ class App extends Component {
   }
 
   componentDidMount() {
-    this.initDittoClient().then((result) => this.setState({ ditto_client: result}))
+    this.initDittoClient().then((result) =>
+      this.setState({ ditto_client: result })
+    );
     /* this.getDeployments()
       .then((result) => this.setState({ deployments: result }))
       .then(() => this.getAppliedDevices())
@@ -64,8 +83,16 @@ class App extends Component {
       .then((result) => this.setState({ targetedDevices: result }))
       .then(() => this.getActiveDeployments())
       .then((result) => this.setState({ activeDeployments: result })); */
-    this.getAllDevices().then((result) => this.setState({ devices: result }));
-    this.getAllTrustAgents().then((result) => this.setState({ trust_agents: result }));
+    this.getAllDevices()
+      .then((result) => this.setState({ devices: result }))
+      .then(() =>
+        this.populatePropertyTags().then((result) =>
+          this.setState({ cyber_properties: result })
+        )
+      );
+    this.getAllTrustAgents().then((result) =>
+      this.setState({ trust_agents: result })
+    );
     //.then(() => this.getDeviceTags())
     //.then((result) => this.setState({ deviceTags: result }))
     //.then(() => this.getDeviceProperties())
@@ -87,7 +114,7 @@ class App extends Component {
   };
 
   render() {
-    const { devices, trust_agents, activeTab } = this.state;
+    const { activeTab } = this.state;
 
     return (
       <GlobalContext.Provider value={this.state}>
@@ -114,8 +141,8 @@ class App extends Component {
                         <span>
                           <img
                             style={{ height: "40px" }}
-                            src="https://eratosthenes-project.eu/wp-content/uploads/2021/09/eratosthenis_l14a-300x69.png"
-                            alt="logo eratosthenes"
+                            src={PROJECT_LOGO}
+                            alt="Project logo"
                           />
                         </span>
                       }
@@ -161,11 +188,11 @@ class App extends Component {
                       tab={
                         <span>
                           <Icon type="code-sandbox" />
-                          Sandbox
+                          Assignments
                         </span>
                       }
                     >
-                      <SandboxArea
+                      <AssignmentArea
                       //devices={devices}
                       //deployments={deployments}
                       //activeDeployments={activeDeployments}
@@ -181,9 +208,8 @@ class App extends Component {
 
             <Footer>
               <p>
-                This work is supported by{" "}
-                <a href="https://eratosthenes-project.eu/">ERATOSTHENES</a> and
-                powered by{" "}
+                This work is supported by <a href={PROJECT_URL}>{PROJECT}</a>{" "}
+                and powered by{" "}
                 <a href="https://www.eclipse.org/ditto/">Eclipse Ditto</a>.
               </p>
               <p>
@@ -208,36 +234,72 @@ class App extends Component {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
+<<<<<<< HEAD
     .withFilter('eq(attributes/type,"device")')
     .withSort("+thingId").withLimit(0, 200);
+=======
+      .withFilter('eq(attributes/type,"device")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
+>>>>>>> 6d6e37739cb98407ae7b9282a42e45150f063a70
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
-    console.info(devices);
+    //console.info(devices);
+    logger.debug(JSON.stringify(devices));
     return devices;
   };
 
   /**
    * Get all trust agents from Ditto
    */
-   getAllTrustAgents = async () => {
+  getAllTrustAgents = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
-    var options = DefaultSearchOptions.getInstance().withFilter('eq(attributes/type,"trust_agent")').withSort("+thingId").withLimit(0, 200);
+    var options = DefaultSearchOptions.getInstance()
+      .withFilter('eq(attributes/type,"agent")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var trust_agents = (await searchHandle.search(options)).items;
-    console.info(trust_agents);
+    logger.debug(JSON.stringify(trust_agents));
     return trust_agents;
   };
 
-  getAllTrustAgent = async () => {
+  /**
+   * Get all trust agents from Ditto
+   */
+  getAllAssignments = async () => {
+    const searchHandle = ditto_client.getSearchHandle();
 
+    var options = DefaultSearchOptions.getInstance()
+      .withFilter('eq(attributes/type,"assignment")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
+    //searchHandle.search(options).then(result => console.log("returned",result.items))
+    var assignments = (await searchHandle.search(options)).items;
+    logger.debug(JSON.stringify(assignments));
+    return assignments;
+  };
+
+  populatePropertyTags = async () => {
+    logger.info(this.state.devices)
+    let cyber_properties = new Set();
+    this.state.devices.forEach((device) => {
+      if (device._features.hasOwnProperty("cyber")) {
+        Object.entries(device._features.cyber._properties).forEach(
+          ([key, value]) => {
+            cyber_properties.add(key);
+            //logger.info(key);
+          }
+        );
+      }
+    });
+    cyber_properties.forEach(function (entry) {
+      logger.info(entry);
+    });
+    let a = Array.from(cyber_properties)
+    return a;
   }
-
-  getTrustAgents = async () => {
-    //TODO: fetch available trust agents from somewhere
-    var trust_agents = {};
-    return trust_agents;
-  };
 
   initDittoClient = async () => {
     const ditto_client = DittoDomClient.newHttpClient()
@@ -247,7 +309,7 @@ class App extends Component {
         DomHttpBasicAuth.newInstance(ditto_username, ditto_password)
       )
       .build();
-      return ditto_client;
+    return ditto_client;
   };
 }
 

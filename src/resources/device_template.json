@@ -1,25 +1,35 @@
 {
-    "thingId": "no.sintef.sct.giot:REPLACE_WITH_DEVICE_ID",
-    "policyId": "no.sintef.sct.giot:policy",
-    "attributes": {
-        "type": "device",
-        "manufacturer": "Raspberry",
-        "architecture": "arm",
-        "os": { 
-            "name": "Raspberry Pi OS",
-            "version": "5.15"
-        }        
+  "thingId": "no.sintef.sct.giot:REPLACE_WITH_UNIQUE_DEVICE_ID",
+  "policyId": "no.sintef.sct.giot:policy",
+  "attributes": {
+    "type": "device",
+    "arch": "amd64",
+    "host": "localhost",
+    "info": "Docker Engine 20.10.17 on amd64 with linux, API 1.41"
+  },
+  "features": {
+    "execEnv": {
+      "properties": {
+        "name": "docker_engine",
+        "port": 2375
+      }
     },
-    "features": {
-        "trustAgent": {
-            "properties": {
-                "version": "",
-                "status": ""
-            },
-            "desiredProperties": {
-                "version": "1.0.0",
-                "status": "running"
-            }
-        }
+    "agent": {
+      "properties": {},
+      "desiredProperties": {
+        "localFile": "ext/trust-agent-image.tar.gz",
+        "image": "songhui/trust-agent:latest",
+        "status": "running",
+        "name": "trust_agent"
+      }
+    },
+    "meta": {
+      "properties": {
+        "latestState": "",
+        "lastOperation": "",
+        "lastTried": "",
+        "lastSeen": ""
+      }
     }
+  }
 }

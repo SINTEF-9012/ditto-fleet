@@ -1,0 +1,21 @@
+{
+  "thingId": "no.sintef.sct.giot:REPLACE_WITH_UNIQUE_AGENT_ID",
+  "policyId": "no.sintef.sct.giot:policy",
+  "attributes": {
+    "type": "agent",
+    "url": "",
+    "localFile": "",
+    "remoteFile": "mockupAgent",
+    "developer": "",
+    "signature": "",
+    "image": "",
+    "cmd": "",
+    "cwd": "",
+    "manufacturer": "Raspberry",
+    "architecture": "arm",
+    "os": {
+      "name": "Raspberry Pi OS",
+      "version": "5.15"
+    }
+  }
+}
