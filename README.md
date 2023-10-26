@@ -7,7 +7,9 @@ This fleet management tool builds upon and further extends the functionality of 
 The best way to install and run Eclipse Ditto is via docker-compose, as fully described [here](https://github.com/eclipse-ditto/ditto/tree/master/deployment/docker). 
 
 `git clone https://github.com/eclipse-ditto/ditto.git`
+
 `cd ditto/deployment/docker`
+
 `docker-compose up -d`
 
 ## Running from source-code
