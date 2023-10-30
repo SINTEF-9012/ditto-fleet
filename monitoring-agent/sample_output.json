@@ -1,0 +1,26 @@
+{
+  "fields": {
+    "container_id": "5832bf3ca8b949da5020b11ad5305695038fd5adc2d45138ab2de08d9ddd25e8",
+    "exitcode": 0,
+    "finished_at": 1698677095035937300,
+    "oomkilled": false,
+    "pid": 0,
+    "restart_count": 0,
+    "started_at": 1698677095036354900,
+    "uptime_ns": 2345168757300
+  },
+  "name": "docker_container_status",
+  "tags": {
+    "container_image": "hello-world",
+    "container_name": "trust-agent",
+    "container_status": "exited",
+    "container_version": "unknown",
+    "dc": "ditto-monitoring-agent",
+    "engine_host": "docker-desktop",
+    "host": "194c3fc5a774",
+    "metric_source": "docker",
+    "server_version": "24.0.2",
+    "source": "5832bf3ca8b9"
+  },
+  "timestamp": 1698679440
+}

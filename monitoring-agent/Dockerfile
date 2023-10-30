@@ -1,5 +1,5 @@
-# FROM telegraf
-FROM telegraf:alpine
+FROM telegraf
+# FROM telegraf:alpine
 
 ## Necessary installs for Alpine
 # RUN apk update && apk add dpkg nano

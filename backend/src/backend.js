@@ -41,7 +41,7 @@ const PORT = process.env.PORT || 3001;
 
 const app = express();
 
-const logger = winston_logger.child({ source: 'backend.js' });
+const logger = winston_logger.child({ source: "backend.js" });
 
 //MQTT connection config
 const mqtt_host = "localhost";
@@ -52,6 +52,7 @@ const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
 const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 const request_mqtt_topic = "no.sintef.sct.giot.things/request";
+const monitoring_agent_mqtt_topic = "ditto-monitoring-agent/+/+";
 
 const mqtt_client = mqtt.connect(connectUrl, {
   clientId,
@@ -62,15 +63,18 @@ const mqtt_client = mqtt.connect(connectUrl, {
 
 mqtt_client.on("connect", () => {
   logger.info("[MQTT] Connected to MQTT broker!");
-  mqtt_client.subscribe([upstream_mqtt_topic, request_mqtt_topic], () => {
-    logger.info(
-      `[MQTT] Subscribed to topics: '${upstream_mqtt_topic}', '${request_mqtt_topic}'`
-    );
-  });
+  mqtt_client.subscribe(
+    [upstream_mqtt_topic, request_mqtt_topic, monitoring_agent_mqtt_topic],
+    () => {
+      logger.info(
+        `[MQTT] Subscribed to topics: '${upstream_mqtt_topic}', '${request_mqtt_topic}', '${monitoring_agent_mqtt_topic}'`
+      );
+    }
+  );
 });
 
 mqtt_client.on("message", (topic, payload) => {
-  logger.debug("[MQTT] Received MQTT message:", topic, payload.toString());
+  logger.debug("[MQTT] Received via " + topic + ": " + payload.toString());
   if (topic === upstream_mqtt_topic) {
     //logger.debug("topic ok")
     //logger.debug(payload)
@@ -81,6 +85,21 @@ mqtt_client.on("message", (topic, payload) => {
   if (topic === request_mqtt_topic) {
     //TODO: send all twins at once
     getAllDeviceTwins();
+  }
+  if (topic.includes("ditto-monitoring-agent")) {
+    logger.debug("Received from monitoring agent: ");
+    // ogger.debug(JSON.parse(payload.toString()))
+    const obj = JSON.parse(payload.toString());
+    logger.debug(
+      obj.tags.host +
+        " - " +
+        obj.tags.container_name +
+        " - " +
+        obj.tags.container_status
+    );
+    // TODO: update the device twin matching the hostname with the status of the monitoring agent
+    getDeviceTwin(obj.tags.host);
+    // TODO: include more monitroing metrics for the multi-dimensional context!!!
   }
 });
 
@@ -115,7 +134,10 @@ async function sendDeviceTwin(thingId) {
   const thing = await ws_ditto_client.getThingsHandle().getThing(thingId);
   //logger.info(JSON.stringify(thing));
   logger.info("[Ditto] Reported properties: ", thing.features.agent.properties);
-  logger.info("[Ditto] Desired properties: ", thing.features.agent.desiredProperties);
+  logger.info(
+    "[Ditto] Desired properties: ",
+    thing.features.agent.desiredProperties
+  );
   //TODO: this is an ugly fix
   if (
     thing.features.agent.desiredProperties.status !== "" &&
@@ -149,6 +171,19 @@ async function updateDeviceTwinProperties(twin) {
   });
 }
 
+async function getDeviceTwin(id) {
+  const thingsHandle = http_ditto_client.getThingsHandle();
+  
+  try {
+    var twin = await thingsHandle.getThing("no.sintef.sct.giot:" + id);
+    logger.debug("Found matching device twin: " + twin.toString());
+
+  } catch (err) {
+    logger.error("Device twin was not found!", err);
+  }
+  //TODO: check the twin syntax and update more fields!
+}
+
 async function getAllDeviceTwins() {
   //TODO: better structure the code!
   const searchHandle = http_ditto_client.getSearchHandle();
@@ -177,7 +212,9 @@ async function getAllDeviceTwins() {
 
 socket.onopen = function (e) {
   logger.info("[WebSocket] Connected to Ditto server via WebSocket");
-  logger.info("[WebSocket] Initiating WebSocket commun ication with START-SEND-EVENTS");
+  logger.info(
+    "[WebSocket] Initiating WebSocket commun ication with START-SEND-EVENTS"
+  );
   socket.send("START-SEND-EVENTS");
 
   const events_handle = ws_ditto_client.getEventsHandle();
@@ -206,7 +243,9 @@ socket.onopen = function (e) {
 };
 
 socket.onmessage = function (event) {
-  logger.debug(`[WebSocket] Data received from Ditto via WebSocket: ${event.data}`);
+  logger.debug(
+    `[WebSocket] Data received from Ditto via WebSocket: ${event.data}`
+  );
 };
 
 socket.onclose = function (event) {

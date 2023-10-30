@@ -12,8 +12,8 @@ services:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
   
   telegraf:
-    image: rdautov/trust-agent:0.1
-    container_name: trust-agent    
+    image: rdautov/ditto-monitoring-agent:0.1
+    container_name: ditto-monitoring-agent    
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
