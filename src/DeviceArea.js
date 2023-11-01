@@ -71,9 +71,11 @@ export class DeviceArea extends Component {
                       //height: 300,
                       content: (
                         <Select
-                          style={{ width: '100%' }}
+                          style={{ width: "100%" }}
                           align="middle"
-                          onSelect={this.handleDropdownChange}
+                          onSelect={(value, event) =>
+                            this.handleDropdownChange(value, event)
+                          }
                         >
                           {this.context.trust_agents.map((item) => (
                             <Option
@@ -99,7 +101,7 @@ export class DeviceArea extends Component {
                   ghost
                 />
               </Tooltip>
-              <Tooltip title="Edit digital twin">
+              {/* <Tooltip title="Edit digital twin">
                 <Button
                   type="primary"
                   icon="edit"
@@ -128,7 +130,7 @@ export class DeviceArea extends Component {
                   }
                   ghost
                 />
-              </Tooltip>
+              </Tooltip> */}
               <Tooltip title="Delete device twin">
                 <Button
                   type="primary"
@@ -200,10 +202,11 @@ export class DeviceArea extends Component {
     });
   }; */
 
-  handleDropdownChange = (value) => {
-    //logger.info("value", value);
-    //logger.info("trust_agent", this.state.trust_agent);
+  handleDropdownChange = (value, event) => {
+    logger.info("value: " + value);
+    logger.info("Current trust_agent " + this.state.trust_agent);
     this.setState({ trust_agent: JSON.parse(value) });
+    logger.info("Current trust_agent: " + this.state.trust_agent);
   };
 
   handleOkEdit = (e) => {
@@ -345,8 +348,9 @@ export class DeviceArea extends Component {
     });
   };
 
-  deployTrustAgent = async (thingId, desired_agent) => {
-    //FIXME: this overwrites all of desired properties under some feature! Solution: read the desired propoerties first, append some new value and put them back.
+  //FIXME: this function is redundant
+  deployTrustAgent_old = async (thingId, desired_agent) => {
+    //FIXME: this overwrites all of desired properties under same feature! Solution: read the desired properties first, append some new value and put them back.
     //FIXME: do not include features in desired trust agents, only attributes!
     desired_agent.status = "running";
     logger.info("Desired agent", desired_agent);
@@ -368,6 +372,28 @@ export class DeviceArea extends Component {
 
     // TODO: send an MQTT message to an adapter
     logger.info("Sending a MQTT message to deploy a trust agent");
+  };
+
+  deployTrustAgent = async (thingId, desired_agent) => {
+    //TODO: how to pass the meta information about the trust agent?
+    //desired_agent.status = "running";
+    logger.info("Desired agent", desired_agent);
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+    featuresHandle
+      .putDesiredProperty("cyber", "trustAgent", {
+        container_image: desired_agent._attributes.image,
+        container_status: "running",
+        container_version: desired_agent._attributes.version
+          ? desired_agent._attributes.version
+          : "unknown",
+      })
+      .then((result) =>
+        logger.info(
+          `Finished updating the device twin with result: ${JSON.stringify(
+            result
+          )}`
+        )
+      );
   };
 
   updateDeviceTwin = async () => {

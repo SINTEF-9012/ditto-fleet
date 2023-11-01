@@ -35,7 +35,11 @@ import WebSocket from "ws";
 import mqtt from "mqtt";
 
 import express from "express";
+import { TimePicker } from "antd";
 //import { connectionLostError } from "@eclipse-ditto/ditto-javascript-client-node";
+
+import schedule from 'node-schedule';
+import _ from 'lodash';
 
 const PORT = process.env.PORT || 3001;
 
@@ -53,6 +57,7 @@ const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 const request_mqtt_topic = "no.sintef.sct.giot.things/request";
 const monitoring_agent_mqtt_topic = "ditto-monitoring-agent/+/+";
+const namespace = "no.sintef.sct.giot";
 
 const mqtt_client = mqtt.connect(connectUrl, {
   clientId,
@@ -60,6 +65,7 @@ const mqtt_client = mqtt.connect(connectUrl, {
   connectTimeout: 4000,
   reconnectPeriod: 1000,
 });
+
 
 mqtt_client.on("connect", () => {
   logger.info("[MQTT] Connected to MQTT broker!");
@@ -87,19 +93,81 @@ mqtt_client.on("message", (topic, payload) => {
     getAllDeviceTwins();
   }
   if (topic.includes("ditto-monitoring-agent")) {
-    logger.debug("Received from monitoring agent: ");
-    // ogger.debug(JSON.parse(payload.toString()))
+    //console.debug("Topic name: " + topic);
     const obj = JSON.parse(payload.toString());
-    logger.debug(
-      obj.tags.host +
-        " - " +
-        obj.tags.container_name +
-        " - " +
+    if (topic.includes("docker_container_status")) {
+      // logger.debug("Received from monitoring agent: ");
+      // logger.debug(JSON.parse(payload.toString()))
+      //const obj = JSON.parse(payload.toString());
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "trustAgent/container_image",
+        obj.tags.container_image
+      );
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "trustAgent/container_status",
         obj.tags.container_status
-    );
-    // TODO: update the device twin matching the hostname with the status of the monitoring agent
-    getDeviceTwin(obj.tags.host);
-    // TODO: include more monitroing metrics for the multi-dimensional context!!!
+      );
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "trustAgent/container_version",
+        obj.tags.container_version
+      );
+    } else if (topic.includes("mem")) {
+      //logger.debug("Received memory stats: " + payload.toString());
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "memory/used_percentage",
+        obj.fields.used_percent
+      );
+    } else if (topic.includes("cpu")) {
+      //logger.debug("Received CPU stats: " + payload.toString());
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "cpu/usage_system",
+        obj.fields.usage_system
+      );
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "cpu/usage_user",
+        obj.fields.usage_user
+      );
+    } else if (topic.includes("temp")) {
+      //logger.debug("Received temperature stats: " + payload.toString());
+      updateReportedProperty(
+        obj.tags.host,
+        "physical",
+        "temp/cpu_temp",
+        obj.fields.temp
+      );
+    } else if (topic.includes("internet_speed")) {
+      //logger.debug("Received internet_speed stats: " + payload.toString());
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "network/latency",
+        obj.fields.latency
+      );
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "network/download",
+        obj.fields.download
+      );
+      updateReportedProperty(
+        obj.tags.host,
+        "cyber",
+        "network/upload",
+        obj.fields.upload
+      );
+    }
   }
 });
 
@@ -130,35 +198,42 @@ const http_ditto_client = DittoNodeClient.newHttpClient()
   //.twinChannel()
   .build();
 
+  const job = schedule.scheduleJob("*/1 * * * *", checkAllDesiredReportedProperties);
+  
+
 async function sendDeviceTwin(thingId) {
   const thing = await ws_ditto_client.getThingsHandle().getThing(thingId);
   //logger.info(JSON.stringify(thing));
-  logger.info("[Ditto] Reported properties: ", thing.features.agent.properties);
-  logger.info(
-    "[Ditto] Desired properties: ",
-    thing.features.agent.desiredProperties
-  );
-  //TODO: this is an ugly fix
-  if (
-    thing.features.agent.desiredProperties.status !== "" &&
-    thing.features.agent.properties.status !==
-      thing.features.agent.desiredProperties.status
-  ) {
-    mqtt_client.publish(
-      downstream_mqtt_topic,
-      JSON.stringify(thing),
-      { qos: 0, retain: false },
-      (error) => {
-        if (error) {
-          logger.error(error.message);
-        }
+  //logger.info("[Ditto] Reported properties: ", thing.features.agent.properties);
+  //logger.info(
+  //  "[Ditto] Desired properties: ",
+  //  thing.features.agent.desiredProperties
+  //);
+
+  //TODO: this is an ugly fix - it is not needed?
+  //if (
+  //  thing.features.agent.desiredProperties.status !== "" &&
+  //  thing.features.agent.properties.status !==
+  //    thing.features.agent.desiredProperties.status
+  //) {
+  mqtt_client.publish(
+    downstream_mqtt_topic,
+    JSON.stringify(thing),
+    { qos: 0, retain: false },
+    (error) => {
+      if (error) {
+        logger.error(error.message);
       }
-    );
-  } else {
-    logger.info(
-      "Trust agent already in sync or not assigned yet, not sending device twin to dowsntream channel."
-    );
-  }
+    }
+  );
+  logger.info(
+    "Device twin with updated desired properties sent to the dowsntream channel."
+  );
+  //} else {
+  //  logger.info(
+  //    "Trust agent already in sync or not assigned yet, not sending device twin to dowsntream channel."
+  //  );
+  //}
 }
 
 async function updateDeviceTwinProperties(twin) {
@@ -171,15 +246,48 @@ async function updateDeviceTwinProperties(twin) {
   });
 }
 
-async function getDeviceTwin(id) {
+async function updateReportedProperty(
+  thingId,
+  feature,
+  propertyPath,
+  propertyValue
+) {
   const thingsHandle = http_ditto_client.getThingsHandle();
-  
   try {
-    var twin = await thingsHandle.getThing("no.sintef.sct.giot:" + id);
-    logger.debug("Found matching device twin: " + twin.toString());
-
+    let thing = await thingsHandle.getThing(namespace + ":" + thingId);
+    logger.debug("Found matching device twin: " + thing.thingId);
+    //FIXME: think how to better implement this check for an existing unchanged value
+    //if (
+    //  propertyValue !==
+    //  thing.features[feature].properties[propertyPath.split("/")[0]][
+    //    propertyPath.split("/")[1]
+    //  ]
+    //) {
+    await http_ditto_client
+      .getFeaturesHandle(thing.thingId)
+      .putProperty(feature, propertyPath, propertyValue);
+    //} else {
+    //  logger.debug(
+    //    propertyPath +
+    //      " of " +
+    //      thing.thingId +
+    //      " is already in the reported state: " +
+    //      propertyValue
+    //  );
+    //}
   } catch (err) {
-    logger.error("Device twin was not found!", err);
+    logger.error(err.message);
+  }
+}
+
+async function getDeviceTwin(id) {
+  //logger.debug("Device twin id: " + id);
+  const thingsHandle = http_ditto_client.getThingsHandle();
+
+  try {
+    return await thingsHandle.getThing(namespace + ":" + id);
+  } catch (err) {
+    logger.error("Device twin was not found!", err.message);
   }
   //TODO: check the twin syntax and update more fields!
 }
@@ -210,12 +318,36 @@ async function getAllDeviceTwins() {
   });
 }
 
+async function checkAllDesiredReportedProperties() {
+
+  //THIS IS
+  logger.debug("STARTING CRONE JOB!");
+  const searchHandle = http_ditto_client.getSearchHandle();
+
+  var options = DefaultSearchOptions.getInstance()
+    .withFilter('eq(attributes/type,"device")')
+    .withSort("+thingId")
+    .withLimit(0, 200);
+  var devices = (await searchHandle.search(options)).items;
+  devices.forEach((device) => {
+    // iterate through cyber, physical, and social
+    logger.debug(JSON.stringify(device._features))
+    let desiredTrustAgent = device._features.cyber._desiredProperties.trustAgent
+    let reportedTrustAgent = device._features.cyber._properties.trustAgent
+    logger.debug("desiredTrustAgent: " + JSON.stringify(desiredTrustAgent));
+    logger.debug("reportedTrustAgent: " + JSON.stringify(reportedTrustAgent));
+    logger.debug(JSON.stringify(desiredTrustAgent) === JSON.stringify(reportedTrustAgent));
+    logger.debug(desiredTrustAgent === reportedTrustAgent);
+    logger.debug(_.isEqual(desiredTrustAgent, reportedTrustAgent))
+  });
+}
+
 socket.onopen = function (e) {
   logger.info("[WebSocket] Connected to Ditto server via WebSocket");
-  logger.info(
-    "[WebSocket] Initiating WebSocket commun ication with START-SEND-EVENTS"
-  );
   socket.send("START-SEND-EVENTS");
+  logger.info(
+    "[WebSocket] Initiating WebSocket communication with START-SEND-EVENTS"
+  );
 
   const events_handle = ws_ditto_client.getEventsHandle();
 
@@ -223,16 +355,19 @@ socket.onopen = function (e) {
     events_handle.requestEvents().then(() => {
       events_handle.subscribeToAllEvents((event) => {
         logger.debug("Message received via Ditto event handler", event.message);
-        //TODO: this is an ugly workaround, remove the hard-coded mentioning of "agent".
         if (
           event.action === "modified" &&
-          (event.path.includes("desiredProperties") ||
-            event.path.includes("agent/properties"))
+          //event.path.includes("/features/cyber/desiredProperties/trustAgent")
+          event.path.includes("desiredProperties")
         ) {
           const name_array = event.topic.split("/");
           logger.debug("Device Id: " + name_array[0] + ":" + name_array[1]);
-          logger.debug("Feature changed: " + JSON.stringify(event.value));
-
+          logger.debug(
+            "Desired property " +
+              JSON.stringify(event.value) +
+              " changed to: " +
+              JSON.stringify(event.value)
+          );
           sendDeviceTwin(name_array[0] + ":" + name_array[1]);
         }
       });

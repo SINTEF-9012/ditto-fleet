@@ -12,53 +12,15 @@
   },
   "features": {
     "cyber": {
-      "properties": {
-        "trustAgent": {
-          "version": "1.0.0",
-          "status": "running"
-        },
-        "docker": {
-          "version": "containerd.io_1.2.0-1_arm64.deb",
-          "url": "https://download.docker.com/linux/debian/dists/buster/pool/stable/arm64/containerd.io_1.2.0-1_arm64.deb",
-          "status": ""
-        },
-        "proxy": {
-          "enabled": false,
-          "host": "",
-          "port": ""
-        },
-        "ssh": {
-          "enabled": false,
-          "port": 443
-        },
-        "meta": {
-          "latestState": "",
-          "lastOperation": "",
-          "lastTried": "",
-          "lastSeen": ""
-        }
-      },
+      "properties": {},
       "desiredProperties": {}
     },
     "physical": {
-      "properties": {
-        "powerSupply": {
-          "source": "constant_power_supply"
-        },
-        "location": {
-          "latitude": "",
-          "longitude": ""
-        }
-      },
+      "properties": {},
       "desiredProperties": {}
     },
     "social": {
-      "properties": {
-        "subscription": {
-          "type": "premium",
-          "expires": ""
-        }
-      },
+      "properties": {},
       "desiredProperties": {}
     }
   }
