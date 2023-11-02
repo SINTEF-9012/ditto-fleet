@@ -103,7 +103,8 @@ export class TrustAgentArea extends Component {
       //add if needed
       visible: false,
       payload: "Hello world!",
-      new_trust_agent_json: require("./resources/cps_agent_template.json"),
+      new_trust_agent_docker: require("./resources/docker_agent_template.json"),
+      new_trust_agent_ssh: require("./resources/ssh_agent_template.json"),
     };
     this.editor = React.createRef();
   }
@@ -140,16 +141,16 @@ export class TrustAgentArea extends Component {
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new trust agent",
+                    title: "Create a new trust agent for Docker",
                     width: 800,
                     content: (
                       <Editor
-                        value={this.state.new_trust_agent_json}
+                        value={this.state.new_trust_agent_docker}
                         onChange={this.handleChange}
                       />
                     ),
                     onOk: () => {
-                      this.createTrustAgent(this.state.new_trust_agent_json);
+                      this.createTrustAgent(this.state.new_trust_agent_docker);
                     },
                     onCancel: () => {
                       //this.setState({ payload: "Hello world!" });
@@ -157,7 +158,31 @@ export class TrustAgentArea extends Component {
                   })
                 }
               >
-                New trust agent
+                New trust agent for Docker
+              </Button>
+              <Button
+                type="primary"
+                style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
+                onClick={() =>
+                  Modal.confirm({
+                    title: "Create a new trust agent for SSH",
+                    width: 800,
+                    content: (
+                      <Editor
+                        value={this.state.new_trust_agent_ssh}
+                        onChange={this.handleChange}
+                      />
+                    ),
+                    onOk: () => {
+                      this.createTrustAgent(this.state.new_trust_agent_ssh);
+                    },
+                    onCancel: () => {
+                      //this.setState({ payload: "Hello world!" });
+                    },
+                  })
+                }
+              >
+                New trust agent for SSH
               </Button>
               <Popconfirm
                 title="Delete all trust agents?"
@@ -219,7 +244,7 @@ export class TrustAgentArea extends Component {
 
   createTrustAgent = async () => {
     //var json = require("./resources/thing_template.json");
-    const trust_agent = Thing.fromObject(this.state.new_trust_agent_json);
+    const trust_agent = Thing.fromObject(this.state.new_trust_agent_docker);
     logger.info(trust_agent);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle

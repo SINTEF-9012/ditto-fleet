@@ -2,20 +2,13 @@
   "thingId": "no.sintef.sct.giot:REPLACE_WITH_UNIQUE_AGENT_ID",
   "policyId": "no.sintef.sct.giot:policy",
   "attributes": {
-    "type": "agent",
+    "type": "trust_agent_ssh",
     "url": "",
     "localFile": "",
-    "remoteFile": "mockupAgent",
+    "remoteFile": "",
     "developer": "",
     "signature": "",
-    "image": "",
     "cmd": "",
-    "cwd": "",
-    "manufacturer": "Raspberry",
-    "architecture": "arm",
-    "os": {
-      "name": "Raspberry Pi OS",
-      "version": "5.15"
-    }
+    "cwd": ""
   }
 }

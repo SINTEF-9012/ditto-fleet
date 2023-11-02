@@ -11,13 +11,12 @@ import {
 } from "@eclipse-ditto/ditto-javascript-client-dom";
 
 //"@eclipse-ditto/ditto-javascript-client-dom"; //"../ditto-client-extensions/lib/api/dist/model/things.model.js";
-
 //import { DomHttpBasicAuth } from "./build/dom/src/dom-auth.js";
 //import { DefaultSearchOptions } from "./build/options/request.options.js";
 //import { DittoDomClient } from "./build/dom/src/ditto-dom-client.js";
 
-import { TrustAgentArea } from "./TrustAgentArea";
 import { DeviceArea } from "./DeviceArea";
+import { TrustAgentArea } from "./TrustAgentArea";
 import { AssignmentArea } from "./AssignmentArea";
 import { GlobalContext } from "./GlobalContext";
 
@@ -251,7 +250,7 @@ class App extends Component {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-      .withFilter('eq(attributes/type,"agent")')
+      .withFilter('in(attributes/type,"agent","trust_agent","trust_agent_docker","trust_agent_ssh","trust_agent_axis")')
       .withSort("+thingId")
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))

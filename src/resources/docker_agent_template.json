@@ -1,0 +1,13 @@
+{
+  "thingId": "no.sintef.sct.giot:REPLACE_WITH_UNIQUE_AGENT_ID",
+  "policyId": "no.sintef.sct.giot:policy",
+  "attributes": {
+    "type": "trust_agent_docker",
+    "url": "",
+    "localFile": "",
+    "remoteFile": "",
+    "developer": "",
+    "signature": "",
+    "image": ""    
+  }
+}
