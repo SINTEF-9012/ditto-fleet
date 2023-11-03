@@ -7,6 +7,10 @@ FROM telegraf
 
 ## VOLUME /var/run/docker.sock:/var/run/docker.sock
 COPY telegraf.conf /etc/telegraf/telegraf.conf
+# ADD geoip /etc/telegraf/geoip
+# COPY --chmod=777 geoip/geoip /etc/telegraf/geoip/geoip
+# COPY --chmod=777 geoip/geoip.conf /etc/telegraf/geoip/geoip.conf
+# COPY --chmod=777 geoip/GeoLite2-City.mmdb /etc/telegraf/geoip/GeoLite2-City.mmdb
 # COPY dpkg.sh /etc/telegraf/dpkg.sh
 
 ## ENTRYPOINT [ "/bin/telegraf" ]

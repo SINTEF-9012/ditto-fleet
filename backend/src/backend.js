@@ -52,7 +52,8 @@ const mqtt_host = "localhost";
 const mqtt_port = "1883";
 const clientId = "ditto-fleet-backend";
 
-const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
+//const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
+const connectUrl = "mqtt://localhost:1883"; 
 const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 const request_mqtt_topic = "no.sintef.sct.giot.things/request";
@@ -182,16 +183,12 @@ mqtt_client.on("message", (topic, payload) => {
     } else if (topic.endsWith("temp")) {
       //logger.debug("[Monitroing agent] Received temperature stats: " + payload.toString());
       //TODO: real fields from measurements
-      let temp = {}
-      updateTwinProperty(
-        obj.tags.host,
-        "physical",
-        "temp",
-        temp
-      );
+      let temp = {};
+      updateTwinProperty(obj.tags.host, "physical", "temp", temp);
     } else if (topic.endsWith("internet_speed")) {
       //logger.debug("[Monitoring agent] Received internet_speed stats: " + payload.toString());
       let speed = {
+        ip_address: obj.tags.ip_address,
         download: obj.fields.download,
         jitter: obj.fields.jitter,
         latency: obj.fields.latency,
@@ -298,7 +295,7 @@ async function updateTwinProperty(
 /** Fetch a device twin from Ditto and publish it to the downstream MQTT channel.*/
 async function sendDeviceTwin(thingId) {
   const thing = await ws_ditto_client.getThingsHandle().getThing(thingId);
-  logger.debug("[Ditto] Device twin: ", JSON.stringify(thing));
+  logger.debug("[Ditto] Device twin: " + JSON.stringify(thing));
   //logger.info("[Ditto] Reported properties: ", thing.features.agent.properties);
   //logger.info(
   //  "[Ditto] Desired properties: ",

@@ -377,16 +377,32 @@ export class DeviceArea extends Component {
   deployTrustAgent = async (thingId, desired_agent) => {
     //TODO: how to pass the meta information about the trust agent?
     //desired_agent.status = "running";
-    logger.info("Desired agent", desired_agent);
-    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    featuresHandle
-      .putDesiredProperty("cyber", "trustAgent", {
+    logger.debug("Desired agent: " + desired_agent);
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);    
+    let trust_agent;
+    if (desired_agent._attributes.type === "trust_agent_docker") {
+      trust_agent = {
+        //name: desired_agent._thingId,                
         container_image: desired_agent._attributes.image,
+        container_version: desired_agent._attributes.version,
         container_status: "running",
-        container_version: desired_agent._attributes.version
-          ? desired_agent._attributes.version
-          : "unknown",
-      })
+        ta_meta: desired_agent._attributes
+        //  ? desired_agent._attributes.version
+        //  : "unknown",
+      }
+    } else if (desired_agent._attributes.type === "trust_agent_ssh") {
+      trust_agent = {
+        //name: desired_agent._thingId,                
+        process_name: "trust-agent.sh",
+        //container_version: desired_agent._attributes.version,
+        process_status: "running",
+        ta_meta: desired_agent._attributes
+        //  ? desired_agent._attributes.version
+        //  : "unknown",
+      }
+    }
+    featuresHandle
+      .putDesiredProperty("cyber", "trustAgent", trust_agent)
       .then((result) =>
         logger.info(
           `Finished updating the device twin with result: ${JSON.stringify(

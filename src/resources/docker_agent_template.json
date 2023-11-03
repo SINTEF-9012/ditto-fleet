@@ -3,11 +3,12 @@
   "policyId": "no.sintef.sct.giot:policy",
   "attributes": {
     "type": "trust_agent_docker",
+    "image": "",
+    "version": "",
     "url": "",
     "localFile": "",
     "remoteFile": "",
     "developer": "",
-    "signature": "",
-    "image": ""    
+    "signature": ""        
   }
 }

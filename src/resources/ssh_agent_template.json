@@ -3,6 +3,7 @@
   "policyId": "no.sintef.sct.giot:policy",
   "attributes": {
     "type": "trust_agent_ssh",
+    "version" : "",
     "url": "",
     "localFile": "",
     "remoteFile": "",

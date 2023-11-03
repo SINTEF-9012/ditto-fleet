@@ -105,6 +105,7 @@ export class TrustAgentArea extends Component {
       payload: "Hello world!",
       new_trust_agent_docker: require("./resources/docker_agent_template.json"),
       new_trust_agent_ssh: require("./resources/ssh_agent_template.json"),
+      new_trust_agent_json: ""
     };
     this.editor = React.createRef();
   }
@@ -244,8 +245,8 @@ export class TrustAgentArea extends Component {
 
   createTrustAgent = async () => {
     //var json = require("./resources/thing_template.json");
-    const trust_agent = Thing.fromObject(this.state.new_trust_agent_docker);
-    logger.info(trust_agent);
+    const trust_agent = Thing.fromObject(this.state.new_trust_agent_json);
+    logger.debug("NEW TRUST AGENT: " + JSON.stringify(trust_agent));
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .putThing(trust_agent)
