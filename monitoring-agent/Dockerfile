@@ -1,4 +1,4 @@
-FROM telegraf
+FROM --platform=linux/arm/v7 telegraf
 # FROM telegraf:alpine
 
 ## Necessary installs for Alpine

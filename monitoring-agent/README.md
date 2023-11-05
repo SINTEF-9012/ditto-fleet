@@ -8,7 +8,7 @@ Docker-ised monitoring agent built on top of Telegraf
 
 # To run the trust agent (public Mosquitto broker tcp://test.mosquitto.org:1883)
 
-`docker run --name ditto-monitoring-agent -h=$HOSTNAME --rm -v /var/run/docker.sock:/var/run/docker.sock:ro -v /:/hostfs:ro -e HOST_ETC=/hostfs/etc -e HOST_PROC=/hostfs/proc -e HOST_SYS=/hostfs/sys -e HOST_VAR=/hostfs/var -e HOST_RUN=/hostfs/run -e HOST_MOUNT_PREFIX=/hostfs --user telegraf:$(stat -c '%g' /var/run/docker.sock) rdautov/ditto-monitoring-agent:0.1`
+`docker run --name ditto-monitoring-agent -h=$HOSTNAME --rm -v /var/run/docker.sock:/var/run/docker.sock:ro -v /:/hostfs:ro -e IP_ADDRESS=$( hostname -I | awk '{print $1;}') -e HOST_ETC=/hostfs/etc -e HOST_PROC=/hostfs/proc -e HOST_SYS=/hostfs/sys -e HOST_VAR=/hostfs/var -e HOST_RUN=/hostfs/run -e HOST_MOUNT_PREFIX=/hostfs --user telegraf:$(stat -c '%g' /var/run/docker.sock) rdautov/ditto-monitoring-agent:0.1`
 
 # To run the trust agent together with a local Mosquitto broker container
 
