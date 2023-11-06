@@ -52,8 +52,8 @@ const mqtt_host = "localhost";
 const mqtt_port = "1883";
 const clientId = "ditto-fleet-backend";
 
-//const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
-const connectUrl = "mqtt://localhost:1883"; 
+const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
+//const connectUrl = "mqtt://localhost:1883";
 const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 const request_mqtt_topic = "no.sintef.sct.giot.things/request";
@@ -95,6 +95,10 @@ mqtt_client.on("message", (topic, payload) => {
   if (topic.includes("ditto-monitoring-agent")) {
     //console.debug("Topic name: " + topic);
     const obj = JSON.parse(payload.toString());
+    updateTwinAttribute(obj.tags.host, "ip_address", obj.tags.ip_address);
+    updateTwinAttribute(obj.tags.host, "system_name", obj.tags.system_name);
+    updateTwinAttribute(obj.tags.host, "system_version", obj.tags.system_version);
+    updateTwinAttribute(obj.tags.host, "system_description", obj.tags.system_description);
     if (topic.endsWith("docker_container_status")) {
       // logger.debug("Received from monitoring agent: ");
       // logger.debug(JSON.parse(payload.toString()))
@@ -248,12 +252,11 @@ const job = schedule.scheduleJob("*/1 * * * *", checkDesiredReportedTrustAgent);
 
 /** Fully update the digital twin in Ditto (i.e. all its reported properties within features). */
 async function updateTwinProperties(twin) {
+  let featuresHandle = http_ditto_client.getFeaturesHandle(twin.thingId);
   Object.entries(twin.features).forEach(([key, value]) => {
     logger.debug(JSON.stringify(key));
     logger.debug(JSON.stringify(value.properties));
-    http_ditto_client
-      .getFeaturesHandle(twin.thingId)
-      .putProperties(key, value.properties);
+    featuresHandle.putProperties(key, value.properties);
   });
 }
 
@@ -267,28 +270,30 @@ async function updateTwinProperty(
   const thingsHandle = http_ditto_client.getThingsHandle();
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
-    //logger.debug("Found matching device twin: " + thing.thingId);
-    //FIXME: think how to better implement this check for an existing unchanged value
-    //if (
-    //  propertyValue !==
-    //  thing.features[feature].properties[propertyPath.split("/")[0]][
-    //    propertyPath.split("/")[1]
-    //  ]
-    //) {
+    logger.debug("Found matching device twin: " + JSON.stringify(thing));   
     await http_ditto_client
       .getFeaturesHandle(thing.thingId)
-      .putProperty(feature, propertyPath, propertyValue);
-    //} else {
-    //  logger.debug(
-    //    propertyPath +
-    //      " of " +
-    //      thing.thingId +
-    //      " is already in the reported state: " +
-    //      propertyValue
-    //  );
-    //}
+      .putProperty(feature, propertyPath, propertyValue);    
   } catch (error) {
-    logger.error(error.message);
+    logger.error("UpdateTwinProperty error: " + error.message);
+  }
+}
+
+/** Update the value of an attribute in Ditto with a value reported from the monitoring agent. */
+async function updateTwinAttribute(thingId, attribute, attributeValue) {
+  const thingsHandle = http_ditto_client.getThingsHandle();
+  try {
+    let thing = await thingsHandle.getThing(namespace + ":" + thingId);
+    //logger.debug("Found matching device twin: " + JSON.stringify(thing));
+    //update the attribute only if different
+    //logger.debug(JSON.stringify(thing.attributes));
+    //logger.debug(JSON.stringify(thing.attributes[attribute]));
+    if (attributeValue !== thing.attributes[attribute]) {
+      logger.debug("TRY");
+      await thingsHandle.putAttribute(thing.thingId, attribute, attributeValue);
+    }
+  } catch (error) {
+    logger.error("UpdateTwinAttribute error: " + error.message);
   }
 }
 
@@ -314,7 +319,7 @@ async function sendDeviceTwin(thingId) {
     { qos: 0, retain: false },
     (error) => {
       if (error) {
-        logger.error(error.message);
+        logger.error("sendDeviceTwin error: " + error.message);
       }
     }
   );
@@ -346,7 +351,7 @@ async function getAllDeviceTwins() {
       { qos: 0, retain: false },
       (error) => {
         if (error) {
-          logger.error(error.message);
+          logger.error("GetAllDeviceTwins error: " + error.message);
         }
       }
     );

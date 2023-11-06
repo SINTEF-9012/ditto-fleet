@@ -10,6 +10,7 @@ import {
   Modal,
   Select,
   Popconfirm,
+  Switch,
 } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
@@ -176,6 +177,7 @@ export class DeviceArea extends Component {
       active_device: "",
       new_device: require("./resources/cps_device_template.json"),
       edited_device: "",
+      sumulation: true
     };
   }
 
@@ -237,8 +239,19 @@ export class DeviceArea extends Component {
     return (
       <Layout>
         <Content>
-          <Row type="flex" justify="end">
-            <Col>
+          <Row wrap={false}>
+            <Col flex="auto" justify="end" align="right">
+              <Switch
+                checkedChildren="Sim"
+                unCheckedChildren="Phy"
+                defaultChecked
+                style={{
+                  marginTop: 16,
+                  marginBottom: 16,
+                  marginLeft: 24,
+                  float: "left",
+                }}
+              />
               <Button
                 type="primary"
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
@@ -298,7 +311,11 @@ export class DeviceArea extends Component {
                 //scroll={{ y: 500 }}
                 //expandRowByClick={true}
                 expandedRowRender={(record) => (
-                  <ReactJson src={record} enableClipboard={false} />
+                  <ReactJson
+                    src={record}
+                    enableClipboard={false}
+                    collapsed="1"
+                  />
                 )}
               />
             </Col>
@@ -378,28 +395,28 @@ export class DeviceArea extends Component {
     //TODO: how to pass the meta information about the trust agent?
     //desired_agent.status = "running";
     logger.debug("Desired agent: " + desired_agent);
-    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);    
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     let trust_agent;
     if (desired_agent._attributes.type === "trust_agent_docker") {
       trust_agent = {
-        //name: desired_agent._thingId,                
+        //name: desired_agent._thingId,
         container_image: desired_agent._attributes.image,
         container_version: desired_agent._attributes.version,
         container_status: "running",
-        ta_meta: desired_agent._attributes
+        ta_meta: desired_agent._attributes,
         //  ? desired_agent._attributes.version
         //  : "unknown",
-      }
+      };
     } else if (desired_agent._attributes.type === "trust_agent_ssh") {
       trust_agent = {
-        //name: desired_agent._thingId,                
+        //name: desired_agent._thingId,
         process_name: "trust-agent.sh",
         //container_version: desired_agent._attributes.version,
         process_status: "running",
-        ta_meta: desired_agent._attributes
+        ta_meta: desired_agent._attributes,
         //  ? desired_agent._attributes.version
         //  : "unknown",
-      }
+      };
     }
     featuresHandle
       .putDesiredProperty("cyber", "trustAgent", trust_agent)

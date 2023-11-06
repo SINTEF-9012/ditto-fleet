@@ -4,11 +4,7 @@
   "attributes": {
     "type": "device",
     "manufacturer": "Raspberry",
-    "architecture": "arm",
-    "os": {
-      "name": "Raspberry Pi OS",
-      "version": "5.15"
-    }
+    "architecture": "linux/arm7"
   },
   "features": {
     "cyber": {
