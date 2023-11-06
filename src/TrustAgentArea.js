@@ -1,5 +1,15 @@
 import React, { Component } from "react";
-import { Button, Layout, Col, Row, Table, Tooltip, Badge, Modal, Popconfirm } from "antd";
+import {
+  Button,
+  Layout,
+  Col,
+  Row,
+  Table,
+  Tooltip,
+  Badge,
+  Modal,
+  Popconfirm,
+} from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
 import { Thing } from "@eclipse-ditto/ditto-javascript-client-dom";
@@ -7,9 +17,8 @@ import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 import winston_logger from "./logger.js";
 
-const logger = winston_logger.child({ source: 'TrustAgentArea.js' });
+const logger = winston_logger.child({ source: "TrustAgentArea.js" });
 
-//import { Map, Marker, Overlay } from "pigeon-maps";
 const { Content } = Layout;
 const ButtonGroup = Button.Group;
 
@@ -23,19 +32,18 @@ export class TrustAgentArea extends Component {
         title: "Trust Agent ID",
         dataIndex: "_thingId",
         align: "left",
-        render: (text, record) => (
-          //this.context.deviceTags[record.id].status === "failed" ? (
-          //  <span>
-          //    <Badge status="error" />
-          //    {record.id}
-          //  </span>
-          //) : (
+        render: (text, record) => (        
           <span>
-            <Badge status="success" />
+            <Badge
+              color={
+                record._attributes.type === "trust_agent_docker"
+                  ? "blue"
+                  : "green"
+              }
+            />
             {record._thingId}
           </span>
         ),
-        //),
       },
       {
         title: "Actions",
@@ -43,7 +51,7 @@ export class TrustAgentArea extends Component {
         align: "center",
         render: (text, record) => (
           <span style={{ float: "center" }}>
-            <Modal
+            {/* <Modal
               mask={false}
               title="Basic modal"
               visible={this.state.visible}
@@ -53,13 +61,13 @@ export class TrustAgentArea extends Component {
               <p>Some contents...</p>
               <p>Some contents...</p>
               <p>Some contents...</p>
-            </Modal>
+            </Modal> */}
             <ButtonGroup size="small" type="dashed">
               <Tooltip title="Deploy on all suitable devices">
                 <Button
                   type="primary"
                   icon="deployment-unit"
-                  onClick={() => this.deployTrustAgentToAll(record.id)}
+                  onClick={() => this.assignTrustAgentToAll(record)}
                   ghost
                 />
               </Tooltip>
@@ -105,11 +113,12 @@ export class TrustAgentArea extends Component {
       payload: "Hello world!",
       new_trust_agent_docker: require("./resources/docker_agent_template.json"),
       new_trust_agent_ssh: require("./resources/ssh_agent_template.json"),
-      new_trust_agent_json: ""
+      new_trust_agent_json: "",
     };
     this.editor = React.createRef();
   }
 
+  /** Handles the opening of the modal window by making it visible */
   showModal = () => {
     logger.info("showModal");
     this.setState({
@@ -117,6 +126,7 @@ export class TrustAgentArea extends Component {
     });
   };
 
+  /** Handles the OK button of the modal window */
   handleOk = (e) => {
     logger.info(e);
     this.setState({
@@ -124,11 +134,17 @@ export class TrustAgentArea extends Component {
     });
   };
 
+  /** Handles the closing of the modal window by making it invisible */
   handleCancel = (e) => {
     logger.info(e);
     this.setState({
       visible: false,
     });
+  };
+
+  /** Handles the changes in the JSON editor when creating a new trust agent  */
+  handleChange = (value) => {
+    this.setState({ new_trust_agent_json: value });
   };
 
   render() {
@@ -228,7 +244,7 @@ export class TrustAgentArea extends Component {
                   </span>
                 )}
               />
-            </Col>            
+            </Col>
           </Row>
         </Content>
       </Layout>
@@ -239,10 +255,7 @@ export class TrustAgentArea extends Component {
     //add something if needed
   }
 
-  handleChange = (value) => {
-    this.setState({ new_trust_agent_json: value });
-  };
-
+  /** Creates a new trust agent in Ditto */
   createTrustAgent = async () => {
     //var json = require("./resources/thing_template.json");
     const trust_agent = Thing.fromObject(this.state.new_trust_agent_json);
@@ -251,7 +264,7 @@ export class TrustAgentArea extends Component {
     thingsHandle
       .putThing(trust_agent)
       .then((result) =>
-      logger.info(
+        logger.info(
           `Finished putting the new trust agent with result: ${JSON.stringify(
             result
           )}`
@@ -259,12 +272,13 @@ export class TrustAgentArea extends Component {
       );
   };
 
+  /** Deletes the selected trust agent from Ditto */
   deleteTrustAgent = async (trustAgentId) => {
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .deleteThing(trustAgentId)
       .then((result) =>
-      logger.info(
+        logger.info(
           `Finished deleting the trust agent with result: ${JSON.stringify(
             result
           )}`
@@ -272,32 +286,82 @@ export class TrustAgentArea extends Component {
       );
   };
 
-  deleteAllTrustAgents = async () => {    
-    this.context.trust_agents.forEach(agent => {
-      //logger.info(agent.id); 
-      this.deleteTrustAgent(agent.id);        
-    });    
-  }
-
-  deployTrustAgentToAll = async (trustAgentId) => {
-    //TODO: basic logic to check for suitable devicves in the fleet, and then modify desired propoerties one by one
-    //const thingsHandle = this.context.ditto_client.getThingsHandle();
-    //thingsHandle
-    //  .deleteThing(trustAgentId)
-    //  .then((result) =>
-    //    console.log(
-    //      `Finished deleting the trust agent with result: ${JSON.stringify(
-    //        result
-    //      )}`
-    //    )
-    //  );
+  /** Deletes all trust agents from Ditto */
+  deleteAllTrustAgents = async () => {
+    this.context.trust_agents.forEach((agent) => {
+      //logger.info(agent.id);
+      this.deleteTrustAgent(agent.id);
+    });
   };
 
-  deployTrustAgentToSelected = async (trustAgentId, deviceId) => {
-    //TODO: modify desired properties of that device. Maybe check if it is suitable in the first place.    
+  /** Checks for devices suitable for this trust agent and deploys it to them */
+  assignTrustAgentToAll = async (trustAgent) => {
+    //FIXME: what if a device has both docker and ssh?
+    //FIXME: there must only one check whether the device is suitable
+    this.context.devices.forEach((device) => {
+      logger.info(
+        device._thingId +
+          " has platform " +
+          device._attributes.platform +
+          " and has Docker Engine: " +
+          JSON.stringify(device._features.cyber._properties.docker)
+      );
+      if (
+        trustAgent._attributes.type === "trust_agent_docker" &&
+        device._features.cyber._properties.docker
+      ) {
+        logger.info(
+          "Deploying " + trustAgent._thingId + " to " + device._thingId
+        );
+        this.deployTrustAgent(device._thingId, trustAgent);
+      } else if (
+        trustAgent._attributes.type === "trust_agent_ssh" &&
+        device._features.cyber._properties.ssh
+      ) {
+        logger.info(
+          "Deploying " + trustAgent._thingId + " to " + device._thingId
+        );
+        this.deployTrustAgent(device._thingId, trustAgent);
+      } else {
+        logger.warn("No suitable devices found!");
+      }
+    });
   };
 
-  checkSuitability(trustAgent, devices) {
-    //TODO: check if main attributes of the trust agent are satisfied by all available devices. 
-  }
+  /** Deploy the assigned trust agent to the selected device by modifying the corresponding desired property */
+  deployTrustAgent = async (thingId, desired_agent) => {
+    //logger.debug("Desired agent: " + desired_agent);
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+    let trust_agent;
+    if (desired_agent._attributes.type === "trust_agent_docker") {
+      trust_agent = {
+        //name: desired_agent._thingId,
+        container_image: desired_agent._attributes.image,
+        container_version: desired_agent._attributes.version,
+        container_status: "running",
+        ta_meta: desired_agent._attributes,
+        //  ? desired_agent._attributes.version
+        //  : "unknown",
+      };
+    } else if (desired_agent._attributes.type === "trust_agent_ssh") {
+      trust_agent = {
+        //name: desired_agent._thingId,
+        process_name: "trust-agent.sh",
+        //container_version: desired_agent._attributes.version,
+        process_status: "running",
+        ta_meta: desired_agent._attributes,
+        //  ? desired_agent._attributes.version
+        //  : "unknown",
+      };
+    }
+    featuresHandle
+      .putDesiredProperty("cyber", "trustAgent", trust_agent)
+      .then((result) =>
+        logger.info(
+          `Finished updating the device twin with result: ${JSON.stringify(
+            result
+          )}`
+        )
+      );
+  };
 }

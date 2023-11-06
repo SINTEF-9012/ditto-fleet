@@ -99,6 +99,8 @@ mqtt_client.on("message", (topic, payload) => {
     updateTwinAttribute(obj.tags.host, "system_name", obj.tags.system_name);
     updateTwinAttribute(obj.tags.host, "system_version", obj.tags.system_version);
     updateTwinAttribute(obj.tags.host, "system_description", obj.tags.system_description);
+    let collected_time = (new Date(obj.timestamp * 1000)).toLocaleString();
+    let received_time = (new Date()).toLocaleString();
     if (topic.endsWith("docker_container_status")) {
       // logger.debug("Received from monitoring agent: ");
       // logger.debug(JSON.parse(payload.toString()))
@@ -107,6 +109,8 @@ mqtt_client.on("message", (topic, payload) => {
         container_image: obj.tags.container_image,
         container_status: obj.tags.container_status,
         container_version: obj.tags.container_version,
+        _collected_time: collected_time,
+        _received_time: received_time
       };
       updateTwinProperty(obj.tags.host, "cyber", "trustAgent", ta);
     } else if (topic.endsWith("docker")) {
@@ -114,6 +118,8 @@ mqtt_client.on("message", (topic, payload) => {
       let docker = {
         engine_host: obj.tags.engine_host,
         server_version: obj.tags.server_version,
+        _collected_time: collected_time,
+        _received_time: received_time
       };
       updateTwinProperty(obj.tags.host, "cyber", "docker", docker);
     } else if (topic.endsWith("mem")) {
@@ -153,6 +159,8 @@ mqtt_client.on("message", (topic, payload) => {
         vmalloc_used: obj.fields.vmalloc_used,
         write_back: obj.fields.write_back,
         write_back_tmp: obj.fields.write_back_tmp,
+        _collected_time: collected_time,
+        _received_time: received_time
       };
       updateTwinProperty(obj.tags.host, "cyber", "memory", mem);
     } else if (topic.endsWith("cpu")) {
@@ -168,6 +176,8 @@ mqtt_client.on("message", (topic, payload) => {
         usage_steal: obj.fields.usage_steal,
         usage_system: obj.fields.usage_system,
         usage_user: obj.fields.usage_user,
+        _collected_time: collected_time,
+        _received_time: received_time
       };
       updateTwinProperty(obj.tags.host, "cyber", "cpu", cpu);
     } else if (topic.endsWith("disk")) {
@@ -182,10 +192,12 @@ mqtt_client.on("message", (topic, payload) => {
         total: obj.fields.total,
         used: obj.fields.used,
         used_percent: obj.fields.used_percent,
+        _collected_time: collected_time,
+        _received_time: received_time
       };
       updateTwinProperty(obj.tags.host, "cyber", "disk", disk);
     } else if (topic.endsWith("temp")) {
-      //logger.debug("[Monitroing agent] Received temperature stats: " + payload.toString());
+      //logger.debug("[Monitoring agent] Received temperature stats: " + payload.toString());
       //TODO: real fields from measurements
       let temp = {};
       updateTwinProperty(obj.tags.host, "physical", "temp", temp);
@@ -198,6 +210,8 @@ mqtt_client.on("message", (topic, payload) => {
         latency: obj.fields.latency,
         location: obj.fields.location,
         upload: obj.fields.upload,
+        _collected_time: collected_time,
+        _received_time: received_time
       };
       updateTwinProperty(obj.tags.host, "cyber", "internet_speed", speed);
     } else if (topic.endsWith("procstat_lookup")) {
@@ -369,7 +383,7 @@ async function checkDesiredReportedTrustAgent() {
   var devices = (await searchHandle.search(options)).items;
   devices.forEach((device) => {
     // iterate through cyber, physical, and social
-    logger.debug("DESIRED VS REPORED" + JSON.stringify(device._features));
+    //logger.debug("DESIRED VS REPORED" + JSON.stringify(device._features));
     let desiredTrustAgent =
       device._features.cyber._desiredProperties.trustAgent;
     let reportedTrustAgent = device._features.cyber._properties.trustAgent;
@@ -381,7 +395,7 @@ async function checkDesiredReportedTrustAgent() {
     //logger.debug(desiredTrustAgent === reportedTrustAgent);
 
     //FIXME: check that desied propoerty is not empty! Or maybe it is ok...
-    logger.debug(_.isMatch(reportedTrustAgent, desiredTrustAgent));
+    //logger.debug(_.isMatch(reportedTrustAgent, desiredTrustAgent));
   });
 }
 

@@ -51,6 +51,8 @@ class App extends Component {
       //templates: [],
       //variants: [],
       devices: [],
+      physical_devices: [],
+      virtual_devices: [],
       trust_agents: [],
       cyber_properties: [],
       //forEdit: null,
@@ -82,13 +84,14 @@ class App extends Component {
       .then((result) => this.setState({ targetedDevices: result }))
       .then(() => this.getActiveDeployments())
       .then((result) => this.setState({ activeDeployments: result })); */
-    this.getAllDevices()
-      .then((result) => this.setState({ devices: result }))
-      .then(() =>
-        this.populatePropertyTags().then((result) =>
-          this.setState({ cyber_properties: result })
-        )
-      );
+    this.getAllDevices().then((result) => this.setState({ devices: result }));
+
+    this.getAllPhysicalDevices().then((result) =>
+      this.setState({ physical_devices: result })
+    );
+    this.getAllVirtualDevices().then((result) =>
+      this.setState({ virtual_devices: result })
+    );
     this.getAllTrustAgents().then((result) =>
       this.setState({ trust_agents: result })
     );
@@ -233,7 +236,9 @@ class App extends Component {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-      .withFilter('in(attributes/type,"device","physical_device","virtual_device")')
+      .withFilter(
+        'in(attributes/type,"device","physical_device","virtual_device")'
+      )
       .withSort("+thingId")
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
@@ -244,13 +249,49 @@ class App extends Component {
   };
 
   /**
+   * Get all physical things from Ditto
+   */
+  getAllPhysicalDevices = async () => {
+    const searchHandle = ditto_client.getSearchHandle();
+
+    var options = DefaultSearchOptions.getInstance()
+      .withFilter('eq(attributes/type,"physical_device")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
+    //searchHandle.search(options).then(result => console.log("returned",result.items))
+    var devices = (await searchHandle.search(options)).items;
+    //console.info(devices);
+    //logger.debug(JSON.stringify(devices));
+    return devices;
+  };
+
+  /**
+   * Get all virtual things from Ditto
+   */
+  getAllVirtualDevices = async () => {
+    const searchHandle = ditto_client.getSearchHandle();
+
+    var options = DefaultSearchOptions.getInstance()
+      .withFilter('eq(attributes/type,"virtual_device")')
+      .withSort("+thingId")
+      .withLimit(0, 200);
+    //searchHandle.search(options).then(result => console.log("returned",result.items))
+    var devices = (await searchHandle.search(options)).items;
+    //console.info(devices);
+    //logger.debug(JSON.stringify(devices));
+    return devices;
+  };
+
+  /**
    * Get all trust agents from Ditto
    */
   getAllTrustAgents = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-      .withFilter('in(attributes/type,"agent","trust_agent","trust_agent_docker","trust_agent_ssh","trust_agent_axis")')
+      .withFilter(
+        'in(attributes/type,"agent","trust_agent","trust_agent_docker","trust_agent_ssh","trust_agent_axis")'
+      )
       .withSort("+thingId")
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
@@ -275,8 +316,8 @@ class App extends Component {
     return assignments;
   };
 
-  populatePropertyTags = async () => {
-    logger.info(this.state.devices)
+ /*  populatePropertyTags = async () => {
+    logger.info(this.state.devices);
     let cyber_properties = new Set();
     this.state.devices.forEach((device) => {
       if (device._features.hasOwnProperty("cyber")) {
@@ -291,9 +332,9 @@ class App extends Component {
     cyber_properties.forEach(function (entry) {
       logger.info(entry);
     });
-    let a = Array.from(cyber_properties)
+    let a = Array.from(cyber_properties);
     return a;
-  }
+  }; */
 
   initDittoClient = async () => {
     const ditto_client = DittoDomClient.newHttpClient()

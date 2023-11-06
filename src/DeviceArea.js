@@ -49,7 +49,7 @@ export class DeviceArea extends Component {
           //  </span>
           //) : (
           <span>
-            <Badge status="success" />
+            <Badge status={record._attributes.type === "physical_device" ? "processing" : "default"} />
             {record._thingId}
           </span>
         ),
@@ -177,7 +177,7 @@ export class DeviceArea extends Component {
       active_device: "",
       new_device: require("./resources/cps_device_template.json"),
       edited_device: "",
-      sumulation: true
+      simulation: true,
     };
   }
 
@@ -235,11 +235,16 @@ export class DeviceArea extends Component {
     this.setState({ new_device: value });
   };
 
+  handleSimulationSwitchChange = (value) => {
+    logger.info(value)
+    this.setState({ simulation: value });
+  };
+
   render() {
     return (
       <Layout>
         <Content>
-          <Row wrap={false}>
+          <Row>
             <Col flex="auto" justify="end" align="right">
               <Switch
                 checkedChildren="Sim"
@@ -251,6 +256,7 @@ export class DeviceArea extends Component {
                   marginLeft: 24,
                   float: "left",
                 }}
+                onChange={this.handleSimulationSwitchChange}
               />
               <Button
                 type="primary"
@@ -298,7 +304,11 @@ export class DeviceArea extends Component {
                 //bordered
                 rowKey={(record) => record.id}
                 size="small"
-                dataSource={this.context.devices}
+                dataSource={
+                  this.state.simulation
+                    ? this.context.devices
+                    : this.context.physical_devices
+                }
                 columns={this.columns}
                 pagination={{ pageSize: 50 }}
                 onRow={(record) => {
