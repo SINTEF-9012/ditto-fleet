@@ -17,7 +17,8 @@ import {
 
 import { DeviceArea } from "./DeviceArea";
 import { TrustAgentArea } from "./TrustAgentArea";
-import { AssignmentArea } from "./AssignmentArea";
+import { DeploymentArea } from "./DeploymentArea";
+import { CreateDeploymentArea } from "./CreateDeploymentArea.js";
 import { GlobalContext } from "./GlobalContext";
 
 const { Footer, Content } = Layout;
@@ -54,7 +55,8 @@ class App extends Component {
       physical_devices: [],
       virtual_devices: [],
       trust_agents: [],
-      cyber_properties: [],
+      deployments: [],
+      //cyber_properties: [],      
       //forEdit: null,
       //edited: null,
       //appliedDevices: {},
@@ -94,6 +96,9 @@ class App extends Component {
     );
     this.getAllTrustAgents().then((result) =>
       this.setState({ trust_agents: result })
+    );
+    this.getAllDeployments().then((result) =>
+      this.setState({ deployments: result })
     );
     //.then(() => this.getDeviceTags())
     //.then((result) => this.setState({ deviceTags: result }))
@@ -190,11 +195,29 @@ class App extends Component {
                       tab={
                         <span>
                           <Icon type="code-sandbox" />
-                          Assignments
+                          Deployments
                         </span>
                       }
                     >
-                      <AssignmentArea
+                      <DeploymentArea
+                      //devices={devices}
+                      //deployments={deployments}
+                      //activeDeployments={activeDeployments}
+                      //appliedDevices={appliedDevices}
+                      //deviceTags={deviceTags}
+                      //callbackTabChange={this.handleTabChange}
+                      />
+                    </TabPane>
+                    <TabPane
+                      key="4"
+                      tab={
+                        <span>
+                          <Icon type="control" />
+                          Create Deployment
+                        </span>
+                      }
+                    >
+                      <CreateDeploymentArea
                       //devices={devices}
                       //deployments={deployments}
                       //activeDeployments={activeDeployments}
@@ -303,20 +326,20 @@ class App extends Component {
   /**
    * Get all trust agents from Ditto
    */
-  getAllAssignments = async () => {
+  getAllDeployments = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-      .withFilter('eq(attributes/type,"assignment")')
+      .withFilter('eq(attributes/type,"deployment")')
       .withSort("+thingId")
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
-    var assignments = (await searchHandle.search(options)).items;
-    logger.debug(JSON.stringify(assignments));
-    return assignments;
+    var deployments = (await searchHandle.search(options)).items;
+    logger.debug(JSON.stringify(deployments));
+    return deployments;
   };
 
- /*  populatePropertyTags = async () => {
+  /*  populatePropertyTags = async () => {
     logger.info(this.state.devices);
     let cyber_properties = new Set();
     this.state.devices.forEach((device) => {

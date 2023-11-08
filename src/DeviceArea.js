@@ -251,8 +251,8 @@ export class DeviceArea extends Component {
                 unCheckedChildren="Phy"
                 defaultChecked
                 style={{
-                  marginTop: 16,
-                  marginBottom: 16,
+                  marginTop: 22,
+                  marginBottom: 10,
                   marginLeft: 24,
                   float: "left",
                 }}

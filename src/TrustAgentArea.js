@@ -32,7 +32,7 @@ export class TrustAgentArea extends Component {
         title: "Trust Agent ID",
         dataIndex: "_thingId",
         align: "left",
-        render: (text, record) => (        
+        render: (text, record) => (
           <span>
             <Badge
               color={
@@ -251,6 +251,7 @@ export class TrustAgentArea extends Component {
     );
   }
 
+  /** Executes code after all visual React components are loaded */
   componentDidMount() {
     //add something if needed
   }
@@ -294,74 +295,49 @@ export class TrustAgentArea extends Component {
     });
   };
 
-  /** Checks for devices suitable for this trust agent and deploys it to them */
+  /** Deploys the selected trust agent to all suitable devices */
   assignTrustAgentToAll = async (trustAgent) => {
     //FIXME: what if a device has both docker and ssh?
     //FIXME: there must only one check whether the device is suitable
     this.context.devices.forEach((device) => {
-      logger.info(
-        device._thingId +
-          " has platform " +
-          device._attributes.platform +
-          " and has Docker Engine: " +
-          JSON.stringify(device._features.cyber._properties.docker)
+      const featuresHandle = this.context.ditto_client.getFeaturesHandle(
+        device.thingId
       );
-      if (
-        trustAgent._attributes.type === "trust_agent_docker" &&
-        device._features.cyber._properties.docker
-      ) {
-        logger.info(
-          "Deploying " + trustAgent._thingId + " to " + device._thingId
-        );
-        this.deployTrustAgent(device._thingId, trustAgent);
-      } else if (
-        trustAgent._attributes.type === "trust_agent_ssh" &&
-        device._features.cyber._properties.ssh
-      ) {
-        logger.info(
-          "Deploying " + trustAgent._thingId + " to " + device._thingId
-        );
-        this.deployTrustAgent(device._thingId, trustAgent);
+      // let trust_agent;
+      if (trustAgent._attributes.type === "trust_agent_docker") {
+        let trust_agent = {
+          container_image: trustAgent._attributes.image,
+          container_version: trustAgent._attributes.version,
+          container_status: "running",
+          ta_meta: trustAgent._attributes,
+        };
+        featuresHandle
+          .putDesiredProperty("cyber", "trustAgent", trust_agent)
+          .then((result) =>
+            logger.info(
+              `Finished updating the device twin with result: ${JSON.stringify(
+                result
+              )}`
+            )
+          );
+      } else if (trustAgent._attributes.type === "trust_agent_ssh") {
+        let trust_agent = {
+          process_name: "trust-agent.sh",
+          process_status: "running",
+          ta_meta: trustAgent._attributes,
+        };
+        featuresHandle
+          .putDesiredProperty("cyber", "trustAgent", trust_agent)
+          .then((result) =>
+            logger.info(
+              `Finished updating the device twin with result: ${JSON.stringify(
+                result
+              )}`
+            )
+          );
       } else {
-        logger.warn("No suitable devices found!");
+        logger.info(device._thingId + " is not suitable for " + trustAgent._thingId)
       }
     });
-  };
-
-  /** Deploy the assigned trust agent to the selected device by modifying the corresponding desired property */
-  deployTrustAgent = async (thingId, desired_agent) => {
-    //logger.debug("Desired agent: " + desired_agent);
-    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    let trust_agent;
-    if (desired_agent._attributes.type === "trust_agent_docker") {
-      trust_agent = {
-        //name: desired_agent._thingId,
-        container_image: desired_agent._attributes.image,
-        container_version: desired_agent._attributes.version,
-        container_status: "running",
-        ta_meta: desired_agent._attributes,
-        //  ? desired_agent._attributes.version
-        //  : "unknown",
-      };
-    } else if (desired_agent._attributes.type === "trust_agent_ssh") {
-      trust_agent = {
-        //name: desired_agent._thingId,
-        process_name: "trust-agent.sh",
-        //container_version: desired_agent._attributes.version,
-        process_status: "running",
-        ta_meta: desired_agent._attributes,
-        //  ? desired_agent._attributes.version
-        //  : "unknown",
-      };
-    }
-    featuresHandle
-      .putDesiredProperty("cyber", "trustAgent", trust_agent)
-      .then((result) =>
-        logger.info(
-          `Finished updating the device twin with result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
   };
 }

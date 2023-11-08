@@ -97,10 +97,18 @@ mqtt_client.on("message", (topic, payload) => {
     const obj = JSON.parse(payload.toString());
     updateTwinAttribute(obj.tags.host, "ip_address", obj.tags.ip_address);
     updateTwinAttribute(obj.tags.host, "system_name", obj.tags.system_name);
-    updateTwinAttribute(obj.tags.host, "system_version", obj.tags.system_version);
-    updateTwinAttribute(obj.tags.host, "system_description", obj.tags.system_description);
-    let collected_time = (new Date(obj.timestamp * 1000)).toLocaleString();
-    let received_time = (new Date()).toLocaleString();
+    updateTwinAttribute(
+      obj.tags.host,
+      "system_version",
+      obj.tags.system_version
+    );
+    updateTwinAttribute(
+      obj.tags.host,
+      "system_description",
+      obj.tags.system_description
+    );
+    let collected_time = new Date(obj.timestamp * 1000).toLocaleString();
+    let received_time = new Date().toLocaleString();
     if (topic.endsWith("docker_container_status")) {
       // logger.debug("Received from monitoring agent: ");
       // logger.debug(JSON.parse(payload.toString()))
@@ -110,7 +118,7 @@ mqtt_client.on("message", (topic, payload) => {
         container_status: obj.tags.container_status,
         container_version: obj.tags.container_version,
         _collected_time: collected_time,
-        _received_time: received_time
+        _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "trustAgent", ta);
     } else if (topic.endsWith("docker")) {
@@ -119,7 +127,7 @@ mqtt_client.on("message", (topic, payload) => {
         engine_host: obj.tags.engine_host,
         server_version: obj.tags.server_version,
         _collected_time: collected_time,
-        _received_time: received_time
+        _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "docker", docker);
     } else if (topic.endsWith("mem")) {
@@ -160,7 +168,7 @@ mqtt_client.on("message", (topic, payload) => {
         write_back: obj.fields.write_back,
         write_back_tmp: obj.fields.write_back_tmp,
         _collected_time: collected_time,
-        _received_time: received_time
+        _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "memory", mem);
     } else if (topic.endsWith("cpu")) {
@@ -177,7 +185,7 @@ mqtt_client.on("message", (topic, payload) => {
         usage_system: obj.fields.usage_system,
         usage_user: obj.fields.usage_user,
         _collected_time: collected_time,
-        _received_time: received_time
+        _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "cpu", cpu);
     } else if (topic.endsWith("disk")) {
@@ -193,13 +201,18 @@ mqtt_client.on("message", (topic, payload) => {
         used: obj.fields.used,
         used_percent: obj.fields.used_percent,
         _collected_time: collected_time,
-        _received_time: received_time
+        _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "disk", disk);
     } else if (topic.endsWith("temp")) {
       //logger.debug("[Monitoring agent] Received temperature stats: " + payload.toString());
       //TODO: real fields from measurements
-      let temp = {};
+      let temp = {
+        sensor: obj.tags.sensor,
+        temp: obj.fields.temp,
+        _collected_time: collected_time,
+        _received_time: received_time,
+      };
       updateTwinProperty(obj.tags.host, "physical", "temp", temp);
     } else if (topic.endsWith("internet_speed")) {
       //logger.debug("[Monitoring agent] Received internet_speed stats: " + payload.toString());
@@ -211,7 +224,7 @@ mqtt_client.on("message", (topic, payload) => {
         location: obj.fields.location,
         upload: obj.fields.upload,
         _collected_time: collected_time,
-        _received_time: received_time
+        _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "internet_speed", speed);
     } else if (topic.endsWith("procstat_lookup")) {
@@ -284,10 +297,10 @@ async function updateTwinProperty(
   const thingsHandle = http_ditto_client.getThingsHandle();
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
-    logger.debug("Found matching device twin: " + JSON.stringify(thing));   
+    logger.debug("Found matching device twin: " + JSON.stringify(thing));
     await http_ditto_client
       .getFeaturesHandle(thing.thingId)
-      .putProperty(feature, propertyPath, propertyValue);    
+      .putProperty(feature, propertyPath, propertyValue);
   } catch (error) {
     logger.error("UpdateTwinProperty error: " + error.message);
   }
