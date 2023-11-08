@@ -6,13 +6,10 @@ import {
   Row,
   Table,
   Badge,
-  Modal,
   Tooltip,
-  Popconfirm,
   Select,
   Steps,
   message,
-  Tag,
   Form,
   Input,
   Icon,
@@ -20,7 +17,6 @@ import {
 } from "antd";
 import ReactJson from "react-json-view";
 import winston_logger from "./logger.js";
-import Axios from "axios";
 import { GlobalContext } from "./GlobalContext.js";
 import {
   Thing,
@@ -157,19 +153,16 @@ export class CreateDeploymentArea extends Component {
       this.saveDeployment();
     }
     message.success("Deployment complete!")
+    this.setState({current: 0, deployment_name: "", current_agent: {}, matching_devices: [],  save: false})
+
   };
 
   saveDeployment = () => {
-    //logger.info(this.state.new_device);
-    //var device = Thing.fromObject(this.state.new_deployment);
-    //logger.info(device);
 
     let json = this.state.new_deployment;
     json.thingId = "no.sintef.sct.giot:" + this.state.deployment_name;
     json.attributes.trust_agent_id = this.state.current_agent._thingId;
     json.attributes.rql_expression = this.state.fields.rql.value;
-
-    //logger.info("DEPLOYMENT " + JSON.stringify(json));
 
     let deployment = Thing.fromObject(json);
 
@@ -300,79 +293,25 @@ export class CreateDeploymentArea extends Component {
 
   componentDidMount() {
     //add if needed
-    //this.populatePropertyTags();
-    //setTimeout(function () {
-    //this.context.cyber_properties.forEach(function (entry) {
-    //  logger.info(entry);
-    //});
-    //}, 1000);
-    //logger.info(this.context.cyber_properties);
   }
-
-  populatePropertyTags() {
-    let cyber_properties = new Set();
-    this.context.devices.forEach((device) => {
-      if (device._features.hasOwnProperty("cyber")) {
-        Object.entries(device._features.cyber._properties).forEach(
-          ([key, value]) => {
-            cyber_properties.add(key);
-            //logger.info(key);
-          }
-        );
-      }
-    });
-    cyber_properties.forEach(function (entry) {
-      logger.info(entry);
-    });
-    this.setState({ cyber_properties: cyber_properties });
-  }
-
+  
   handleFormChange = (changedFields) => {
     this.setState(({ fields }) => ({
       fields: { ...fields, ...changedFields },
     }));
-    logger.info("changed fields" + JSON.stringify(changedFields));
-    logger.info(" fields" + JSON.stringify(this.state.fields));
+    //logger.info("changed fields" + JSON.stringify(changedFields));
+    //logger.info(" fields" + JSON.stringify(this.state.fields));
   };
 
   onCheckboxChange = (e) => {
-    console.log(`checked = ${e.target.checked}`);
+    //logger.info(`checked = ${e.target.checked}`);
     this.setState({ save: e.target.checked });
   };
 
   onDeploymentNameChange = (e) => {
-    logger.debug(JSON.stringify(e.target.value))
+    //logger.debug(JSON.stringify(e.target.value))
     this.setState({ deployment_name: e.target.value });
   };
-
-  /* showModal = () => {
-    this.setState({
-      modal: true,
-    });
-  }; */
-
-  /* handleOk = (e) => {
-    logger.info(e);
-    this.setState({
-      modal: false,
-    });
-  }; */
-
-  /* handleCancel = (e) => {
-    logger.info(e);
-    this.setState({
-      modal: false,
-    });
-  }; */
-
-  /* handleTagChange(tag, checked) {
-    const { selectedTags } = this.state;
-    const nextSelectedTags = checked
-      ? [...selectedTags, tag]
-      : selectedTags.filter((t) => t !== tag);
-    console.log("You are interested in: ", nextSelectedTags);
-    this.setState({ selectedTags: nextSelectedTags });
-  } */
 
   next() {
     logger.info(this.state.current);
@@ -393,26 +332,10 @@ export class CreateDeploymentArea extends Component {
     const current = this.state.current - 1;
     this.setState({ current });
     logger.info("Prev", current);
-  }
-
-  saveAssignment = async () => {
-    //var json = require("./resources/thing_template.json");
-    const assignment = Thing.fromObject(this.state.new_assignment_json);
-    logger.info(assignment);
-    const thingsHandle = this.context.ditto_client.getThingsHandle();
-    thingsHandle
-      .putThing(assignment)
-      .then((result) =>
-        logger.info(
-          `Finished putting the new assignment with result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
-  };
+  }  
 
   /**
-   * Get all things from Ditto
+   * Find matching devices in Ditto according to the RQL query
    */
   findMatchingDevices = async (trustAgent, rqlExpression) => {
     const searchHandle = this.context.ditto_client.getSearchHandle();
@@ -479,9 +402,5 @@ export class CreateDeploymentArea extends Component {
     //logger.info("value", value);
     //logger.info("trust_agent", this.state.trust_agent);
     this.setState({ current_agent: JSON.parse(value) });
-  };
-
-  executeAssignment = async (assignmentId) => {
-    //TODO:
   };
 }

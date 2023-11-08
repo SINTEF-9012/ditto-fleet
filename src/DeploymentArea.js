@@ -11,22 +11,16 @@ import {
   Popconfirm,
   Select,
   Steps,
-  message,
   Tag,
 } from "antd";
 import ReactJson from "react-json-view";
 import winston_logger from "./logger.js";
-import Axios from "axios";
 import { GlobalContext } from "./GlobalContext";
-import { Thing } from "@eclipse-ditto/ditto-javascript-client-dom";
 
 const logger = winston_logger.child({ source: "DeploymentArea.js" });
 
-const { CheckableTag } = Tag;
 const { Content } = Layout;
 const ButtonGroup = Button.Group;
-const { Option } = Select;
-const { Step } = Steps;
 
 export class DeploymentArea extends Component {
   static contextType = GlobalContext;
@@ -180,23 +174,6 @@ export class DeploymentArea extends Component {
     });
   };
   
-
-  /* createAssignment = async () => {
-    //var json = require("./resources/thing_template.json");
-    const assignment = Thing.fromObject(this.state.new_assignment_json);
-    logger.info(assignment);
-    const thingsHandle = this.context.ditto_client.getThingsHandle();
-    thingsHandle
-      .putThing(assignment)
-      .then((result) =>
-        logger.info(
-          `Finished putting the new assignment with result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
-  }; */  
-
   enactDeployment = async (thingId) => {
     //TODO:
     logger.debug("Enacting deployment: " + thingId)
