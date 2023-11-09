@@ -9,13 +9,14 @@ import {
   Modal,
   Tooltip,
   Popconfirm,
-  Select,
-  Steps,
-  Tag,
+  message
 } from "antd";
 import ReactJson from "react-json-view";
 import winston_logger from "./logger.js";
 import { GlobalContext } from "./GlobalContext";
+import {
+  DefaultSearchOptions,
+} from "@eclipse-ditto/ditto-javascript-client-dom";
 
 const logger = winston_logger.child({ source: "DeploymentArea.js" });
 
@@ -46,7 +47,7 @@ export class DeploymentArea extends Component {
         render: (text, record) => (
           <span style={{ float: "center" }}>
             <ButtonGroup size="small" type="dashed">
-            <Tooltip title="Enact deployment">
+              <Tooltip title="Enact deployment">
                 <Button
                   type="primary"
                   icon="rocket"
@@ -55,8 +56,8 @@ export class DeploymentArea extends Component {
                       title: "Enact deployment: " + record.id,
                       width: 800,
                       onOk: () => {
-                        this.enactDeployment(record.id);
-                      }
+                        this.enactDeployment(record);
+                      },
                     })
                   }
                   ghost
@@ -72,7 +73,7 @@ export class DeploymentArea extends Component {
                       width: 800,
                       onOk: () => {
                         this.deleteDeployment(record.id);
-                      }
+                      },
                     })
                   }
                   ghost
@@ -100,7 +101,8 @@ export class DeploymentArea extends Component {
     ];
     this.state = {
       //add if needed
-      current: 0
+      current: 0,
+      matching_device: [],
     };
     this.editor = React.createRef();
   }
@@ -110,7 +112,7 @@ export class DeploymentArea extends Component {
       <Layout>
         <Content>
           <Row type="flex" justify="end">
-            <Col> 
+            <Col>
               <Popconfirm
                 title="Delete all deployments?"
                 onConfirm={this.deleteAllDeployments}
@@ -139,7 +141,7 @@ export class DeploymentArea extends Component {
                 //expandRowByClick={true}
                 expandedRowRender={(record) => (
                   <span>
-                    <ReactJson src={record} enableClipboard={false} />                    
+                    <ReactJson src={record} enableClipboard={false} />
                   </span>
                 )}
               />
@@ -173,9 +175,56 @@ export class DeploymentArea extends Component {
       this.deleteDeployment(deployment._thingId);
     });
   };
-  
-  enactDeployment = async (thingId) => {
+
+  /** Apply the selected to deployment to matching devices */
+  enactDeployment = async (deployment) => {
+    logger.debug("Enacting deployment: " + deployment._thingId);
     //TODO:
-    logger.debug("Enacting deployment: " + thingId)
+    this.findMatchingDevices(
+      deployment._attributes.rql_expression
+    ).then((result) => this.handleDeploy(deployment._attributes.trust_agent_id, result));
+    message.success("Deployment complete!");
+  };
+
+  /**
+   * Find matching devices in Ditto according to the RQL query
+   */
+  findMatchingDevices = async (rqlExpression) => {
+    const searchHandle = this.context.ditto_client.getSearchHandle();
+    var options = DefaultSearchOptions.getInstance()
+      .withFilter(rqlExpression)
+      .withSort("+thingId")
+      .withLimit(0, 200);
+    var devices = (await searchHandle.search(options)).items;
+    logger.debug("Found matching devices: " + JSON.stringify(devices));
+    return devices;
+  };
+
+  handleDeploy = (trustAgentId, matchingDevices) => {
+    let ta = this.context.trust_agents.find((x) => x._thingId === trustAgentId);
+    logger.debug("Current trust agent: " + JSON.stringify(ta));
+    matchingDevices.forEach((device) => {
+      logger.debug("matching device: " + JSON.stringify(device))
+      const featuresHandle = this.context.ditto_client.getFeaturesHandle(
+        device._thingId
+      );
+      let trust_agent = {
+        container_image: ta._attributes.image,
+        container_version: ta._attributes.version,
+        container_status: "running",
+        ta_meta: ta._attributes,
+      };
+      logger.debug("ta: " + JSON.stringify(trust_agent))
+      featuresHandle
+        .putDesiredProperty("cyber", "trustAgent", trust_agent)
+        .then((result) =>
+          logger.info(
+            device._thingId +
+              `Finished updating the device twin with result: ${JSON.stringify(
+                result
+              )}`
+          )
+        );
+    });
   };
 }
