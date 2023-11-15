@@ -4,7 +4,7 @@
   "attributes": {
     "type": "device",
     "manufacturer": "Raspberry",
-    "platform": "linux/arm7"
+    "platform": "linux/arm/v7"
   },
   "features": {
     "cyber": {

@@ -9,14 +9,12 @@ import {
   Modal,
   Tooltip,
   Popconfirm,
-  message
+  message,
 } from "antd";
 import ReactJson from "react-json-view";
 import winston_logger from "./logger.js";
 import { GlobalContext } from "./GlobalContext";
-import {
-  DefaultSearchOptions,
-} from "@eclipse-ditto/ditto-javascript-client-dom";
+import { DefaultSearchOptions } from "@eclipse-ditto/ditto-javascript-client-dom";
 
 const logger = winston_logger.child({ source: "DeploymentArea.js" });
 
@@ -48,36 +46,24 @@ export class DeploymentArea extends Component {
           <span style={{ float: "center" }}>
             <ButtonGroup size="small" type="dashed">
               <Tooltip title="Enact deployment">
-                <Button
-                  type="primary"
-                  icon="rocket"
-                  onClick={() =>
-                    Modal.confirm({
-                      title: "Enact deployment: " + record.id,
-                      width: 800,
-                      onOk: () => {
-                        this.enactDeployment(record);
-                      },
-                    })
-                  }
-                  ghost
-                />
+                <Popconfirm
+                  title={"Enact deployment: " + record.id}
+                  onConfirm={() => this.enactDeployment(record)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="primary" icon="rocket" ghost />
+                </Popconfirm>
               </Tooltip>
               <Tooltip title="Delete deployment">
-                <Button
-                  type="primary"
-                  icon="delete"
-                  onClick={() =>
-                    Modal.confirm({
-                      title: "Delete deployment: " + record.id,
-                      width: 800,
-                      onOk: () => {
-                        this.deleteDeployment(record.id);
-                      },
-                    })
-                  }
-                  ghost
-                />
+                <Popconfirm
+                  title={"Delete deployment: " + record.id}
+                  onConfirm={() => this.deleteDeployment(record.id)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="primary" icon="delete" ghost />
+                </Popconfirm>
               </Tooltip>
             </ButtonGroup>
           </span>
@@ -180,9 +166,10 @@ export class DeploymentArea extends Component {
   enactDeployment = async (deployment) => {
     logger.debug("Enacting deployment: " + deployment._thingId);
     //TODO:
-    this.findMatchingDevices(
-      deployment._attributes.rql_expression
-    ).then((result) => this.handleDeploy(deployment._attributes.trust_agent_id, result));
+    this.findMatchingDevices(deployment._attributes.rql_expression).then(
+      (result) =>
+        this.handleDeploy(deployment._attributes.trust_agent_id, result)
+    );
     message.success("Deployment complete!");
   };
 
@@ -200,11 +187,12 @@ export class DeploymentArea extends Component {
     return devices;
   };
 
+  /** Deploys the selected trust agent to the matching devices */
   handleDeploy = (trustAgentId, matchingDevices) => {
     let ta = this.context.trust_agents.find((x) => x._thingId === trustAgentId);
     logger.debug("Current trust agent: " + JSON.stringify(ta));
     matchingDevices.forEach((device) => {
-      logger.debug("matching device: " + JSON.stringify(device))
+      logger.debug("matching device: " + JSON.stringify(device));
       const featuresHandle = this.context.ditto_client.getFeaturesHandle(
         device._thingId
       );
@@ -214,7 +202,7 @@ export class DeploymentArea extends Component {
         container_status: "running",
         ta_meta: ta._attributes,
       };
-      logger.debug("ta: " + JSON.stringify(trust_agent))
+      logger.debug("ta: " + JSON.stringify(trust_agent));
       featuresHandle
         .putDesiredProperty("cyber", "trustAgent", trust_agent)
         .then((result) =>

@@ -189,9 +189,7 @@ mqtt_client.on("message", (topic, payload) => {
       };
       updateTwinProperty(obj.tags.host, "cyber", "cpu", cpu);
     } else if (topic.endsWith("disk")) {
-      logger.debug(
-        "[Monitoring agent] Received disk stats: " + payload.toString()
-      );
+      //logger.debug("[Monitoring agent] Received disk stats: " + payload.toString());
       let disk = {
         free: obj.fields.free,
         inodes_free: obj.fields.inodes_free,
@@ -206,7 +204,6 @@ mqtt_client.on("message", (topic, payload) => {
       updateTwinProperty(obj.tags.host, "cyber", "disk", disk);
     } else if (topic.endsWith("temp")) {
       //logger.debug("[Monitoring agent] Received temperature stats: " + payload.toString());
-      //TODO: real fields from measurements
       let temp = {
         sensor: obj.tags.sensor,
         temp: obj.fields.temp,
@@ -227,6 +224,15 @@ mqtt_client.on("message", (topic, payload) => {
         _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "internet_speed", speed);
+    } else if (topic.endsWith("exec")) {
+      //logger.debug("[Monitoring agent] Received exec (packages) stats: " + payload.toString());
+      let packages = 
+      {
+        packages: JSON.parse(obj.fields.packages),        
+        _collected_time: collected_time,
+        _received_time: received_time,
+      };
+      updateTwinProperty(obj.tags.host, "cyber", "packages", packages);
     } else if (topic.endsWith("procstat_lookup")) {
       // logger.debug(
       //   "[Monitoring agent] Received procstat_lookup stats: " +
@@ -316,7 +322,7 @@ async function updateTwinAttribute(thingId, attribute, attributeValue) {
     //logger.debug(JSON.stringify(thing.attributes));
     //logger.debug(JSON.stringify(thing.attributes[attribute]));
     if (attributeValue !== thing.attributes[attribute]) {
-      logger.debug("TRY");
+      //logger.debug("TRY");
       await thingsHandle.putAttribute(thing.thingId, attribute, attributeValue);
     }
   } catch (error) {
@@ -390,7 +396,9 @@ async function checkDesiredReportedTrustAgent() {
   const searchHandle = http_ditto_client.getSearchHandle();
 
   var options = DefaultSearchOptions.getInstance()
-    .withFilter('eq(attributes/type,"device")')
+    .withFilter(
+      'in(attributes/type,"device","physical_device","virtual_device")'
+    )
     .withSort("+thingId")
     .withLimit(0, 200);
   var devices = (await searchHandle.search(options)).items;
@@ -408,7 +416,18 @@ async function checkDesiredReportedTrustAgent() {
     //logger.debug(desiredTrustAgent === reportedTrustAgent);
 
     //FIXME: check that desied propoerty is not empty! Or maybe it is ok...
-    //logger.debug(_.isMatch(reportedTrustAgent, desiredTrustAgent));
+
+    if (desiredTrustAgent) {
+      delete desiredTrustAgent.ta_meta;
+    }
+    if (!_.isMatch(reportedTrustAgent, desiredTrustAgent)) {
+      logger.debug(
+        device._thingId + ": reported and desired trust agents are not in sync!"
+      );
+      logger.debug("Reported TA: " + JSON.stringify(reportedTrustAgent));
+      logger.debug("Desired TA: " + JSON.stringify(desiredTrustAgent));
+      sendDeviceTwin(device._thingId);
+    }
   });
 }
 
@@ -455,7 +474,7 @@ socket.onmessage = function (event) {
 
 socket.onclose = function (event) {
   if (event.wasClean) {
-    loger.info(
+    logger.info(
       `[WebSocket] Connection closed cleanly, code=${event.code} reason=${event.reason}`
     );
   } else {

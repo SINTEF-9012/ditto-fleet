@@ -80,12 +80,14 @@ export class TrustAgentArea extends Component {
                 />
               </Tooltip> */}
               <Tooltip title="Delete trust agent">
-                <Button
-                  type="primary"
-                  icon="delete"
-                  onClick={() => this.deleteTrustAgent(record.id)}
-                  ghost
-                />
+              <Popconfirm
+                  title={"Delete trust agent: " + record.id}
+                  onConfirm={() => this.deleteTrustAgent(record.id)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="primary" icon="delete" ghost />
+                </Popconfirm>                
               </Tooltip>
             </ButtonGroup>
           </span>

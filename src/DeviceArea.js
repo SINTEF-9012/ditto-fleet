@@ -49,7 +49,13 @@ export class DeviceArea extends Component {
           //  </span>
           //) : (
           <span>
-            <Badge status={record._attributes.type === "physical_device" ? "processing" : "default"} />
+            <Badge
+              status={
+                record._attributes.type === "physical_device"
+                  ? "processing"
+                  : "default"
+              }
+            />
             {record._thingId}
           </span>
         ),
@@ -133,23 +139,14 @@ export class DeviceArea extends Component {
                 />
               </Tooltip> */}
               <Tooltip title="Delete device twin">
-                <Button
-                  type="primary"
-                  icon="delete"
-                  onClick={() =>
-                    Modal.confirm({
-                      title: "Delete device twin: " + record.id,
-                      width: 800,
-                      onOk: () => {
-                        this.deleteDeviceTwin(record.id);
-                      },
-                      onCancel: () => {
-                        this.handleCancelEdit();
-                      },
-                    })
-                  }
-                  ghost
-                />
+                <Popconfirm
+                  title={"Delete device twin: " + record.id}
+                  onConfirm={() => this.deleteDeviceTwin(record.id)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="primary" icon="delete" ghost />
+                </Popconfirm>
               </Tooltip>
             </ButtonGroup>
           </span>
@@ -236,7 +233,7 @@ export class DeviceArea extends Component {
   };
 
   handleSimulationSwitchChange = (value) => {
-    logger.info(value)
+    logger.info(value);
     this.setState({ simulation: value });
   };
 
@@ -310,7 +307,7 @@ export class DeviceArea extends Component {
                     : this.context.physical_devices
                 }
                 columns={this.columns}
-                pagination={{ pageSize: 50 }}
+                pagination={{ pageSize: 20 }}
                 onRow={(record) => {
                   return {
                     onClick: (event) => {
