@@ -6,13 +6,13 @@ import {
   Row,
   Table,
   Badge,
-  Tooltip,
+  //Tooltip,
   Select,
   Steps,
   message,
-  Form,
+  //Form,
   Input,
-  Icon,
+  //Icon,
   Checkbox,
 } from "antd";
 import ReactJson from "react-json-view";
@@ -22,18 +22,22 @@ import {
   Thing,
   DefaultSearchOptions,
 } from "@eclipse-ditto/ditto-javascript-client-dom";
+import Editor from "react-simple-code-editor";
+import { highlight, languages } from "prismjs/components/prism-core";
+import "prismjs/components/prism-powershell.js";
+import "prismjs/themes/prism.css"; //Example style, you can use another
 
 const logger = winston_logger.child({ source: "CreateDeploymentArea.js" });
 
 const { Content } = Layout;
-const ButtonGroup = Button.Group;
+//const ButtonGroup = Button.Group;
 const { Option } = Select;
 const { Step } = Steps;
-const { TextArea } = Input;
+//const { TextArea } = Input;
 
-let id = 0;
+//let id = 0;
 
-const CustomizedForm = Form.create({
+/* const CustomizedForm = Form.create({
   name: "rql_expression",
   onFieldsChange(props, changedFields) {
     props.onChange(changedFields);
@@ -81,7 +85,7 @@ const CustomizedForm = Form.create({
       </Form.Item>
     </Form>
   );
-});
+}); */
 
 export class CreateDeploymentArea extends Component {
   static contextType = GlobalContext;
@@ -113,10 +117,11 @@ export class CreateDeploymentArea extends Component {
       current: 0,
       save: false,
       deployment_name: "",
-      current_agent: {},
+      current_agent: null,
       new_deployment: require("./resources/deployment_template.json"),
       matching_devices: [],
       new_assignment_json: require("./resources/cps_assignment_template.json"),
+      rql: "in(attributes/type,'device','physical_device','virtual_device')",
       fields: {
         rql: {
           value:
@@ -142,27 +147,32 @@ export class CreateDeploymentArea extends Component {
       featuresHandle
         .putDesiredProperty("cyber", "trustAgent", trust_agent)
         .then((result) =>
-          logger.info(device._thingId + 
-            `Finished updating the device twin with result: ${JSON.stringify(
-              result
-            )}`
+          logger.info(
+            device._thingId +
+              `Finished updating the device twin with result: ${JSON.stringify(
+                result
+              )}`
           )
         );
     });
     if (this.state.save && this.state.deployment_name !== "") {
       this.saveDeployment();
     }
-    message.success("Deployment complete!")
-    this.setState({current: 0, deployment_name: "", current_agent: {}, matching_devices: [],  save: false})
-
+    message.success("Deployment complete!");
+    this.setState({
+      current: 0,
+      deployment_name: "",
+      current_agent: null,
+      matching_devices: [],
+      save: false,
+    });
   };
 
   saveDeployment = () => {
-
     let json = this.state.new_deployment;
     json.thingId = "no.sintef.sct.giot:" + this.state.deployment_name;
     json.attributes.trust_agent_id = this.state.current_agent._thingId;
-    json.attributes.rql_expression = this.state.fields.rql.value;
+    json.attributes.rql_expression = this.state.rql;
 
     let deployment = Thing.fromObject(json);
 
@@ -176,10 +186,11 @@ export class CreateDeploymentArea extends Component {
           )}`
         )
       );
-  }
+  };
+  
 
   render() {
-    const { current, selected_tags, fields } = this.state;
+    const { current, selected_tags, fields, rql } = this.state;
 
     const steps = [
       {
@@ -196,14 +207,26 @@ export class CreateDeploymentArea extends Component {
                 </Option>
               ))}
             </Select>
-            <ReactJson src={this.state.current_agent} />
+            <ReactJson src={this.state.current_agent === null ? {} : this.state.current_agent} />
           </>
         ),
       },
       {
         title: "Define target conditions",
         content: (
-          <CustomizedForm {...fields} onChange={this.handleFormChange} />
+          <>
+            {/* <CustomizedForm {...fields} onChange={this.handleFormChange} /> */}
+            <Editor
+              value={rql}
+              onValueChange={(code) => this.handleTypeChanges(code)}
+              highlight={(code) => highlight(code, languages.powershell)}
+              padding={10}
+              style={{
+                fontFamily: '"Fira code", "Fira Mono", monospace',
+                fontWeight: 'bold'
+              }}
+            />
+          </>
         ),
       },
       {
@@ -249,15 +272,12 @@ export class CreateDeploymentArea extends Component {
                 style={{ display: "flex", justifyContent: "center" }}
               >
                 {current < steps.length - 1 && (
-                  <Button type="primary" onClick={() => this.next()}>
+                  <Button type="primary" disabled={!this.state.current_agent} onClick={() => this.next()}>
                     Next
                   </Button>
                 )}
                 {current === steps.length - 1 && (
-                  <Button
-                    type="primary"
-                    onClick={this.handleDeploy}
-                  >
+                  <Button type="primary" onClick={this.handleDeploy}>
                     Deploy
                   </Button>
                 )}
@@ -294,6 +314,10 @@ export class CreateDeploymentArea extends Component {
   componentDidMount() {
     //add if needed
   }
+
+  handleTypeChanges = (value) => {
+    this.setState({rql: value});
+  }
   
   handleFormChange = (changedFields) => {
     this.setState(({ fields }) => ({
@@ -318,10 +342,10 @@ export class CreateDeploymentArea extends Component {
     const current = this.state.current + 1;
     if (current === 2) {
       this.handleFormChange();
-      logger.debug("RQL query is: " + this.state.fields.rql.value);
+      logger.debug("RQL query is: " + this.state.rql);
       this.findMatchingDevices(
         this.state.current_agent,
-        this.state.fields.rql.value
+        this.state.rql
       ).then((result) => this.setState({ matching_devices: result }));
     }
     this.setState({ current });
@@ -332,7 +356,7 @@ export class CreateDeploymentArea extends Component {
     const current = this.state.current - 1;
     this.setState({ current });
     logger.info("Prev", current);
-  }  
+  }
 
   /**
    * Find matching devices in Ditto according to the RQL query
