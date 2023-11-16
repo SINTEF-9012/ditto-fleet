@@ -3,13 +3,13 @@
   "policyId": "no.sintef.sct.giot:policy",
   "attributes": {
     "type": "trust_agent_ssh",
-    "version" : "",
-    "url": "",
-    "localFile": "",
+    "version": "3.0.1",
+    "url": "https://eratblob.blob.core.windows.net/newcontainer/trust-agent-ssh.zip",
+    "localFile": "trush-agent-ssh.zip",
     "remoteFile": "",
-    "developer": "",
+    "developer": "songhui",
     "signature": "",
-    "cmd": "",
-    "cwd": ""
+    "cmd": "./trust-agent-ssh/trust-agent.sh",
+    "cwd": "/opt"
   }
 }
