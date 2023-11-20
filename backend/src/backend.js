@@ -109,18 +109,40 @@ mqtt_client.on("message", (topic, payload) => {
     );
     let collected_time = new Date(obj.timestamp * 1000).toLocaleString();
     let received_time = new Date().toLocaleString();
-    if (topic.endsWith("docker_container_status")) {
+    if (
+      topic.endsWith("docker_container_status") ||
+      topic.endsWith("procstat_lookup")
+    ) {
       // logger.debug("Received from monitoring agent: ");
       // logger.debug(JSON.parse(payload.toString()))
       //const obj = JSON.parse(payload.toString());
-      let ta = {
-        container_image: obj.tags.container_image,
-        container_status: obj.tags.container_status,
-        container_version: obj.tags.container_version,
-        _collected_time: collected_time,
-        _received_time: received_time,
-      };
+      let ta = {};
+      if (obj.tags.container_image) {
+        logger.debug("Docker-based trust agent found!");
+        ta = {
+          container_image: obj.tags.container_image,
+          container_status: obj.tags.container_status,
+          container_version: obj.tags.container_version,
+          _collected_time: collected_time,
+          _received_time: received_time,
+        };
+      } else if (obj.fields.running === 1) {
+        logger.debug("SSH-based trust agent found!");
+        ta = {
+          process_name: "trust-agent.sh",
+          process_status: "running",
+          _collected_time: collected_time,
+          _received_time: received_time,
+        };
+      }
       updateTwinProperty(obj.tags.host, "cyber", "trustAgent", ta);
+      //} else if (topic.endsWith("procstat_lookup")) {
+      //logger.debug(
+      //  "[Monitoring agent] Received procstat_lookup stats: " +
+      //    payload.toString()
+      //);
+
+      //updateTwinProperty(obj.tags.host, "cyber", "trustAgent", ta);
     } else if (topic.endsWith("docker")) {
       //logger.debug("[Monitoring agent] Received Docker stats: " + payload.toString())
       let docker = {
@@ -226,30 +248,12 @@ mqtt_client.on("message", (topic, payload) => {
       updateTwinProperty(obj.tags.host, "cyber", "internet_speed", speed);
     } else if (topic.endsWith("exec")) {
       //logger.debug("[Monitoring agent] Received exec (packages) stats: " + payload.toString());
-      let packages = 
-      {
-        packages: JSON.parse(obj.fields.packages),        
+      let packages = {
+        packages: JSON.parse(obj.fields.packages),
         _collected_time: collected_time,
         _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "packages", packages);
-    } else if (topic.endsWith("procstat_lookup")) {
-      // logger.debug(
-      //   "[Monitoring agent] Received procstat_lookup stats: " +
-      //     payload.toString()
-      // );
-      //TODO: finish when the ssh script is ready
-      let ta = {
-        name: "trust-agent.sh",
-        status: obj.fields.running === 1 ? "running" : "stopped",
-      };
-
-      //updateTwinProperty(
-      //  obj.tags.host,
-      //  "cyber",
-      //  "trust_agent",
-      //  ta
-      //);
     }
   }
 });
@@ -303,7 +307,7 @@ async function updateTwinProperty(
   const thingsHandle = http_ditto_client.getThingsHandle();
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
-    logger.debug("Found matching device twin: " + JSON.stringify(thing));
+    //logger.debug("Found matching device twin: " + JSON.stringify(thing));
     await http_ditto_client
       .getFeaturesHandle(thing.thingId)
       .putProperty(feature, propertyPath, propertyValue);
