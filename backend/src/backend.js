@@ -38,12 +38,17 @@ import express from "express";
 import { TimePicker } from "antd";
 //import { connectionLostError } from "@eclipse-ditto/ditto-javascript-client-node";
 
+import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
+import convert from "xml-js";
+
 import schedule from "node-schedule";
 import _ from "lodash";
 
 const PORT = process.env.PORT || 3001;
 
 const app = express();
+
+const parser = new XMLParser();
 
 const logger = winston_logger.child({ source: "backend.js" });
 
@@ -58,6 +63,7 @@ const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 const request_mqtt_topic = "no.sintef.sct.giot.things/request";
 const monitoring_agent_mqtt_topic = "ditto-monitoring-agent/+/+";
+const ta_update_topic = "no.sintef.sct.giot.things/ta-update";
 const namespace = "no.sintef.sct.giot";
 
 const mqtt_client = mqtt.connect(connectUrl, {
@@ -70,10 +76,15 @@ const mqtt_client = mqtt.connect(connectUrl, {
 mqtt_client.on("connect", () => {
   logger.info("[MQTT] Connected to MQTT broker!");
   mqtt_client.subscribe(
-    [upstream_mqtt_topic, request_mqtt_topic, monitoring_agent_mqtt_topic],
+    [
+      upstream_mqtt_topic,
+      request_mqtt_topic,
+      monitoring_agent_mqtt_topic,
+      ta_update_topic,
+    ],
     () => {
       logger.info(
-        `[MQTT] Subscribed to topics: '${upstream_mqtt_topic}', '${request_mqtt_topic}', '${monitoring_agent_mqtt_topic}'`
+        `[MQTT] Subscribed to topics: '${upstream_mqtt_topic}', '${request_mqtt_topic}', '${monitoring_agent_mqtt_topic}', '${ta_update_topic}'`
       );
     }
   );
@@ -91,6 +102,20 @@ mqtt_client.on("message", (topic, payload) => {
     //TODO: send all twins at once
     //FIXME: this is not needed anymore?
     getAllDeviceTwins();
+  }
+  if (topic === ta_update_topic) {
+    //TODO: parse the MSPL message
+    //let mspl = parser.parse(payload.toString());
+    logger.debug(payload.toString());
+    let mspl = convert.xml2js(payload.toString(), {
+      ignoreComment: true,
+      alwaysChildren: true,
+    });
+    //logger.debug("Converted JSON file " + mspl);
+    //FIXME: this hard-coded part needs to be fixed
+    //TODO: create a new TA instance with a new version (DOCKER!)
+    //Find all devices running this TA with an older version and pply the new one. 
+
   }
   if (topic.includes("ditto-monitoring-agent")) {
     //console.debug("Topic name: " + topic);
