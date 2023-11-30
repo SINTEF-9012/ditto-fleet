@@ -262,7 +262,7 @@ class App extends Component {
       .withFilter(
         'in(attributes/type,"device","physical_device","virtual_device")'
       )
-      .withSort("+thingId")
+      .withSort("+attributes/type")
       .withLimit(0, 200);
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;

@@ -70,7 +70,7 @@ export class DeviceArea extends Component {
               <Tooltip title="Deploy a trust agent">
                 <Button
                   type="primary"
-                  icon="safety-certificate"
+                  icon="plus-circle"
                   onClick={() =>
                     Modal.confirm({
                       title: "Deploy a trust agent",
@@ -108,36 +108,16 @@ export class DeviceArea extends Component {
                   ghost
                 />
               </Tooltip>
-              {/* <Tooltip title="Edit digital twin">
-                <Button
-                  type="primary"
-                  icon="edit"
-                  onClick={() =>
-                    Modal.confirm({
-                      title: "Edit device twin",
-                      width: 800,
-                      height: 600,
-                      content: (
-                        <Editor
-                          value={this.state.active_device}
-                          onChange={this.handleExistingTwinChange}
-                        />
-                      ),
-                      onOk: () => {
-                        //TODO: update the digital twin
-                        //this.deployTrustAgent(
-                        //  this.state.active_device,
-                        //  this.state.trust_agent
-                        //);
-                      },
-                      onCancel: () => {
-                        this.handleCancelEdit();
-                      },
-                    })
-                  }
-                  ghost
-                />
-              </Tooltip> */}
+              <Tooltip title="Undeploy a trust agent">
+                <Popconfirm
+                  title={"Undeploy a trust agent on: " + record.id}
+                  onConfirm={() => this.undeployTrustAgent(record.id)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="primary" icon="minus-circle" ghost />
+                </Popconfirm>
+              </Tooltip>
               <Tooltip title="Delete device twin">
                 <Popconfirm
                   title={"Delete device twin: " + record.id}
@@ -396,6 +376,20 @@ export class DeviceArea extends Component {
 
     // TODO: send an MQTT message to an adapter
     logger.info("Sending a MQTT message to deploy a trust agent");
+  };
+
+  undeployTrustAgent = async (thingId) => {
+    logger.debug("Undeploying agent on: " + thingId);
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);    
+    featuresHandle
+      .putDesiredProperty("cyber", "trustAgent", {})
+      .then((result) =>
+        logger.info(
+          `Finished updating the device twin with result: ${JSON.stringify(
+            result
+          )}`
+        )
+      );
   };
 
   deployTrustAgent = async (thingId, desired_agent) => {
