@@ -64,12 +64,13 @@ export class TrustAgentArea extends Component {
             </Modal> */}
             <ButtonGroup size="small" type="dashed">
               <Tooltip title="Deploy on all suitable devices">
-                <Button
-                  type="primary"
-                  icon="deployment-unit"
-                  onClick={() => this.assignTrustAgentToAll(record)}
-                  ghost
-                />
+              <Popconfirm
+                  title={"Deploy on all devices: " + record.id}
+                  onConfirm={() => this.assignTrustAgentToAll(record)}
+                  okText="Yes"
+                  cancelText="No"                >
+                  <Button type="primary" icon="deployment-unit" ghost />
+                </Popconfirm>                
               </Tooltip>
               {/* <Tooltip title="Deploy on selected devices">
                 <Button

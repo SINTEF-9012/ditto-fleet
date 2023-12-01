@@ -33,13 +33,13 @@ import { logger as winston_logger } from "./logger.js";
 
 import WebSocket from "ws";
 import mqtt from "mqtt";
-
+import fs from "fs";
 import express from "express";
 import { TimePicker } from "antd";
 //import { connectionLostError } from "@eclipse-ditto/ditto-javascript-client-node";
 
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
-import convert from "xml-js";
+//import convert from "xml-js";
 
 import schedule from "node-schedule";
 import _ from "lodash";
@@ -107,15 +107,17 @@ mqtt_client.on("message", (topic, payload) => {
     //TODO: parse the MSPL message
     //let mspl = parser.parse(payload.toString());
     logger.debug(payload.toString());
-    let mspl = convert.xml2js(payload.toString(), {
-      ignoreComment: true,
-      alwaysChildren: true,
-    });
+    //let mspl = convert.xml2js(payload.toString(), {
+    //  ignoreComment: true,
+    //  alwaysChildren: true,
+    //});
     //logger.debug("Converted JSON file " + mspl);
     //FIXME: this hard-coded part needs to be fixed
     //TODO: create a new TA instance with a new version (DOCKER!)
-    //Find all devices running this TA with an older version and pply the new one. 
-
+    //Find all devices running this TA with an older version and apply the new one.
+    //let new_ta = require('./resources/new_ta.json');
+    var new_ta = JSON.parse(fs.readFileSync("./resources/new_ta.json", "utf8"));
+    createTrustAgent(new_ta).then((result) => checkExistingTrustAgents(result));
   }
   if (topic.includes("ditto-monitoring-agent")) {
     //console.debug("Topic name: " + topic);
@@ -310,7 +312,7 @@ const http_ditto_client = DittoNodeClient.newHttpClient()
   //.twinChannel()
   .build();
 
-const job = schedule.scheduleJob("*/1 * * * *", checkDesiredReportedTrustAgent);
+//const job = schedule.scheduleJob("*/1 * * * *", checkDesiredReportedTrustAgent);
 
 /** Fully update the digital twin in Ditto (i.e. all its reported properties within features). */
 async function updateTwinProperties(twin) {
@@ -420,7 +422,24 @@ async function getAllDeviceTwins() {
   });
 }
 
-/** Check if the desired and reported properties related to the Trust Agent are equal. */
+/** Check if any of the devices is running an older version of the TA. */
+async function checkExistingTrustAgents(new_ta) {
+  const searchHandle = http_ditto_client.getSearchHandle();
+  var options = DefaultSearchOptions.getInstance()
+    .withFilter(
+      'in(attributes/type,"device","physical_device","virtual_device")'
+    )
+    .withSort("+thingId")
+    .withLimit(0, 200);
+  var devices = (await searchHandle.search(options)).items;
+  devices.forEach((device) => {
+    let trustAgent = device._features.cyber._properties.trustAgent;
+
+    //FIXME: uncomment
+    //deployTrustAgent(device._thingId, new_ta);
+  });
+}
+
 async function checkDesiredReportedTrustAgent() {
   const searchHandle = http_ditto_client.getSearchHandle();
 
@@ -457,6 +476,60 @@ async function checkDesiredReportedTrustAgent() {
       logger.debug("Desired TA: " + JSON.stringify(desiredTrustAgent));
       sendDeviceTwin(device._thingId);
     }
+  });
+}
+
+async function deployTrustAgent(thingId, desired_agent) {
+  //TODO: how to pass the meta information about the trust agent?
+  //desired_agent.status = "running";
+  logger.debug("Desired agent: " + desired_agent);
+  const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
+  let trust_agent;
+  if (desired_agent._attributes.type === "trust_agent_docker") {
+    trust_agent = {
+      //name: desired_agent._thingId,
+      container_image: desired_agent._attributes.image,
+      container_version: desired_agent._attributes.version,
+      container_status: "running",
+      ta_meta: desired_agent._attributes,
+      //  ? desired_agent._attributes.version
+      //  : "unknown",
+    };
+  } else if (desired_agent._attributes.type === "trust_agent_ssh") {
+    trust_agent = {
+      //name: desired_agent._thingId,
+      process_name: "trust-agent.sh",
+      //container_version: desired_agent._attributes.version,
+      process_status: "running",
+      ta_meta: desired_agent._attributes,
+      //  ? desired_agent._attributes.version
+      //  : "unknown",
+    };
+  }
+  featuresHandle
+    .putDesiredProperty("cyber", "trustAgent", trust_agent)
+    .then((result) =>
+      logger.info(
+        `Finished updating the device twin with result: ${JSON.stringify(
+          result
+        )}`
+      )
+    );
+}
+
+/** Creates a new trust agent in Ditto */
+async function createTrustAgent(new_ta_string) {
+  //var json = require("./resources/thing_template.json");
+  const trust_agent = Thing.fromObject(new_ta_string);
+  logger.debug("NEW TRUST AGENT CREATED: " + JSON.stringify(trust_agent));
+  const thingsHandle = http_ditto_client.getThingsHandle();
+  thingsHandle.putThing(trust_agent).then((result) => {
+    logger.info(
+      `Finished putting the new trust agent with result: ${JSON.stringify(
+        result
+      )}`
+    );
+    return trust_agent;
   });
 }
 
