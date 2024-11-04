@@ -1,13 +1,17 @@
 #!/usr/bin/python
 
+import os
 import paho.mqtt.client as mqtt
 
 client = mqtt.Client("send_mspl")
 client.connect(host="test.mosquitto.org", port=1883)
 
-f = open("mspl.xml")
+script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
+abs_file_path = os.path.join(script_dir, "mspl.xml")
+
+f = open(abs_file_path)
 string = f.read()
 byteArray = bytes(string,  encoding='utf-8')
-client.publish("no.sintef.sct.giot.things/ta-update", payload=byteArray, qos=0, retain=False)
+client.publish("no.sintef.sct.giot.things/mspl-update", payload=byteArray, qos=0, retain=False)
 
 print("MESSAGE SENT")

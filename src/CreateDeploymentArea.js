@@ -21,7 +21,7 @@ import { GlobalContext } from "./GlobalContext.js";
 import {
   Thing,
   DefaultSearchOptions,
-} from "@eclipse-ditto/ditto-javascript-client-dom";
+} from "sintef-ditto-javascript-client-dom";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-powershell.js";
@@ -121,11 +121,11 @@ export class CreateDeploymentArea extends Component {
       new_deployment: require("./resources/deployment_template.json"),
       matching_devices: [],
       new_assignment_json: require("./resources/cps_assignment_template.json"),
-      rql: "in(attributes/type,'device','physical_device','virtual_device')",
+      rql: "and(eq(features/cyber/properties/trustAgent/container_image,'rdautov/trust-agent'),eq(features/cyber/properties/trustAgent/container_version,'0.1'))",
       fields: {
         rql: {
           value:
-            "in(attributes/type,'device','physical_device','virtual_device')",
+            "and(eq(features/cyber/properties/trustAgent/container_image,'rdautov/trust-agent'),eq(features/cyber/properties/trustAgent/container_version,'0.1'))",
         },
       },
     };
@@ -194,7 +194,7 @@ export class CreateDeploymentArea extends Component {
 
     const steps = [
       {
-        title: "Select a trust agent",
+        title: "Select software/firmware",
         content: (
           <>
             <Select

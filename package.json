@@ -4,11 +4,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@eclipse-ditto/ditto-javascript-client-dom": "0.0.4",
-    "@eclipse-ditto/ditto-javascript-client-node": "0.0.4",
     "@types/prismjs": "^1.26.3",
     "antd": "^3.26.19",
     "axios": "^0.19.0",
+    "ditto-fleet-gui": "file:",
     "fast-xml-parser": "^4.3.2",
     "js-yaml": "^3.14.0",
     "json2yaml": "^1.1.0",
@@ -23,6 +22,7 @@
     "react-scripts": "^3.4.3",
     "react-simple-code-editor": "^0.11.0",
     "read-yaml": "^1.1.0",
+    "sintef-ditto-javascript-client-dom": "0.0.1",
     "winston": "^3.8.2"
   },
   "scripts": {

@@ -2,6 +2,8 @@ This project is a Digital Twin platform for software management on a fleet of de
 
 ## Docker
 
+`docker image build --tag rdautov/ditto-fleet-backend:0.1 .`
+
 ### Stand-alone Docker container
 
 To run the GUI please pull the latest version of the `dautov:ditto-fleet-backend` image and run the following command:

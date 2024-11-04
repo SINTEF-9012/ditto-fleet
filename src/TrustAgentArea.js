@@ -12,7 +12,7 @@ import {
 } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
-import { Thing } from "@eclipse-ditto/ditto-javascript-client-dom";
+import { Thing } from "sintef-ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 import winston_logger from "./logger.js";
@@ -29,7 +29,7 @@ export class TrustAgentArea extends Component {
     super(props);
     this.columns = [
       {
-        title: "Trust Agent ID",
+        title: "Software/firmware ID",
         dataIndex: "_thingId",
         align: "left",
         render: (text, record) => (
@@ -80,9 +80,9 @@ export class TrustAgentArea extends Component {
                   ghost
                 />
               </Tooltip> */}
-              <Tooltip title="Delete trust agent">
+              <Tooltip title="De-register">
               <Popconfirm
-                  title={"Delete trust agent: " + record.id}
+                  title={"De-register software/firmware: " + record.id}
                   onConfirm={() => this.deleteTrustAgent(record.id)}
                   okText="Yes"
                   cancelText="No"
@@ -161,7 +161,7 @@ export class TrustAgentArea extends Component {
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new trust agent for Docker",
+                    title: "Register new Docker-based software",
                     width: 800,
                     content: (
                       <Editor
@@ -178,14 +178,14 @@ export class TrustAgentArea extends Component {
                   })
                 }
               >
-                New trust agent for Docker
+                New Docker-based software
               </Button>
-              <Button
+              {/* <Button
                 type="primary"
                 style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
                 onClick={() =>
                   Modal.confirm({
-                    title: "Create a new trust agent for SSH",
+                    title: "Register new SSH-based software",
                     width: 800,
                     content: (
                       <Editor
@@ -202,10 +202,10 @@ export class TrustAgentArea extends Component {
                   })
                 }
               >
-                New trust agent for SSH
-              </Button>
+                New SSH-based software
+              </Button> */}
               <Popconfirm
-                title="Delete all trust agents?"
+                title="Un-register all software?"
                 onConfirm={this.deleteAllTrustAgents}
                 okText="Yes"
                 cancelText="No"

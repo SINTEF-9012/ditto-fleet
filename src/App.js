@@ -8,7 +8,7 @@ import {
   DittoDomClient,
   DomHttpBasicAuth,
   DefaultSearchOptions,
-} from "@eclipse-ditto/ditto-javascript-client-dom";
+} from "sintef-ditto-javascript-client-dom";
 
 //"@eclipse-ditto/ditto-javascript-client-dom"; //"../ditto-client-extensions/lib/api/dist/model/things.model.js";
 //import { DomHttpBasicAuth } from "./build/dom/src/dom-auth.js";
@@ -34,7 +34,7 @@ const PROJECT_URL = process.env["REACT_APP_" + PROJECT + "_URL"];
 const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png";
 
 const logger = winston_logger.child({ source: "App.js" });
-logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
+//logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
 
 const ditto_client = DittoDomClient.newHttpClient()
   .withoutTls()
@@ -177,7 +177,7 @@ class App extends Component {
                       tab={
                         <span>
                           <Icon type="safety-certificate" />
-                          Trust Agents
+                          Software/Firmware
                         </span>
                       }
                     >

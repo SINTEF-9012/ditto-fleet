@@ -4,7 +4,7 @@ import {
   DittoNodeClient,
   NodeWebSocketBasicAuth,
   Thing,
-} from "@eclipse-ditto/ditto-javascript-client-node";
+} from "sintef-ditto-javascript-client-node";
 import WebSocket from "ws";
 
 import fs from "fs";

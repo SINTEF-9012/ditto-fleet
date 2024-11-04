@@ -25,7 +25,7 @@ import {
   Features,
   Thing,
   connectionLostError,
-} from "@eclipse-ditto/ditto-javascript-client-node";
+} from "sintef-ditto-javascript-client-node";
 //import {  } from "../dist/node/dist/node/src/node-auth.js";
 //"@eclipse-ditto/ditto-javascript-client-dom";
 
@@ -35,14 +35,15 @@ import WebSocket from "ws";
 import mqtt from "mqtt";
 import fs from "fs";
 import express from "express";
-import { TimePicker } from "antd";
-//import { connectionLostError } from "@eclipse-ditto/ditto-javascript-client-node";
-
+import {DOMParser} from 'xmldom';
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
 //import convert from "xml-js";
 
 import schedule from "node-schedule";
 import _ from "lodash";
+
+import deployment_template from '../resources/deployment_template.json' assert { type: "json" };
+import software_template from '../resources/software_template.json' assert { type: "json" };
 
 const PORT = process.env.PORT || 3001;
 
@@ -63,7 +64,7 @@ const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 const request_mqtt_topic = "no.sintef.sct.giot.things/request";
 const monitoring_agent_mqtt_topic = "ditto-monitoring-agent/+/+";
-const ta_update_topic = "no.sintef.sct.giot.things/ta-update";
+const mspl_topic = "no.sintef.sct.giot.things/mspl-update";
 const namespace = "no.sintef.sct.giot";
 
 const mqtt_client = mqtt.connect(connectUrl, {
@@ -80,18 +81,18 @@ mqtt_client.on("connect", () => {
       upstream_mqtt_topic,
       request_mqtt_topic,
       monitoring_agent_mqtt_topic,
-      ta_update_topic,
+      mspl_topic,
     ],
     () => {
       logger.info(
-        `[MQTT] Subscribed to topics: '${upstream_mqtt_topic}', '${request_mqtt_topic}', '${monitoring_agent_mqtt_topic}', '${ta_update_topic}'`
+        `[MQTT] Subscribed to topics: '${upstream_mqtt_topic}', '${request_mqtt_topic}', '${monitoring_agent_mqtt_topic}', '${mspl_topic}'`
       );
     }
   );
 });
 
 mqtt_client.on("message", (topic, payload) => {
-  logger.debug("[MQTT] Received via " + topic + ": " + payload.toString());
+  //logger.debug("[MQTT] Received via " + topic + ": " + payload.toString());
   if (topic === upstream_mqtt_topic) {
     //logger.debug("topic ok")
     //FIXME: this is not how the digital twin is supposed to be updated!
@@ -103,24 +104,45 @@ mqtt_client.on("message", (topic, payload) => {
     //FIXME: this is not needed anymore?
     getAllDeviceTwins();
   }
-  if (topic === ta_update_topic) {
+  if (topic === mspl_topic) {
     //TODO: parse the MSPL message
     //let mspl = parser.parse(payload.toString());
-    logger.debug(payload.toString());
-    //let mspl = convert.xml2js(payload.toString(), {
-    //  ignoreComment: true,
-    //  alwaysChildren: true,
-    //});
-    //logger.debug("Converted JSON file " + mspl);
-    //FIXME: this hard-coded part needs to be fixed
-    //TODO: create a new TA instance with a new version (DOCKER!)
-    //Find all devices running this TA with an older version and apply the new one.
-    //let new_ta = require('./resources/new_ta.json');
-    var new_ta = JSON.parse(fs.readFileSync("./resources/new_ta.json", "utf8"));
-    createTrustAgent(new_ta).then((result) => checkExistingTrustAgents(result));
+    //logger.debug(payload.toString());
+
+    const parser = new DOMParser();
+    let mspl = parser.parseFromString(payload.toString(), 'text/xml');
+    logger.debug(mspl.toString());
+
+    let rules = mspl.getElementsByTagName('configuration-rule');
+    Array.from(rules).forEach((rule) => {
+      //logger.debug('RULE' + rule.toString())
+      let actions = rule.getElementsByTagName('configuration-action');
+      Array.from(actions).forEach((action) => {
+        let type = action.getElementsByTagName('software-protection-type')[0];
+        //logger.debug("TYPE" + type.textContent)
+        if (type.textContent == 'UPDATE') {
+          //logger.debug("UPDATE" + action.toString())                    
+          let imageName = rule.getElementsByTagName('software-name')[0].textContent
+          let imageVersion = rule.getElementsByTagName('software-fixed-version')[0].textContent
+          let softwareId = imageName.split('/')[1] + '_v' + imageVersion
+                    
+          //logger.info(softwareId,imageName,imageVersion)
+          //createSoftware(softwareId,imageName,imageVersion) 
+
+          let deploymentId = rule.getElementsByTagName('name')[0].textContent          
+          let targets = rule.getElementsByTagName('software-version')
+          let rql = "and(eq(features/cyber/properties/trustAgent/container_image,'" + imageName + "'),eq(features/cyber/properties/trustAgent/container_version,'" + targets[0].textContent + "'))"
+          //TODO: handle if there is more than one target version
+          
+          //logger.debug("RQL: " + rql)
+
+          createDeployment(deploymentId,softwareId,rql)
+        }
+      });
+    });
   }
   if (topic.includes("ditto-monitoring-agent")) {
-    //console.debug("Topic name: " + topic);
+    logger.debug("[MQTT] Message via topic: " + topic);
     const obj = JSON.parse(payload.toString());
     updateTwinAttribute(obj.tags.host, "ip_address", obj.tags.ip_address);
     updateTwinAttribute(obj.tags.host, "system_name", obj.tags.system_name);
@@ -140,8 +162,8 @@ mqtt_client.on("message", (topic, payload) => {
       topic.endsWith("docker_container_status") ||
       topic.endsWith("procstat_lookup")
     ) {
-      // logger.debug("Received from monitoring agent: ");
-      // logger.debug(JSON.parse(payload.toString()))
+      //logger.warn("Received from monitoring agent: ");
+      //logger.warn(JSON.parse(payload.toString()))
       //const obj = JSON.parse(payload.toString());
       let ta = {};
       if (obj.tags.container_image) {
@@ -162,6 +184,7 @@ mqtt_client.on("message", (topic, payload) => {
           _received_time: received_time,
         };
       }
+      //logger.warn("Resulting trust agent" + JSON.stringify(ta))
       updateTwinProperty(obj.tags.host, "cyber", "trustAgent", ta);
       //} else if (topic.endsWith("procstat_lookup")) {
       //logger.debug(
@@ -312,7 +335,7 @@ const http_ditto_client = DittoNodeClient.newHttpClient()
   //.twinChannel()
   .build();
 
-//const job = schedule.scheduleJob("*/1 * * * *", checkDesiredReportedTrustAgent);
+const job = schedule.scheduleJob("*/3 * * * *", checkDesiredReportedTrustAgent);
 
 /** Fully update the digital twin in Ditto (i.e. all its reported properties within features). */
 async function updateTwinProperties(twin) {
@@ -335,6 +358,7 @@ async function updateTwinProperty(
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
     //logger.debug("Found matching device twin: " + JSON.stringify(thing));
+    //logger.error(feature + " -- " + propertyPath + " -- " + propertyValue)
     await http_ditto_client
       .getFeaturesHandle(thing.thingId)
       .putProperty(feature, propertyPath, propertyValue);
@@ -377,24 +401,27 @@ async function sendDeviceTwin(thingId) {
   //  thing.features.agent.properties.status !==
   //    thing.features.agent.desiredProperties.status
   //) {
-  mqtt_client.publish(
-    downstream_mqtt_topic,
-    JSON.stringify(thing),
-    { qos: 0, retain: false },
-    (error) => {
-      if (error) {
-        logger.error("sendDeviceTwin error: " + error.message);
+
+  if (thing.attributes.type == "physical_device") {
+    mqtt_client.publish(
+      downstream_mqtt_topic,
+      JSON.stringify(thing),
+      { qos: 0, retain: false },
+      (error) => {
+        if (error) {
+          logger.error("sendDeviceTwin error: " + error.message);
+        }
       }
-    }
-  );
-  logger.info(
-    "Device twin with updated desired properties sent to the dowsntream channel."
-  );
-  //} else {
-  //  logger.info(
-  //    "Trust agent already in sync or not assigned yet, not sending device twin to dowsntream channel."
-  //  );
-  //}
+    );
+    logger.info(
+      "Device twin with updated desired properties sent to the dowsntream channel."
+    );
+    //} else {
+    //  logger.info(
+    //    "Trust agent already in sync or not assigned yet, not sending device twin to dowsntream channel."
+    //  );
+    //}
+  }
 }
 
 /** Fetch all device twins from Ditto and publish them to the downstream MQTT channel. */
@@ -469,11 +496,15 @@ async function checkDesiredReportedTrustAgent() {
       delete desiredTrustAgent.ta_meta;
     }
     if (!_.isMatch(reportedTrustAgent, desiredTrustAgent)) {
-      logger.debug(
-        device._thingId + ": reported and desired trust agents are not in sync!"
+      logger.warn(
+        device._thingId + ": reported and desired software are not in sync!"
       );
-      logger.debug("Reported TA: " + JSON.stringify(reportedTrustAgent));
-      logger.debug("Desired TA: " + JSON.stringify(desiredTrustAgent));
+      logger.warn(
+        "Reported software: " + JSON.stringify(reportedTrustAgent, null, 2)
+      );
+      logger.warn(
+        "Desired software: " + JSON.stringify(desiredTrustAgent, null, 2)
+      );
       sendDeviceTwin(device._thingId);
     }
   });
@@ -533,6 +564,51 @@ async function createTrustAgent(new_ta_string) {
   });
 }
 
+/** Creates new software in Ditto after receiving and parsing an MSPL file */
+async function createSoftware(softwareId, imageName, imageVersion) {
+  //var json = require("./resources/thing_template.json");
+  let software = software_template
+  software.thingId = 'no.sintef.sct.giot:' + softwareId
+  software.attributes.image = imageName
+  software.attributes.version = imageVersion
+  
+  //let trust_agent = Thing.fromObject(new_ta_string);
+  //logger.debug("NEW TRUST AGENT CREATED: " + JSON.stringify(trust_agent.));
+  const thingsHandle = http_ditto_client.getThingsHandle();
+  
+  let thing = Thing.fromObject(software)
+  logger.debug("New software: " + JSON.stringify(software))
+  
+  await thingsHandle.putThing(thing).then((result) => {
+    logger.info(
+      `Finished putting software with result: ${JSON.stringify(
+        result
+      )}`
+    );
+  });
+}
+
+/** Creates a new deployment in Ditto after receiving and parsing an MSPL file */
+async function createDeployment(thingId, softwareId, rql) {
+  let deployment = deployment_template;
+  deployment.thingId = "no.sintef.sct.giot:" + thingId;
+  deployment.attributes.trust_agent_id = softwareId;
+  deployment.attributes.rql_expression = rql;
+
+  let thing = Thing.fromObject(deployment);
+
+  const thingsHandle = http_ditto_client.getThingsHandle();
+  await thingsHandle
+    .putThing(thing)
+    .then((result) =>
+      logger.info(
+        `Finished putting the new deployment with the result: ${JSON.stringify(
+          result
+        )}`
+      )
+    );
+};
+
 socket.onopen = function (event) {
   logger.info("[WebSocket] Connected to Ditto server via WebSocket");
   socket.send("START-SEND-EVENTS");
@@ -552,12 +628,10 @@ socket.onopen = function (event) {
           event.path.includes("desiredProperties")
         ) {
           const name_array = event.topic.split("/");
-          logger.debug("Device Id: " + name_array[0] + ":" + name_array[1]);
-          logger.debug(
-            "Desired property " +
-              JSON.stringify(event.value) +
-              " changed to: " +
-              JSON.stringify(event.value)
+          logger.info("Device ID: " + name_array[0] + ":" + name_array[1]);
+          logger.info(
+            "Desired property changed to: " +
+              JSON.stringify(event.value, null, 2)
           );
           sendDeviceTwin(name_array[0] + ":" + name_array[1]);
         }
@@ -591,5 +665,6 @@ socket.onerror = function (error) {
 };
 
 app.listen(PORT, () => {
+  logger.info("Starting Fleet Manager + Eclipse Ditto backend");
   logger.info(`Server listening on ${PORT}`);
 });

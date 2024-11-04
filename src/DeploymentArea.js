@@ -14,7 +14,7 @@ import {
 import ReactJson from "react-json-view";
 import winston_logger from "./logger.js";
 import { GlobalContext } from "./GlobalContext";
-import { DefaultSearchOptions } from "@eclipse-ditto/ditto-javascript-client-dom";
+import { DefaultSearchOptions } from "sintef-ditto-javascript-client-dom";
 
 const logger = winston_logger.child({ source: "DeploymentArea.js" });
 

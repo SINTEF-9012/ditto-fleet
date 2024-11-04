@@ -16,46 +16,20 @@
           <configuration-action>
             <software-protection-action>
               <software-protection-type>UPDATE</software-protection-type>
-              <software-fixed-version>4.0.2</software-fixed-version>
-              <software-fix-url>https://software.cisco.com/download/home/286325414/type/286325316/release/4.0.2?catid=268438162</software-fix-url>
+              <software-fixed-version>0.4</software-fixed-version>
+              <software-fix-url>https://hub.docker.com/repository/docker/rdautov/trust-agent</software-fix-url>
             </software-protection-action>
           </configuration-action>
           <configuration-condition>
             <software-configuration-condition>
               <software-identification-condition>
-                <software-name>Cyber Vision Software</software-name>
-                <software-version>&lt;=3.2</software-version>
-                <software-version>4.0</software-version>
+                <software-name>rdautov/trust-agent</software-name>
+                <software-version>0.1</software-version>
+                <software-version>0.2</software-version>
               </software-identification-condition>
             </software-configuration-condition>
           </configuration-condition>
-        </configuration-rule>
-        <configuration-rule>
-          <name>Rule_61a19faa-820a-4d0a-a5ca-337d3c72a7bf</name>
-          <isCNF>false</isCNF>
-          <external-data>
-            <priority>500</priority>
-          </external-data>
-          <configuration-action>
-            <software-protection-action>
-              <software-protection-type>UPDATE</software-protection-type>
-              <software-fixed-version>2.9.19</software-fixed-version>
-              <software-fixed-version>3.1.11.0</software-fixed-version>
-              <software-fix-url>https://www.snort.org/downloads/snort/snort-2.9.20-1.f35.x86_64.rpm</software-fix-url>
-              <software-fix-url>https://www.snort.org/downloads/snort/snort-openappid-2.9.20-1.f35.x86_64.rpm</software-fix-url>
-              <software-fix-url>https://www.snort.org/downloads/snort/snort-2.9.20-1.centos.x86_64.rpm</software-fix-url>
-            </software-protection-action>
-          </configuration-action>
-          <configuration-condition>
-            <software-configuration-condition>
-              <software-identification-condition>
-                <software-name>Snort Software</software-name>
-                <software-version>2.x</software-version>
-                <software-version>3.x</software-version>
-              </software-identification-condition>
-            </software-configuration-condition>
-          </configuration-condition>
-        </configuration-rule>
+        </configuration-rule>        
       </rule-set-configuration>
     </configuration>
   </mspl>

@@ -18,7 +18,7 @@ import {
   Feature,
   Thing,
   Features,
-} from "@eclipse-ditto/ditto-javascript-client-dom";
+} from "sintef-ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 import winston_logger from "./logger.js";
@@ -67,13 +67,13 @@ export class DeviceArea extends Component {
         render: (text, record) => (
           <span style={{ float: "center" }}>
             <ButtonGroup size="small" type="dashed">
-              <Tooltip title="Deploy a trust agent">
+              <Tooltip title="Deploy software">
                 <Button
                   type="primary"
                   icon="plus-circle"
                   onClick={() =>
                     Modal.confirm({
-                      title: "Deploy a trust agent",
+                      title: "Deploy software",
                       //width: 600,
                       //height: 300,
                       content: (
@@ -108,9 +108,9 @@ export class DeviceArea extends Component {
                   ghost
                 />
               </Tooltip>
-              <Tooltip title="Undeploy a trust agent">
+              <Tooltip title="Undeploy software">
                 <Popconfirm
-                  title={"Undeploy a trust agent on: " + record.id}
+                  title={"Undeploy software on: " + record.id}
                   onConfirm={() => this.undeployTrustAgent(record.id)}
                   okText="Yes"
                   cancelText="No"
@@ -154,7 +154,7 @@ export class DeviceArea extends Component {
       active_device: "",
       new_device: require("./resources/cps_device_template.json"),
       edited_device: "",
-      simulation: true,
+      simulation: false,
     };
   }
 
@@ -225,8 +225,7 @@ export class DeviceArea extends Component {
             <Col flex="auto" justify="end" align="right">
               <Switch
                 checkedChildren="Sim"
-                unCheckedChildren="Phy"
-                defaultChecked
+                unCheckedChildren="Phy"                
                 style={{
                   marginTop: 22,
                   marginBottom: 10,
