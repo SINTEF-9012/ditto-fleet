@@ -1,0 +1,18 @@
+{
+    "clientID":"High Risk Test",
+    "software":{
+        "name": "WINDOWS",
+        "distribution": "8",
+        "version":"0.1"
+    },
+    "hardware":{
+        "cpu": "INTEL",
+        "ram": "4GB"
+    },
+    "softwareReconfig": {
+        "authorized": "FALSE"
+    },
+    "hardwareReconfig": {
+        "authorized": "FALSE"
+    }
+}

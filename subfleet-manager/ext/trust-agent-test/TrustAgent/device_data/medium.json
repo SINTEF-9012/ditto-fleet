@@ -1,0 +1,12 @@
+{
+    "clientID":"Medium Risk Test",
+    "software":{
+        "name": "WINDOWS",
+        "distribution": "11",
+        "version": "1.0"
+    },
+    "hardware":{
+        "cpu": "INTEL",
+        "ram": "8GB"
+    }
+}

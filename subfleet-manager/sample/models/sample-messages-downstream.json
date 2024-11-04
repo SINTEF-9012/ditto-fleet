@@ -1,0 +1,36 @@
+{
+    "_thingId": "no.sintef.sct.giot:raspberrypi_1",
+    "_attributes": {
+        "host": "192.168.32.2",
+        "arch": "arm64",
+        "info": "Docker Engine 24.0.6 on arm64 with linux, API 1.43"
+    },
+    "_features": {
+        "execEnv": {
+            "properties": {
+                "_type": "exec_env",
+                "name": "docker_engine",
+                "port": 2375
+            }
+        },
+        "agent": {
+            "_desiredProperties": {
+                "_type": "software",
+                "url": "https://eratblob.blob.core.windows.net/newcontainer/ta_armv7.tar.gz",
+                "developer": "songhui",
+                "image": "erat/ta-sample:armv7",
+                "name": "ta_armv7",
+                "status": "running"
+            }
+        },
+        "meta": {
+            "properties": {
+                "latestState": "connected",
+                "lastOperation": "info",
+                "lastTried": "2023-09-24T21:42:07.888Z",
+                "lastSeen": "2023-09-24T21:42:07.963Z",
+                "latestFailMessage": ""
+            }
+        }
+    }
+}

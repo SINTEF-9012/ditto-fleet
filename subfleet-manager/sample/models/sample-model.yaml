@@ -1,0 +1,141 @@
+types:
+  docker_env:
+    _type: exec_env
+    name: docker_engine
+    port: 2375
+  ssh_env:
+    _type: exec_env
+    name: ssh
+    username: __user_name__
+    password: __password__ #need a seperate file...
+    port: 22
+  mock_env:
+    _type: exec_env
+    name: mock    
+  linux_device:
+    _type: device
+    host: __local_ip__
+    thingId: __some_uid__
+    arch: __amd64_arm64_arm_arm64v8
+  laptop:
+    arch: x86-64
+    execEnv:
+      _from: docker_env
+  rpi4:
+    arch: arm64
+    execEnv:
+      _from: docker_env
+  gw:
+    arch: armv7
+    execEnv:
+      _from: docker_env
+  axis_cam:
+    host: __some_local_ip__
+    execEnv:
+      _type: exec_env
+      name: axis_cam_api
+      username: root
+    
+  software_artifact: 
+    _type: software
+    url: __some_url__
+    localFile: __some_local_file_path__
+    remoteFile: __name_of_file_in_device__
+    developer: __some_developers_id__
+    signature: __some_signature__
+  docker_component:
+    _from: software_artifact
+    image: __image_tag__
+  ssh_script:
+    _from: software_artifact
+    cmd: __some_local_command__
+    cwd: __remote_working_folder
+
+devices:
+  # my_local_machine:
+  #   _from: laptop
+  #   host: localhost
+  #   thingId: no.sintef.sct.giot:SINTEF9977
+  #   agent: ta_docker_amd64 #This is normally assigned automatically
+  my_local_rpi4:
+    _from: rpi4
+    host: 192.168.32.2 # remember to change according to the network
+    thingId: no.sintef.sct.giot:raspberrypi_1
+    agent: ta_docker_arm64
+  # my_local_rpi4_ssh:
+  #   _from: my_local_rpi4
+  #   thingId: no.sintef.sct.giot:raspberrypi_1_ssh
+  #   execEnv:
+  #     _from: ssh_env
+  #     username: pi
+  #     password: raspberry
+  #   agent: nonta_ssh
+  # my_local_container_ssh:
+  #   _from: linux_device
+  #   thingId: no.sintef.sct.giot:docker_1_ssh
+  #   host: mockdevice
+  #   execEnv:
+  #     _from: ssh_env
+  #     username: mockdevice
+  #     password: password
+  #     port: 2222
+  #   agent: ta_node_ssh
+  # my_local_mockup:
+  #   host: mockup
+  #   thingId: no.sintef.sct.giot:mockupdevice
+  #   execEnv:
+  #     _from: mock_env
+  #   agent: ta_axis_hb
+  my_local_tellugateway:
+    _from: gw
+    host: 192.168.32.5 # remember to change according to the network
+    thingId: no.sintef.sct.giot:tellu_gw1
+    agent: ta_docker_armv7
+  # my_axis_cam1:
+  #   _from: axis_cam
+  #   host: 192.168.32.4
+  #   thingId: no.sintef.sct.giot:tellu_axis_cam1
+  #   agent: ta_axis_hb
+
+agents:
+  ta_docker_amd64:
+    _from: docker_component
+    image: songhui/trust-agent:latest
+    localFile: ext/trust-agent-image.tar.gz
+  ta_docker_arm64:
+    _from: docker_component
+    image: songhui/trust-agent:arm64
+    localFile: ext/ta-arm64.tar.gz
+  nonta_ssh:
+    _from: ssh_script
+    localFile: ext/hello/hello # for arm64v8 from: https://github.com/docker-library/hello-world/blob/master/arm64v8/hello-world/hello
+    remoteFile: hello
+    cmd: './hello'
+    cwd: /home/pi
+  mockup_agent:
+    _from: software_artifact
+    remoteFile: mockupAgent
+  ta_docker_armv7:
+    _from: docker_component
+    url: https://eratblob.blob.core.windows.net/newcontainer/ta_armv7.tar.gz
+    image: erat/ta-sample:armv7
+    developer: songhui
+    name: ta_armv7
+  ta_axis_hb:
+    _from: software_artifact
+    developer: songhui
+    localFile: ./ext/tahb_1_0_0_armv7hf.eap
+    name: heartbeatv2
+    url: https://eratblob.blob.core.windows.net/newcontainer/tahb_1_0_0_armv7hf.eap
+  ta_node_ssh:
+    _from: software_artifact
+    developer: songhui
+    name: main.sh
+    url: https://eratblob.blob.core.windows.net/newcontainer/TrustAgentNode.zip
+    cmd: 'sh main'
+    cwd: '/opt'
+    remoteFile: TA.zip
+
+    
+
+  

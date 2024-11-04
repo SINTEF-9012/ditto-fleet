@@ -1,0 +1,22 @@
+{
+    "_thingId": "no.sintef.sct.giot:raspberrypi_1",
+    "_attributes": {
+        "host": "192.168.32.2",
+        "arch": "arm64"
+    },
+    "_features": {
+        "execEnv": {
+            "_properties": {
+                "_type": "exec_env",
+                "name": "docker_engine",
+                "port": 2375
+            }
+        },
+        "agent": {
+            "_properties": {}
+        },
+        "meta": {
+            "_properties": {}
+        }
+    }
+}

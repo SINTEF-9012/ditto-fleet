@@ -1,0 +1,26 @@
+{
+    "clientID":"<CLIENT MQTT ID>",
+    "software":{
+        "name": [ "LINUX" , "ARM" , "WINDONS" ],
+        "distribution":{
+            "LINUX": [ "UBUNTU" , "DEBIAN" , "FEDORA" ],
+            "ARM": [ "ARCH" , "UBUNTU" , "DEBIAN" , "FEDORA" ],
+            "WINDONS": [ "8" , "10" , "11" ]
+        },
+        "version":{
+            "0": [ "0.1" , "0.2" , "0.3" ],
+            "1": [ "1.0" , "1.1" , "1.2" , "1.3" ],
+            "2": [ "2.0" , "2.1" , "2.2" , "2.3" ]
+        }
+    },
+    "hardware":{
+        "cpu": ["INTEL", "QUALCOMM", "AMD"],
+        "ram": [ "2GB" , "4GB" , "8GB" , "16GB" ]
+    },
+    "softwareReconfig": {
+        "authorized": ["TRUE", "FALSE"]
+    },
+    "hardwareReconfig": {
+        "authorized": ["TRUE", "FALSE"]
+    }
+}

@@ -1,0 +1,101 @@
+{
+    "_thingId": "no.sintef.sct.giot:SINTEFPC8827",
+    "_policyId": "no.sintef.sct.giot:policy",
+    "_attributes": {
+      "type": "physical_device",
+      "manufacturer": "hp",
+      "architecture": "linux/amd64/v3",
+      "system_name": "Ubuntu",
+      "system_version": "18.04",
+      "system_description": "Ubuntu 18.04.6 LTS",
+      "ip_address": "192.168.32.10"
+    },
+    "_features": {
+      "cyber": {
+        "_id": "cyber",
+        "_properties": {
+          "disk": {
+            "free": 247174942720,
+            "inodes_free": 16671432,
+            "inodes_total": 16777216,
+            "inodes_used": 105784,
+            "total": 269490393088,
+            "used": 8554778624,
+            "used_percent": 3.34524222645688
+          },
+          "memory": {
+            "high_free": 0,
+            "high_total": 0,
+            "huge_page_size": 2097152,
+            "huge_pages_free": 0,
+            "huge_pages_total": 0,
+            "inactive": 5431500800,
+            "low_free": 0,
+            "low_total": 0,
+            "mapped": 511524864,
+            "page_tables": 20291584,
+            "shared": 8806400,
+            "slab": 159588352,
+            "sreclaimable": 81436672,
+            "sunreclaim": 78151680,
+            "swap_cached": 532480,
+            "swap_free": 7514148864,
+            "swap_total": 7516192768,
+            "total": 26740953088,
+            "used": 4445138944,
+            "used_percent": 16.62296377160452,
+            "vmalloc_chunk": 0,
+            "vmalloc_total": 35184372087808,
+            "vmalloc_used": 47824896,
+            "write_back": 0,
+            "write_back_tmp": 0
+          },
+          "docker": {
+            "engine_host": "docker-desktop",
+            "server_version": "24.0.2"
+          },
+          "trustAgent": {
+            "container_image": "rdautov/trust-agent",
+            "container_status": "exited",
+            "container_version": "0.1"
+          },
+          "cpu": {
+            "usage_guest": 0,
+            "usage_guest_nice": 0,
+            "usage_idle": 98.44394238915505,
+            "usage_iowait": 0.014120304998587938,
+            "usage_irq": 0,
+            "usage_nice": 0,
+            "usage_softirq": 0.23016097147697948,
+            "usage_steal": 0,
+            "usage_system": 0.6283535724371447,
+            "usage_user": 0.683422761931635
+          }
+        },
+        "_desiredProperties": {
+          "trustAgent": {
+            "container_image": "rdautov/trust-agent",
+            "container_version": "1.0.21",
+            "container_status": "running",
+            "ta_meta": {
+              "type": "trust_agent_docker",
+              "image": "rdautov/trust-agent",
+              "version": "1.0.21",
+              "url": "https://eratblob.blob.core.windows.net/newcontainer/trust-agent-tellu-v01-arm32.tar.gz",
+              "localFile": "",
+              "remoteFile": "",
+              "developer": "songhui",
+              "signature": "",
+              "cmd": "docker run --name trust-agent --rm -v /var/run/docker.sock:/var/run/docker.sock:ro -v /var/lib/dpkg/:/var/lib/dpkg/ rdautov/trust-agent:0.1"
+            }
+          }
+        }
+      },
+      "physical": {
+        "_id": "physical",
+        "_properties": {},
+        "_desiredProperties": {}
+      },
+      "social": { "_id": "social", "_properties": {}, "_desiredProperties": {} }
+    }
+  }
