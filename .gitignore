@@ -23,4 +23,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 /backend/node_modules
+<<<<<<< HEAD
+package-lock.json
+=======
 /backend/package-lock.json
+>>>>>>> 6d6e37739cb98407ae7b9282a42e45150f063a70
