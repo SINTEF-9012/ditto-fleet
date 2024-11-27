@@ -12,7 +12,7 @@ services:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
   
   telegraf:
-    image: rdautov/ditto-monitoring-agent:0.1
+    image: rdautov/ditto-monitoring-agent:arm64
     container_name: ditto-monitoring-agent    
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
