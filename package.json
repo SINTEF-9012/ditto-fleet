@@ -4,20 +4,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-<<<<<<< HEAD
     "@types/prismjs": "^1.26.3",
-    "antd": "^3.26.19",
-=======
-<<<<<<< HEAD
-    "@eclipse-ditto/ditto-javascript-client-dom": "^2.4.0",
-    "@eclipse-ditto/ditto-javascript-client-node": "^2.4.0",
     "ace-builds": "^1.4.9",
-=======
-    "@eclipse-ditto/ditto-javascript-client-dom": "0.0.4",
-    "@eclipse-ditto/ditto-javascript-client-node": "0.0.4",
->>>>>>> 6d6e37739cb98407ae7b9282a42e45150f063a70
     "antd": "^3.21.1",
->>>>>>> 744665ade084ad0e303332994d1fa558e30c9cfc
     "axios": "^0.19.0",
     "ditto-fleet-gui": "file:",
     "fast-xml-parser": "^4.3.2",
@@ -34,16 +23,10 @@
     "react-scripts": "^3.4.3",
     "react-simple-code-editor": "^0.11.0",
     "read-yaml": "^1.1.0",
-<<<<<<< HEAD
     "sintef-ditto-javascript-client-dom": "0.0.1",
-=======
-<<<<<<< HEAD
     "traverse": "^0.6.6",
-    "typescript": "^3.5.3"
-=======
->>>>>>> 744665ade084ad0e303332994d1fa558e30c9cfc
+    "typescript": "^3.5.3",
     "winston": "^3.8.2"
->>>>>>> 6d6e37739cb98407ae7b9282a42e45150f063a70
   },
   "scripts": {
     "start": "react-scripts start",

@@ -11,7 +11,7 @@ WORKDIR ${APP_HOME}
 COPY package*.json ${APP_HOME}/
 
 RUN npm config set strict-ssl false
-RUN npm set registry http://host.docker.internal:4873
+#RUN npm set registry http://host.docker.internal:4873
 RUN npm install
 # If you are building your code for production
 # RUN npm ci --only=production
@@ -19,6 +19,6 @@ RUN npm install
 # Bundle app source
 COPY . ${APP_HOME}/
 
-EXPOSE 3000
+EXPOSE 4000
 #CMD [ "node", "server.js" ]
 CMD npm start

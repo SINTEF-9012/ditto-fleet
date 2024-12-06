@@ -82,7 +82,7 @@ program
     .action(async (cmd)=>{
         logger.info("Starting Subfleet Manager")
         let dtConn = new DittoConnector({
-            host: 'tcp://test.mosquitto.org:1883',
+            host: 'tcp://localhost:1883',
             rootTopic: 'no.sintef.sct.giot.things'
         });
         dtConn.startSubDownstream()

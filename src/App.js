@@ -259,21 +259,14 @@ class App extends Component {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-<<<<<<< HEAD
+
       .withFilter(
         'in(attributes/type,"device","physical_device","virtual_device")'
       )
       .withSort("+attributes/type")
-=======
-<<<<<<< HEAD
-    .withFilter('eq(attributes/type,"device")')
-    .withSort("+thingId").withLimit(0, 200);
-=======
-      .withFilter('eq(attributes/type,"device")')
-      .withSort("+thingId")
->>>>>>> 744665ade084ad0e303332994d1fa558e30c9cfc
+      //.withFilter('eq(attributes/type,"device")')
+      //.withSort("+thingId")
       .withLimit(0, 200);
->>>>>>> 6d6e37739cb98407ae7b9282a42e45150f063a70
     //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
     //console.info(devices);
