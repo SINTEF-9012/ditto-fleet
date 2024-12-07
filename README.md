@@ -30,6 +30,6 @@ In a separate terminal change folder: `cd backend` and run: `npm run start`
 
 To run the GUI  pull the latest version of the `dautov:ditto-fleet-gui` image and run the following command:
 
-`docker run -it -p 3000:3000 rdautov:ditto-fleet-gui`
+`docker run -it -p 3000:3000 rdautov/ditto-fleet-gui`
 
 This will run the `npm start` script and launch the React application. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.

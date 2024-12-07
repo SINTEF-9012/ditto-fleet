@@ -46,8 +46,8 @@ import deployment_template from '../resources/deployment_template.json' assert {
 import software_template from '../resources/software_template.json' assert { type: "json" };
 
 const PORT = process.env.PORT || 4000;
-const MQTT_BROKER = process.env.MQTT_HOSTNAME
-const DITTO_SERVER = process.env.DITTO_HOSTNAME
+const MQTT_BROKER = process.env.MQTT_BROKER
+const DITTO_SERVER = "localhost:8080" //process.env.DITTO_SERVER
 
 const app = express();
 
@@ -313,13 +313,13 @@ mqtt_client.on("message", (topic, payload) => {
 });
 
 //Ditto connection config
-const ditto_domain = DITTO_SERVER; //"localhost:8080";
+const ditto_domain = "localhost:8080";
 const ditto_username = "ditto";
 const ditto_password = "ditto";
 
 logger.info("[DITTO SERVER] " + DITTO_SERVER)
 
-let socket = new WebSocket("ws://ditto:ditto@" + DITTO_SERVER + "/ws/2");
+let socket = new WebSocket("ws://ditto:ditto@localhost:8080/ws/2");
 
 const ws_ditto_client = DittoNodeClient.newWebSocketClient()
   .withoutTls()
