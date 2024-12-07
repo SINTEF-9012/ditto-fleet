@@ -5,15 +5,15 @@ services:
   fleet-manager:
     container_name: fleet-manager
     image: rdautov/ditto-fleet-gui
-    network_mode: "host"
+    #network_mode: "host"
     restart: always
     stdin_open: true 
     ##tty: true
     #network_mode: host
-    #networks:
-    #  default:
-    #    aliases:
-    #      - fleet-manager    
+    networks:
+      default:
+        aliases:
+          - fleet-manager    
     ports:
       - 3000:3000
     environment:      
