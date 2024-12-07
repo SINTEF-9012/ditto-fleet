@@ -35,18 +35,18 @@ import WebSocket from "ws";
 import mqtt from "mqtt";
 import fs from "fs";
 import express from "express";
-import {DOMParser} from 'xmldom';
+import { DOMParser } from "xmldom";
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
 //import convert from "xml-js";
 
 import schedule from "node-schedule";
 import _ from "lodash";
 
-import deployment_template from '../resources/deployment_template.json' assert { type: "json" };
-import software_template from '../resources/software_template.json' assert { type: "json" };
+import deployment_template from "../resources/deployment_template.json" assert { type: "json" };
+import software_template from "../resources/software_template.json" assert { type: "json" };
 
 const PORT = process.env.PORT || 4000;
-const MQTT_BROKER = process.env.MQTT_BROKER
+const MQTT_BROKER = "localhost:1883" //process.env.MQTT_BROKER;
 const DITTO_SERVER = "localhost:8080" //process.env.DITTO_SERVER
 
 const app = express();
@@ -114,33 +114,41 @@ mqtt_client.on("message", (topic, payload) => {
     //logger.debug(payload.toString());
 
     const parser = new DOMParser();
-    let mspl = parser.parseFromString(payload.toString(), 'text/xml');
+    let mspl = parser.parseFromString(payload.toString(), "text/xml");
     logger.debug(mspl.toString());
 
-    let rules = mspl.getElementsByTagName('configuration-rule');
+    let rules = mspl.getElementsByTagName("configuration-rule");
     Array.from(rules).forEach((rule) => {
       //logger.debug('RULE' + rule.toString())
-      let actions = rule.getElementsByTagName('configuration-action');
+      let actions = rule.getElementsByTagName("configuration-action");
       Array.from(actions).forEach((action) => {
-        let type = action.getElementsByTagName('software-protection-type')[0];
+        let type = action.getElementsByTagName("software-protection-type")[0];
         //logger.debug("TYPE" + type.textContent)
-        if (type.textContent == 'UPDATE') {
-          //logger.debug("UPDATE" + action.toString())                    
-          let imageName = rule.getElementsByTagName('software-name')[0].textContent
-          let imageVersion = rule.getElementsByTagName('software-fixed-version')[0].textContent
-          let softwareId = imageName.split('/')[1] + '_v' + imageVersion
-                    
-          //logger.info(softwareId,imageName,imageVersion)
-          //createSoftware(softwareId,imageName,imageVersion) 
+        if (type.textContent == "UPDATE") {
+          //logger.debug("UPDATE" + action.toString())
+          let imageName =
+            rule.getElementsByTagName("software-name")[0].textContent;
+          let imageVersion = rule.getElementsByTagName(
+            "software-fixed-version"
+          )[0].textContent;
+          let softwareId = imageName.split("/")[1] + "_v" + imageVersion;
 
-          let deploymentId = rule.getElementsByTagName('name')[0].textContent          
-          let targets = rule.getElementsByTagName('software-version')
-          let rql = "and(eq(features/cyber/properties/trustAgent/container_image,'" + imageName + "'),eq(features/cyber/properties/trustAgent/container_version,'" + targets[0].textContent + "'))"
+          //logger.info(softwareId,imageName,imageVersion)
+          //createSoftware(softwareId,imageName,imageVersion)
+
+          let deploymentId = rule.getElementsByTagName("name")[0].textContent;
+          let targets = rule.getElementsByTagName("software-version");
+          let rql =
+            "and(eq(features/cyber/properties/trustAgent/container_image,'" +
+            imageName +
+            "'),eq(features/cyber/properties/trustAgent/container_version,'" +
+            targets[0].textContent +
+            "'))";
           //TODO: handle if there is more than one target version
-          
+
           //logger.debug("RQL: " + rql)
 
-          createDeployment(deploymentId,softwareId,rql)
+          createDeployment(deploymentId, softwareId, rql);
         }
       });
     });
@@ -313,27 +321,33 @@ mqtt_client.on("message", (topic, payload) => {
 });
 
 //Ditto connection config
-const ditto_domain = "localhost:8080";
+//const ditto_domain = "localhost:8080";
 const ditto_username = "ditto";
 const ditto_password = "ditto";
 
-logger.info("[DITTO SERVER] " + DITTO_SERVER)
+logger.info("[DITTO SERVER] " + DITTO_SERVER);
 
-let socket = new WebSocket("ws://ditto:ditto@localhost:8080/ws/2");
+let socket, ws_ditto_client
 
-const ws_ditto_client = DittoNodeClient.newWebSocketClient()
-  .withoutTls()
-  .withDomain(ditto_domain)
-  .withAuthProvider(
-    NodeWebSocketBasicAuth.newInstance(ditto_username, ditto_password)
-  )
-  .withBuffer(15)
-  .twinChannel()
-  .build();
+try {
+  //socket = new WebSocket("ws://ditto:ditto@" + DITTO_SERVER + "/ws/2");
+  socket = new WebSocket("http://ditto:ditto@" + DITTO_SERVER + "/ws/2")
+  ws_ditto_client = DittoNodeClient.newWebSocketClient()
+    .withoutTls()
+    .withDomain(DITTO_SERVER)
+    .withAuthProvider(
+      NodeWebSocketBasicAuth.newInstance("ditto", "ditto")
+    )
+    .withBuffer(15)
+    .twinChannel()
+    .build();
+} catch (error) {
+  logger.error("WebSocket error: " + error.message);
+}
 
 const http_ditto_client = DittoNodeClient.newHttpClient()
   .withoutTls()
-  .withDomain(ditto_domain)
+  .withDomain(DITTO_SERVER)
   .withAuthProvider(
     NodeHttpBasicAuth.newInstance(ditto_username, ditto_password)
   )
@@ -573,23 +587,21 @@ async function createTrustAgent(new_ta_string) {
 /** Creates new software in Ditto after receiving and parsing an MSPL file */
 async function createSoftware(softwareId, imageName, imageVersion) {
   //var json = require("./resources/thing_template.json");
-  let software = software_template
-  software.thingId = 'no.sintef.sct.giot:' + softwareId
-  software.attributes.image = imageName
-  software.attributes.version = imageVersion
-  
+  let software = software_template;
+  software.thingId = "no.sintef.sct.giot:" + softwareId;
+  software.attributes.image = imageName;
+  software.attributes.version = imageVersion;
+
   //let trust_agent = Thing.fromObject(new_ta_string);
   //logger.debug("NEW TRUST AGENT CREATED: " + JSON.stringify(trust_agent.));
   const thingsHandle = http_ditto_client.getThingsHandle();
-  
-  let thing = Thing.fromObject(software)
-  logger.debug("New software: " + JSON.stringify(software))
-  
+
+  let thing = Thing.fromObject(software);
+  logger.debug("New software: " + JSON.stringify(software));
+
   await thingsHandle.putThing(thing).then((result) => {
     logger.info(
-      `Finished putting software with result: ${JSON.stringify(
-        result
-      )}`
+      `Finished putting software with result: ${JSON.stringify(result)}`
     );
   });
 }
@@ -613,7 +625,7 @@ async function createDeployment(thingId, softwareId, rql) {
         )}`
       )
     );
-};
+}
 
 socket.onopen = function (event) {
   logger.info("[WebSocket] Connected to Ditto server via WebSocket");
@@ -667,7 +679,7 @@ socket.onclose = function (event) {
 };
 
 socket.onerror = function (error) {
-  logger.error(error.message);
+  logger.error("WebSocket Eror!" + error.message);
 };
 
 app.listen(PORT, () => {
