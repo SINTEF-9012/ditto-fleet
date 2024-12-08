@@ -278,7 +278,7 @@ services:
   
   fleet-manager:
     container_name: fleet-manager
-    image: rdautov/ditto-fleet-gui
+    image: rdautov/ditto-fleet-manager
     restart: always
     stdin_open: true 
     ##tty: true

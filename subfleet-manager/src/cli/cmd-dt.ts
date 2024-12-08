@@ -86,7 +86,7 @@ program
         logger.info("Starting Subfleet Manager")
         logger.info("[MQTT]" + MQTT_BROKER)
         let dtConn = new DittoConnector({
-            host: 'tcp://' + MQTT_BROKER,
+            host: String(MQTT_BROKER),
             rootTopic: 'no.sintef.sct.giot.things'
         });
         dtConn.startSubDownstream()

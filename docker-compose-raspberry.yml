@@ -1,0 +1,39 @@
+services:
+  subfleet-manager:
+    image: rdautov/ditto-subfleet-manager:arm64
+    container_name: subfleet-manager
+    restart: always
+    network_mode: host
+    #restart: always
+    #network_mode: host
+    #networks:
+    #  default:
+    #    aliases:
+    #      - subfleet-manager
+    environment:
+      - MQTT_BROKER=broker.hivemq.com:1883
+
+  monitoring-agent:
+    image: rdautov/ditto-monitoring-agent:arm64
+    container_name: ditto-monitoring-agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    restart: always
+    depends_on:
+      subfleet-manager:
+        condition: service_started
+    network_mode: host
+    user: root
+    environment:
+      - IP_ADDRESS=127.0.0.1
+      - MQTT_BROKER=mqtt://broker.hivemq.com:1883
+      - SYSTEM_VERSION=12
+      - SYSTEM_NAME=Debian
+      - SYSTEM_DESCRIPTION=Debian GNU/Linux 12 (bookworm)
+      - HOST_ETC=/hostfs/etc
+      - HOST_PROC=/hostfs/proc
+      - HOST_SYS=/hostfs/sys
+      - HOST_VAR=/hostfs/var
+      - HOST_RUN=/hostfs/run
+      - HOST_MOUNT_PREFIX=/hostfs

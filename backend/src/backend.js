@@ -46,8 +46,8 @@ import deployment_template from "../resources/deployment_template.json" assert {
 import software_template from "../resources/software_template.json" assert { type: "json" };
 
 const PORT = process.env.PORT || 4000;
-const MQTT_BROKER = "localhost:1883" //process.env.MQTT_BROKER;
-const DITTO_SERVER = "localhost:8080" //process.env.DITTO_SERVER
+const MQTT_BROKER = process.env.MQTT_BROKER;
+const DITTO_SERVER = process.env.DITTO_SERVER
 
 const app = express();
 
