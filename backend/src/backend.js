@@ -46,8 +46,8 @@ import deployment_template from "../resources/deployment_template.json" assert {
 import software_template from "../resources/software_template.json" assert { type: "json" };
 
 const PORT = process.env.PORT || 4000;
-const MQTT_BROKER = process.env.MQTT_BROKER;
-const DITTO_SERVER = process.env.DITTO_SERVER
+const MQTT_BROKER = "mqtt://localhost:1883" //process.env.MQTT_BROKER; //"localhost:1883"
+const DITTO_SERVER = "localhost:8080" //process.env.DITTO_SERVER //"localhost:8080"
 
 const app = express();
 
@@ -359,12 +359,25 @@ const job = schedule.scheduleJob("*/3 * * * *", checkDesiredReportedTrustAgent);
 
 /** Fully update the digital twin in Ditto (i.e. all its reported properties within features). */
 async function updateTwinProperties(twin) {
+
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: updateTwinProperties: start")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
+
   let featuresHandle = http_ditto_client.getFeaturesHandle(twin.thingId);
   Object.entries(twin.features).forEach(([key, value]) => {
     logger.debug(JSON.stringify(key));
     logger.debug(JSON.stringify(value.properties));
     featuresHandle.putProperties(key, value.properties);
   });
+
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: updateTwinProperties: finish")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
 }
 
 /** Update the value of a property in Ditto with a value reported from the monitoring agent. */
@@ -374,6 +387,13 @@ async function updateTwinProperty(
   propertyPath,
   propertyValue
 ) {
+
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: updateTwinProperty: start")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
+
   const thingsHandle = http_ditto_client.getThingsHandle();
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
@@ -385,10 +405,23 @@ async function updateTwinProperty(
   } catch (error) {
     logger.error("UpdateTwinProperty error: " + error.message);
   }
+
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: updateTwinProperty: finish")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
 }
 
 /** Update the value of an attribute in Ditto with a value reported from the monitoring agent. */
 async function updateTwinAttribute(thingId, attribute, attributeValue) {
+
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: updateTwinAttribute: start")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
+
   const thingsHandle = http_ditto_client.getThingsHandle();
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
@@ -403,10 +436,23 @@ async function updateTwinAttribute(thingId, attribute, attributeValue) {
   } catch (error) {
     logger.error("UpdateTwinAttribute error: " + error.message);
   }
+
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: updateTwinAttribute: finish")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
 }
 
 /** Fetch a device twin from Ditto and publish it to the downstream MQTT channel.*/
 async function sendDeviceTwin(thingId) {
+  
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: sendDeviceTwin: start")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
+  
   const thing = await ws_ditto_client.getThingsHandle().getThing(thingId);
   logger.debug("[Ditto] Device twin: " + JSON.stringify(thing));
   //logger.info("[Ditto] Reported properties: ", thing.features.agent.properties);
@@ -441,6 +487,11 @@ async function sendDeviceTwin(thingId) {
     //    "Trust agent already in sync or not assigned yet, not sending device twin to dowsntream channel."
     //  );
     //}
+    logger.warn("###################### TIMESTAMP ######################")
+    logger.warn("Backend: sendDeviceTwin: finish")
+    logger.warn(Date.now())
+    logger.warn(new Date().toISOString())
+    logger.warn("###################### TIMESTAMP ######################")
   }
 }
 
@@ -608,6 +659,13 @@ async function createSoftware(softwareId, imageName, imageVersion) {
 
 /** Creates a new deployment in Ditto after receiving and parsing an MSPL file */
 async function createDeployment(thingId, softwareId, rql) {
+  
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: createDeployment: start")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
+  
   let deployment = deployment_template;
   deployment.thingId = "no.sintef.sct.giot:" + thingId;
   deployment.attributes.trust_agent_id = softwareId;
@@ -625,6 +683,11 @@ async function createDeployment(thingId, softwareId, rql) {
         )}`
       )
     );
+  logger.warn("###################### TIMESTAMP ######################")
+  logger.warn("Backend: createDeployment: finish")
+  logger.warn(Date.now())
+  logger.warn(new Date().toISOString())
+  logger.warn("###################### TIMESTAMP ######################")
 }
 
 socket.onopen = function (event) {

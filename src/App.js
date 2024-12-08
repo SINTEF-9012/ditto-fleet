@@ -36,6 +36,10 @@ const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png";
 const logger = winston_logger.child({ source: "App.js" });
 //logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
 
+logger.warn("###################### TIMESTAMP ######################")
+logger.warn(new Date().toISOString())
+logger.warn("###################### TIMESTAMP ######################")
+
 const ditto_client = DittoDomClient.newHttpClient()
   .withoutTls()
   .withDomain(ditto_domain)

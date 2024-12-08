@@ -105,12 +105,25 @@ export class DittoConnector{
     }
 
     async receiveTwin(twinModel: any){
+        
+        logger.warn("###################### TIMESTAMP ######################")
+        logger.warn("Subfleet Manager: instantiate adapter and launch container: start")
+        logger.warn(Date.now())
+        logger.warn(new Date().toISOString())
+        logger.warn("###################### TIMESTAMP ######################")
+        
         twinModel = this.processTwinModel(twinModel)
         //logger.debug(twinModel)
         let adapter = this.locateAdapter(twinModel)
         logger.info("Found adapter for: " + twinModel._thingId)
         let twin = await adapter.receiveTwin(twinModel)
         logger.debug("twin in receiveTwin: --->", twin)
+
+        logger.warn("###################### TIMESTAMP ######################")
+        logger.warn("Subfleet Manager: instantiate adapter and launch container: finish")
+        logger.warn(Date.now())
+        logger.warn(new Date().toISOString())
+        logger.warn("###################### TIMESTAMP ######################")
     }
 
     private processTwinModel(model: any){

@@ -394,6 +394,13 @@ export class DeviceArea extends Component {
   deployTrustAgent = async (thingId, desired_agent) => {
     //TODO: how to pass the meta information about the trust agent?
     //desired_agent.status = "running";
+
+    logger.warn("###################### TIMESTAMP ######################")
+    logger.warn("Update device twin: start")
+    logger.warn(Date.now())
+    logger.warn(new Date().toISOString())
+    logger.warn("###################### TIMESTAMP ######################")
+
     logger.debug("Desired agent: " + desired_agent);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     let trust_agent;
@@ -427,10 +434,22 @@ export class DeviceArea extends Component {
           )}`
         )
       );
+    logger.warn("###################### TIMESTAMP ######################")
+    logger.warn("Update device twin: finish")
+    logger.warn(Date.now())
+    logger.warn(new Date().toISOString())
+    logger.warn("###################### TIMESTAMP ######################")
   };
 
   updateDeviceTwin = async () => {
     //TODO: sort out how it is different from deployTrustAgent()
+    logger.warn("###################### TIMESTAMP ######################")
+    logger.warn("updateDeviceTwin: start")
+    logger.warn(Date.now())
+    logger.warn(new Date().toISOString())
+    logger.warn("###################### TIMESTAMP ######################")
+
+
     logger.info(this.state.edited_device.features);
     var features = Features.fromObject(this.state.edited_device._features);
     logger.info("DEVICE FEATURES: ", features);
@@ -445,5 +464,11 @@ export class DeviceArea extends Component {
           `Finished updating the device with result: ${JSON.stringify(result)}`
         )
       );
+    
+    logger.warn("###################### TIMESTAMP ######################")
+    logger.warn("updateDeviceTwin: finish")
+    logger.warn(Date.now())
+    logger.warn(new Date().toISOString())
+    logger.warn("###################### TIMESTAMP ######################")
   };
 }
