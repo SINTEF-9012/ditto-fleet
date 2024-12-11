@@ -4,7 +4,7 @@ import { loadFromYaml } from "../model/model-handler";
 
 import { createLogger, transports, format } from "winston";
 
-const MQTT_BROKER = "mqtt://localhost:1883" //process.env.MQTT_BROKER //"localhost:1883"
+const MQTT_BROKER = process.env.MQTT_BROKER //"localhost:1883"
 const DITTO_SERVER = process.env.DITTO_SERVER
 
 const logger = createLogger({
