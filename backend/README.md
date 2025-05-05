@@ -2,7 +2,7 @@ This project is a Digital Twin platform for software management on a fleet of de
 
 ## Docker
 
-`docker image build --tag rdautov/ditto-fleet-backend:0.1 .`
+`docker image build --tag rdautov/ditto-fleet-backend:0.1 --platform linux/amd64 .`
 
 ### Stand-alone Docker container
 

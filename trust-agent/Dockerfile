@@ -2,4 +2,4 @@ FROM python:slim
 
 ADD trust-agent.py /
 
-CMD [ "python", "./trust-agent.py" ]
+ENTRYPOINT [ "python", "-u", "./trust-agent.py" ]
