@@ -65,3 +65,7 @@ ta_node_ssh:
 ```
 
 The code is wrapped up as a zip file stored in an Azure Blob. It is signed by developer 'songhui', with signatures stored in the same blob. 
+
+docker run --restart always --name subfleet-manager -e MQTT_BROKER=test.mosquitto.org:1883 --network=host rdautov/ditto-subfleet-manager:arm64
+
+pull rdautov/trust-agent:0.1

@@ -11,7 +11,7 @@ services:
     #    aliases:
     #      - subfleet-manager
     environment:
-      - MQTT_BROKER=broker.hivemq.com:1883
+      - MQTT_BROKER=test.mosquitto.org:1883
 
   monitoring-agent:
     image: rdautov/ditto-monitoring-agent:arm64
@@ -27,7 +27,7 @@ services:
     user: root
     environment:
       - IP_ADDRESS=127.0.0.1
-      - MQTT_BROKER=mqtt://broker.hivemq.com:1883
+      - MQTT_BROKER=mqtt://test.mosquitto.org:1883
       - SYSTEM_VERSION=12
       - SYSTEM_NAME=Debian
       - SYSTEM_DESCRIPTION=Debian GNU/Linux 12 (bookworm)
