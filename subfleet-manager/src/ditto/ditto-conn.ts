@@ -92,6 +92,7 @@ export class DittoConnector{
     }
 
     async startSubDownstream(){
+        logger.info(`Subscribing...`)
         await this.client.subscribe(`${this.connInfo.rootTopic}/downstream`)
         logger.info(`Subscribed to: ${this.connInfo.rootTopic}/downstream`)
         this.client.on('message', async (topic, payload, packet)=>{
@@ -100,17 +101,18 @@ export class DittoConnector{
                 let twinModel = JSON.parse(payload.toString())
                 logger.info("Downstream message received!")
                 await this.receiveTwin(twinModel)
+                //TODO: the monitoring agent config update
             }
         })
     }
 
     async receiveTwin(twinModel: any){
         
-        logger.warn("###################### TIMESTAMP ######################")
+        /* logger.warn("###################### TIMESTAMP ######################")
         logger.warn("Subfleet Manager: instantiate adapter and launch container: start")
         logger.warn(Date.now())
         logger.warn(new Date().toISOString())
-        logger.warn("###################### TIMESTAMP ######################")
+        logger.warn("###################### TIMESTAMP ######################") */
         
         twinModel = this.processTwinModel(twinModel)
         //logger.debug(twinModel)
@@ -119,11 +121,11 @@ export class DittoConnector{
         let twin = await adapter.receiveTwin(twinModel)
         logger.debug("twin in receiveTwin: --->", twin)
 
-        logger.warn("###################### TIMESTAMP ######################")
+        /* logger.warn("###################### TIMESTAMP ######################")
         logger.warn("Subfleet Manager: instantiate adapter and launch container: finish")
         logger.warn(Date.now())
         logger.warn(new Date().toISOString())
-        logger.warn("###################### TIMESTAMP ######################")
+        logger.warn("###################### TIMESTAMP ######################") */
     }
 
     private processTwinModel(model: any){

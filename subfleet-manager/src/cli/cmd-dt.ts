@@ -4,7 +4,7 @@ import { loadFromYaml } from "../model/model-handler";
 
 import { createLogger, transports, format } from "winston";
 
-const MQTT_BROKER = process.env.MQTT_BROKER //"localhost:1883"
+const MQTT_BROKER = "mqtt://broker.hivemq.com:1883" //process.env.MQTT_BROKER //"localhost:1883"
 const DITTO_SERVER = process.env.DITTO_SERVER
 
 const logger = createLogger({
@@ -84,7 +84,7 @@ program
     .description('start from scratch')
     .action(async (cmd)=>{
         logger.info("Starting Subfleet Manager")
-        logger.info("[MQTT]" + MQTT_BROKER)
+        logger.info("[MQTT] " + MQTT_BROKER)
         let dtConn = new DittoConnector({
             host: String(MQTT_BROKER),
             rootTopic: 'no.sintef.sct.giot.things'

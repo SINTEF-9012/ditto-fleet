@@ -16,15 +16,14 @@
         <configuration-action>
           <software-protection-action>
             <software-protection-type>UPDATE</software-protection-type>
-            <software-fixed-version>0.4</software-fixed-version>
+            <software-fixed-version>0.2</software-fixed-version>
             <software-fix-url>https://hub.docker.com/repository/docker/rdautov/trust-agent</software-fix-url>
           </software-protection-action>
         </configuration-action>
         <configuration-condition>
           <device-configuration-condition>            
             <device-identification-condition>
-              <!-- "device-id" should be the ID of the target device in the Digital Twin platform on the DTA side -->
-              <device-id>device-1234-xyz</device-id>             
+              <device-id>no.sintef.sct.giot:tellu-rpm-gateway-001</device-id>             
             </device-identification-condition>
           </device-configuration-condition>
         </configuration-condition>

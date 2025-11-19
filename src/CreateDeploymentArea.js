@@ -29,6 +29,8 @@ import "prismjs/themes/prism.css"; //Example style, you can use another
 
 const logger = winston_logger.child({ source: "CreateDeploymentArea.js" });
 
+const { logTimestampJS } = require("./TimestampLogger");
+
 const { Content } = Layout;
 //const ButtonGroup = Button.Group;
 const { Option } = Select;
@@ -362,6 +364,13 @@ export class CreateDeploymentArea extends Component {
    * Find matching devices in Ditto according to the RQL query
    */
   findMatchingDevices = async (trustAgent, rqlExpression) => {
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "findMatchingDevices",
+      event: "start"
+    });
+
     const searchHandle = this.context.ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
@@ -372,11 +381,25 @@ export class CreateDeploymentArea extends Component {
     var devices = (await searchHandle.search(options)).items;
     //console.info(devices);
     logger.debug("Found matching devices: " + JSON.stringify(devices));
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "findMatchingDevices",
+      event: "finish"
+    });
+
     return devices;
   };
 
   /** Deploys the selected trust agent to all suitable devices */
   assignTrustAgentToAll = async (trustAgent, rqlExpression) => {
+    
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "assignTrustAgentToAll",
+      event: "start"
+    });
+    
     //FIXME: what if a device has both docker and ssh?
     //FIXME: there must only one check whether the device is suitable
     this.context.devices.forEach((device) => {
@@ -419,6 +442,11 @@ export class CreateDeploymentArea extends Component {
           device._thingId + " is not suitable for " + trustAgent._thingId
         );
       }
+    });
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "assignTrustAgentToAll",
+      event: "finish"
     });
   };
 

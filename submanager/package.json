@@ -1,0 +1,38 @@
+{
+    "name": "ditto-submanger",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "dependencies": {
+        "dockerode": "^4.0.9",
+        "dotenv": "^17.2.3",
+        "mqtt": "^5.14.1",
+        "uuid": "^13.0.0"
+    },
+    "scripts": {
+        "start": "node ./src/submanager.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "proxy": "http://localhost:5001/",
+    "devDependencies": {
+        "@types/jest": "^29.4.0",
+        "@types/node": "^18.14.2",
+        "@types/react": "^18.0.28",
+        "@types/react-dom": "^18.0.11"
+    }
+}

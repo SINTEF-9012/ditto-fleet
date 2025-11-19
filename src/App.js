@@ -21,6 +21,8 @@ import { DeploymentArea } from "./DeploymentArea";
 import { CreateDeploymentArea } from "./CreateDeploymentArea.js";
 import { GlobalContext } from "./GlobalContext";
 
+const { logTimestampJS } = require("./TimestampLogger");
+
 const { Footer, Content } = Layout;
 const { TabPane } = Tabs;
 
@@ -36,9 +38,15 @@ const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png";
 const logger = winston_logger.child({ source: "App.js" });
 //logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
 
-logger.warn("###################### TIMESTAMP ######################")
-logger.warn(new Date().toISOString())
-logger.warn("###################### TIMESTAMP ######################")
+//logger.warn("###################### TIMESTAMP ######################")
+//logger.warn(new Date().toISOString())
+//logger.warn("###################### TIMESTAMP ######################")
+
+logTimestampJS({
+    workflowId: "wf009",
+    step: "dummy function",
+    event: "start"
+  });
 
 const ditto_client = DittoDomClient.newHttpClient()
   .withoutTls()
@@ -237,10 +245,12 @@ class App extends Component {
 
             <Footer>
               <p>
-                This work is supported by <a href={PROJECT_URL}>{PROJECT}</a>{" "}
+                This work is supported by <a href={PROJECT_URL}>ERATOSTHENES</a>{" "}
                 and powered by{" "}
                 <a href="https://www.eclipse.org/ditto/">Eclipse Ditto</a>.
               </p>
+              <p>The project has received funding from the European Union's Horizon 2020 research and innovation programme under grant agreement No 101020416.</p>
+              <img src="h2020_logo.png" width="200"/>              
               <p>
                 {" "}
                 Please visit{" "}

@@ -16,6 +16,8 @@ import winston_logger from "./logger.js";
 import { GlobalContext } from "./GlobalContext";
 import { DefaultSearchOptions } from "sintef-ditto-javascript-client-dom";
 
+const { logTimestampJS } = require("./TimestampLogger");
+
 const logger = winston_logger.child({ source: "DeploymentArea.js" });
 
 const { Content } = Layout;
@@ -164,6 +166,13 @@ export class DeploymentArea extends Component {
 
   /** Apply the selected to deployment to matching devices */
   enactDeployment = async (deployment) => {
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "enactDeployment",
+      event: "start"
+    });
+    
     logger.debug("Enacting deployment: " + deployment._thingId);
     //TODO:
     this.findMatchingDevices(deployment._attributes.rql_expression).then(
@@ -171,12 +180,25 @@ export class DeploymentArea extends Component {
         this.handleDeploy(deployment._attributes.trust_agent_id, result)
     );
     message.success("Deployment complete!");
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "enactDeployment",
+      event: "finish"
+    });
   };
 
   /**
    * Find matching devices in Ditto according to the RQL query
    */
   findMatchingDevices = async (rqlExpression) => {
+    
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "findMatchingDevices",
+      event: "start"
+    });
+    
     const searchHandle = this.context.ditto_client.getSearchHandle();
     var options = DefaultSearchOptions.getInstance()
       .withFilter(rqlExpression)
@@ -184,11 +206,25 @@ export class DeploymentArea extends Component {
       .withLimit(0, 200);
     var devices = (await searchHandle.search(options)).items;
     logger.debug("Found matching devices: " + JSON.stringify(devices));
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "findMatchingDevices",
+      event: "finish"
+    });
+
     return devices;
   };
 
   /** Deploys the selected trust agent to the matching devices */
   handleDeploy = (trustAgentId, matchingDevices) => {
+    
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "handleDeploy",
+      event: "start"
+    });
+
     let ta = this.context.trust_agents.find((x) => x._thingId === trustAgentId);
     logger.debug("Current trust agent: " + JSON.stringify(ta));
     matchingDevices.forEach((device) => {
@@ -213,6 +249,12 @@ export class DeploymentArea extends Component {
               )}`
           )
         );
+    });
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "handleDeploy",
+      event: "finish"
     });
   };
 }

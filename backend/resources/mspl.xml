@@ -16,7 +16,7 @@
           <configuration-action>
             <software-protection-action>
               <software-protection-type>UPDATE</software-protection-type>
-              <software-fixed-version>0.4</software-fixed-version>
+              <software-fixed-version>0.2</software-fixed-version>
               <software-fix-url>https://hub.docker.com/repository/docker/rdautov/trust-agent</software-fix-url>
             </software-protection-action>
           </configuration-action>
@@ -25,7 +25,6 @@
               <software-identification-condition>
                 <software-name>rdautov/trust-agent</software-name>
                 <software-version>0.1</software-version>
-                <software-version>0.2</software-version>
               </software-identification-condition>
             </software-configuration-condition>
           </configuration-condition>

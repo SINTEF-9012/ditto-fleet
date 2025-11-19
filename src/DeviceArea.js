@@ -23,6 +23,8 @@ import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 import winston_logger from "./logger.js";
 
+const { logTimestampJS } = require("./TimestampLogger");
+
 const logger = winston_logger.child({ source: "DeviceArea.js" });
 
 const { Content } = Layout;
@@ -225,7 +227,7 @@ export class DeviceArea extends Component {
             <Col flex="auto" justify="end" align="right">
               <Switch
                 checkedChildren="Sim"
-                unCheckedChildren="Phy"                
+                unCheckedChildren="Phy"
                 style={{
                   marginTop: 22,
                   marginBottom: 10,
@@ -272,6 +274,40 @@ export class DeviceArea extends Component {
                   Delete all
                 </Button>
               </Popconfirm>
+              <Button
+                type="primary"
+                style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
+                onClick={() =>
+                  Modal.confirm({
+                    title: "Recover a digital twin from DLT",
+                    //width: 600,
+                    //height: 300,
+                    content: (
+                      <Select
+                        style={{ width: "100%" }}
+                        align="middle"
+                      >
+
+                        <Option
+                          key="key"
+                          value="value"
+                        >
+                          no.sintef.sct.giot:tellu-rpm-gateway-001
+                        </Option>
+
+                      </Select>
+                    ),
+                    onOk: () => {
+
+                    },
+                    onCancel: () => {
+                      this.handleCancelEdit();
+                    },
+                  })
+                }
+              >
+                Recover device twin
+              </Button>
             </Col>
           </Row>
           <Row>
@@ -379,7 +415,7 @@ export class DeviceArea extends Component {
 
   undeployTrustAgent = async (thingId) => {
     logger.debug("Undeploying agent on: " + thingId);
-    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);    
+    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
     featuresHandle
       .putDesiredProperty("cyber", "trustAgent", {})
       .then((result) =>
@@ -395,11 +431,17 @@ export class DeviceArea extends Component {
     //TODO: how to pass the meta information about the trust agent?
     //desired_agent.status = "running";
 
-    logger.warn("###################### TIMESTAMP ######################")
-    logger.warn("Update device twin: start")
-    logger.warn(Date.now())
-    logger.warn(new Date().toISOString())
-    logger.warn("###################### TIMESTAMP ######################")
+    //logger.warn("###################### TIMESTAMP ######################")
+    //logger.warn("Update device twin: start")
+    //logger.warn(Date.now())
+    //logger.warn(new Date().toISOString())
+    //logger.warn("###################### TIMESTAMP ######################")
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "deployTrustAgent",
+      event: "start"
+    });
 
     logger.debug("Desired agent: " + desired_agent);
     const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
@@ -434,20 +476,32 @@ export class DeviceArea extends Component {
           )}`
         )
       );
-    logger.warn("###################### TIMESTAMP ######################")
-    logger.warn("Update device twin: finish")
-    logger.warn(Date.now())
-    logger.warn(new Date().toISOString())
-    logger.warn("###################### TIMESTAMP ######################")
+    //logger.warn("###################### TIMESTAMP ######################")
+    //logger.warn("Update device twin: finish")
+    //logger.warn(Date.now())
+    //logger.warn(new Date().toISOString())
+    //logger.warn("###################### TIMESTAMP ######################")
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "deployTrustAgent",
+      event: "finish"
+    });
   };
 
   updateDeviceTwin = async () => {
     //TODO: sort out how it is different from deployTrustAgent()
-    logger.warn("###################### TIMESTAMP ######################")
-    logger.warn("updateDeviceTwin: start")
-    logger.warn(Date.now())
-    logger.warn(new Date().toISOString())
-    logger.warn("###################### TIMESTAMP ######################")
+    //logger.warn("###################### TIMESTAMP ######################")
+    //logger.warn("updateDeviceTwin: start")
+    //logger.warn(Date.now())
+    //logger.warn(new Date().toISOString())
+    //logger.warn("###################### TIMESTAMP ######################")
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "updateDeviceTwin",
+      event: "start"
+    });
 
 
     logger.info(this.state.edited_device.features);
@@ -464,11 +518,17 @@ export class DeviceArea extends Component {
           `Finished updating the device with result: ${JSON.stringify(result)}`
         )
       );
-    
-    logger.warn("###################### TIMESTAMP ######################")
-    logger.warn("updateDeviceTwin: finish")
-    logger.warn(Date.now())
-    logger.warn(new Date().toISOString())
-    logger.warn("###################### TIMESTAMP ######################")
+
+    //logger.warn("###################### TIMESTAMP ######################")
+    //logger.warn("updateDeviceTwin: finish")
+    //logger.warn(Date.now())
+    //logger.warn(new Date().toISOString())
+    //logger.warn("###################### TIMESTAMP ######################")
+
+    logTimestampJS({
+      workflowId: "wf001",
+      step: "updateDeviceTwin",
+      event: "finish"
+    });
   };
 }

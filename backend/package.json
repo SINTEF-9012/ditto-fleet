@@ -12,6 +12,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@cloudamqp/amqp-client": "^3.2.1",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.14.1",
     "@types/react": "^18.0.28",

@@ -1,6 +1,12 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+#logs
+/backend/logs
+/submanager/logs
+
 # dependencies
+/backend/node_modules
+/submanager/node_modules
 /node_modules
 /.pnp
 .pnp.js
