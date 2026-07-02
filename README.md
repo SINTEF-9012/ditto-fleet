@@ -1,35 +1,72 @@
-This project is a Digital Twin platform for software management on a fleet of devices within the IoT-Edge-Cloud continuum. The backbone of the platform is [Eclipse Ditto](https://www.eclipse.org/ditto/). The platform also comes with a back-end, which listens for changes in the managed digital twins.
+# ditto-fleet
 
-## Pre-requisites: Installing and running Eclipse Ditto
+A research prototype of a Digital Twin platform for software management on a fleet of devices within the IoT-Edge-Cloud continuum. The backbone of the platform is [Eclipse Ditto](https://www.eclipse.org/ditto/).
 
-This fleet management tool builds upon and further extends the functionality of Eclipse Ditto - an open source framework for building digital twins of devices connected to the internet. More information can be found [here](https://eclipse.dev/ditto/).
+## Architecture
 
-The best way to install and run Eclipse Ditto is via docker-compose, as fully described [here](https://github.com/eclipse-ditto/ditto/tree/master/deployment/docker). 
+| Component | Folder | Tech | Port | Role |
+|---|---|---|---|---|
+| Fleet-manager GUI | `src/`, `public/` | React (CRA) | 3000 | Web UI to manage device twins, register software, create and enact deployments |
+| Backend | `backend/` | Node.js | 4000 | Bridge between Ditto and MQTT: ingests monitoring data into twins, watches desired-property changes, publishes device twins downstream, parses MSPL security policies |
+| Submanager | `submanager/` | Node.js | — | Edge-side deployment router: receives twins via MQTT, relays to proxy devices or deploys containers via the Docker Engine API |
+| Monitoring agent | `monitoring-agent/` | Telegraf | — | Runs on devices; publishes CPU/memory/disk/temperature/Docker/package metrics via MQTT |
+| Trust agent | `trust-agent/` | Python | — | Minimal containerized agent deployed to devices as the managed "software" |
+| Eclipse Ditto | external | Java | 8080 | Digital twin repository (things, policies, search, connectivity) |
 
-`git clone https://github.com/SINTEF-9012/ditto-fleet.git`
+Communication: the GUI talks to Ditto's HTTP API (port 8080); the backend uses Ditto's HTTP + WebSocket APIs and an MQTT broker (default `test.mosquitto.org:1883`); devices (submanager, monitoring agent) communicate over MQTT only.
 
-`cd ditto/deployment/docker`
+The former TypeScript `subfleet-manager/` component was superseded by `submanager/` and removed from the working tree; it remains available in git history.
 
-`docker-compose up -d`
+## Configuration
 
-## Running from source-code
+All connection settings are environment variables with development defaults (`ditto`/`ditto` against `localhost:8080`).
 
-The fleet management tool essentially consists of two separate components:
+* GUI: `REACT_APP_DITTO_DOMAIN`, `REACT_APP_DITTO_USERNAME`, `REACT_APP_DITTO_PASSWORD`, `REACT_APP_DITTO_NAMESPACE` — defaults in [.env](.env), local overrides (and any real credentials) go in `.env.local`, which is git-ignored. CRA bakes these in at build time.
+* Backend: `PORT`, `MQTT_BROKER`, `DITTO_SERVER`, `DITTO_USERNAME`, `DITTO_PASSWORD` — see [backend/.env.example](backend/.env.example).
+* Submanager: `MQTT_BROKER_URL`, `HOST_NAME`, `DOCKER_PORT`, `NAMESPACE_PREFIX` — see [submanager/.env](submanager/.env).
 
-#### Front-end GUI
+## Pre-requisites: Eclipse Ditto
 
-In the root folder: `npm run start`
+Run Eclipse Ditto via docker compose, either from the [upstream deployment](https://github.com/eclipse-ditto/ditto/tree/master/deployment/docker) or with the compose file in this repo:
 
-#### Back-end API for interacting with Eclipse Ditto and MQTT communication with downstream devices
+```bash
+docker compose -f docker-compose-ditto.yml up -d
+```
 
-In a separate terminal change folder: `cd backend` and run: `npm run start`
+The Ditto policy and example twins can be set up with the scripts and JSON files in `src/ditto-scripts/` (see its README).
 
-## Runing as a Docker container
+## Running from source
 
-### Stand-alone Docker container
+Front-end GUI (root folder):
 
-To run the GUI  pull the latest version of the `dautov:ditto-fleet-gui` image and run the following command:
+```bash
+npm install
+npm start          # http://localhost:3000
+```
 
-`docker run -it -p 3000:3000 rdautov/ditto-fleet-gui`
+Back-end (separate terminal):
 
-This will run the `npm start` script and launch the React application. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```bash
+cd backend
+npm install
+npm start
+```
+
+## Docker deployment
+
+| File | Purpose |
+|---|---|
+| `docker-compose-ditto.yml` | Eclipse Ditto stack only (things, policies, search, gateway, MongoDB, Mosquitto, nginx, swagger) |
+| `docker-compose-fleet.yml` | Full fleet stack: GUI + backend + submanager images on top of a running Ditto |
+| `docker-compose-raspberry.yml` | Device-side stack for a Raspberry Pi: submanager + monitoring agent |
+| `Dockerfile`, `backend/Dockerfile` | Images for the GUI (`rdautov/ditto-fleet-gui`) and backend (`rdautov/ditto-backend`) |
+
+Stand-alone GUI container:
+
+```bash
+docker run -it -p 3000:3000 rdautov/ditto-fleet-gui
+```
+
+## Experiments
+
+The scripts and data used for the D6.2 scalability experiments (frozen submanager load-test variants, twin generator, the 100 generated twins) live in [experiments/d6.2-scalability/](experiments/d6.2-scalability/README.md).
