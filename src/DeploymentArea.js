@@ -205,7 +205,7 @@ export class DeploymentArea extends Component {
       .withSort("+thingId")
       .withLimit(0, 200);
     var devices = (await searchHandle.search(options)).items;
-    logger.debug("Found matching devices: " + JSON.stringify(devices));
+    //logger.debug("Found matching devices: " + JSON.stringify(devices));
 
     logTimestampJS({
       workflowId: "wf001",
@@ -226,9 +226,9 @@ export class DeploymentArea extends Component {
     });
 
     let ta = this.context.trust_agents.find((x) => x._thingId === trustAgentId);
-    logger.debug("Current trust agent: " + JSON.stringify(ta));
+    //logger.debug("Current trust agent: " + JSON.stringify(ta));
     matchingDevices.forEach((device) => {
-      logger.debug("matching device: " + JSON.stringify(device));
+      //logger.debug("matching device: " + JSON.stringify(device));
       const featuresHandle = this.context.ditto_client.getFeaturesHandle(
         device._thingId
       );
@@ -238,7 +238,7 @@ export class DeploymentArea extends Component {
         container_status: "running",
         ta_meta: ta._attributes,
       };
-      logger.debug("ta: " + JSON.stringify(trust_agent));
+      //logger.debug("ta: " + JSON.stringify(trust_agent));
       featuresHandle
         .putDesiredProperty("cyber", "trustAgent", trust_agent)
         .then((result) =>

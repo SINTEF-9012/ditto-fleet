@@ -48,7 +48,7 @@ import software_template from "../resources/software_template.json" assert { typ
 import { logTimestamp } from "./TimestampLogger.js";
 
 const PORT = process.env.PORT || 4000;
-const MQTT_BROKER = "mqtt://test.mosquitto.org:1883" //"mqtt://broker.hivemq.com:1883" //"mqtt://localhost:1883" //process.env.MQTT_BROKER; //"localhost:1883"
+const MQTT_BROKER = "mqtt://test.mosquitto.org:1883" //"mqtt://localhost:1883" //process.env.MQTT_BROKER; //"localhost:1883" "mqtt://test.mosquitto.org:1883" //
 const DITTO_SERVER = "localhost:8080" //process.env.DITTO_SERVER //"localhost:8080"
 
 const app = express();
@@ -357,7 +357,7 @@ const http_ditto_client = DittoNodeClient.newHttpClient()
   //.twinChannel()
   .build();
 
-const job = schedule.scheduleJob("*/1 * * * *", checkDesiredReportedTrustAgent);
+const job = schedule.scheduleJob("*/2 * * * *", checkDesiredReportedTrustAgent);
 
 /** Fully update the digital twin in Ditto (i.e. all its reported properties within features). */
 async function updateTwinProperties(twin) {

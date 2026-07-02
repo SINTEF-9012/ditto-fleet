@@ -24,7 +24,7 @@ import { logTimestamp } from "./TimestampLogger.js";
 
 
 // ---------- Configuration (env / defaults) ----------
-const MQTT_BROKER_URL = process.env.MQTT_BROKER_URL || "mqtt://test.mosquitto.org:1883";
+const MQTT_BROKER_URL = process.env.MQTT_BROKER_URL || "mqtt://test.mosquitto.org:1883"; // broker.hivemq.com:1883";
 const MQTT_CLIENT_ID = process.env.MQTT_CLIENT_ID || `subfleet-${uuidv4()}`;
 const SUBSCRIBE_TOPIC = process.env.SUBSCRIBE_TOPIC || "no.sintef.sct.giot.things/downstream"//"devices/ditto/+/twin"; // wildcard example
 const NAMESPACE_PREFIX = process.env.NAMESPACE_PREFIX || "no.sintef.sct.giot:";

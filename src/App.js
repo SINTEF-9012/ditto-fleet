@@ -245,7 +245,7 @@ class App extends Component {
 
             <Footer>
               <p>
-                This work is supported by <a href={PROJECT_URL}>ERATOSTHENES</a>{" "}
+                This work is supported by <a href={PROJECT_URL}>ENTRUST</a>{" "}
                 and powered by{" "}
                 <a href="https://www.eclipse.org/ditto/">Eclipse Ditto</a>.
               </p>

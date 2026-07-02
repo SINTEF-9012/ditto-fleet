@@ -51,13 +51,13 @@ export class DeviceArea extends Component {
           //  </span>
           //) : (
           <span>
-            <Badge
+            {/* <Badge
               status={
                 record._attributes.type === "physical_device"
                   ? "processing"
                   : "default"
               }
-            />
+            /> */}
             {record._thingId}
           </span>
         ),
