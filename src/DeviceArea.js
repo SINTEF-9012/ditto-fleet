@@ -6,7 +6,6 @@ import {
   Row,
   Table,
   Tooltip,
-  Badge,
   Modal,
   Select,
   Popconfirm,
@@ -14,23 +13,17 @@ import {
 } from "antd";
 import ReactJson from "react-json-view";
 import { GlobalContext } from "./GlobalContext";
-import {
-  Feature,
-  Thing,
-  Features,
-} from "sintef-ditto-javascript-client-dom";
+import { Thing } from "sintef-ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 import winston_logger from "./logger.js";
-
-const { logTimestampJS } = require("./TimestampLogger");
+import { deployTrustAgent as deployTrustAgentAction, deleteThing } from "./dittoActions";
 
 const logger = winston_logger.child({ source: "DeviceArea.js" });
 
 const { Content } = Layout;
 const ButtonGroup = Button.Group;
 const { Option } = Select;
-//const { confirm } = Modal;
 
 export class DeviceArea extends Component {
   static contextType = GlobalContext;
@@ -42,25 +35,7 @@ export class DeviceArea extends Component {
         title: "Device ID",
         dataIndex: "_thingId",
         align: "left",
-        //width: 100, 
-        render: (text, record) => (
-          //this.context.deviceTags[record.id].status === "failed" ? (
-          //  <span>
-          //    <Badge status="error" />
-          //    {record.id}
-          //  </span>
-          //) : (
-          <span>
-            {/* <Badge
-              status={
-                record._attributes.type === "physical_device"
-                  ? "processing"
-                  : "default"
-              }
-            /> */}
-            {record._thingId}
-          </span>
-        ),
+        render: (text, record) => <span>{record._thingId}</span>,
       },
       {
         title: "Actions",
@@ -76,8 +51,6 @@ export class DeviceArea extends Component {
                   onClick={() =>
                     Modal.confirm({
                       title: "Deploy software",
-                      //width: 600,
-                      //height: 300,
                       content: (
                         <Select
                           style={{ width: "100%" }}
@@ -151,55 +124,16 @@ export class DeviceArea extends Component {
       },
     ];
     this.state = {
-      //add if needed
       trust_agent: { value: "" },
       active_device: "",
       new_device: require("./resources/cps_device_template.json"),
-      edited_device: "",
       simulation: false,
     };
   }
 
-  /* showModal = (thingId) => {
-    Modal.confirm({
-      title: "Deploy a trust agent",
-      //width: 600,
-      //height: 300,
-      content: (
-        <div>
-          <Select style={{ width: 310 }} onSelect={this.handleDropdownChange}>
-            {this.context.trust_agents.map((item) => (
-              <Option key={item._thingId} value={JSON.stringify(item)}>
-                {item._thingId}
-              </Option>
-            ))}
-          </Select>
-        </div>
-      ),
-      onOk: () => {
-        this.createDeviceTwin(this.state.new_device);
-      },
-      onCancel: () => {},
-    });
-  }; */
-
   handleDropdownChange = (value, event) => {
     logger.info("value: " + value);
-    logger.info("Current trust_agent " + this.state.trust_agent);
     this.setState({ trust_agent: JSON.parse(value) });
-    logger.info("Current trust_agent: " + this.state.trust_agent);
-  };
-
-  handleOkEdit = (e) => {
-    //logger.info(e);
-    //TODO: edit the whole twin, not just the trust agent
-    let thingId = this.state.active_device._thingId;
-    let desired_agent = this.state.trust_agent;
-    this.deployTrustAgent(thingId, desired_agent._attributes);
-    this.setState({
-      active_device: {},
-      trust_agent: {},
-    });
   };
 
   handleCancelEdit = (e) => {
@@ -207,10 +141,6 @@ export class DeviceArea extends Component {
   };
 
   handleNewTwinChange = (value) => {
-    this.setState({ new_device: value });
-  };
-
-  handleExistingTwinChange = (value) => {
     this.setState({ new_device: value });
   };
 
@@ -280,26 +210,14 @@ export class DeviceArea extends Component {
                 onClick={() =>
                   Modal.confirm({
                     title: "Recover a digital twin from DLT",
-                    //width: 600,
-                    //height: 300,
                     content: (
-                      <Select
-                        style={{ width: "100%" }}
-                        align="middle"
-                      >
-
-                        <Option
-                          key="key"
-                          value="value"
-                        >
+                      <Select style={{ width: "100%" }} align="middle">
+                        <Option key="key" value="value">
                           no.sintef.sct.giot:tellu-rpm-gateway-001
                         </Option>
-
                       </Select>
                     ),
-                    onOk: () => {
-
-                    },
+                    onOk: () => {},
                     onCancel: () => {
                       this.handleCancelEdit();
                     },
@@ -313,7 +231,6 @@ export class DeviceArea extends Component {
           <Row>
             <Col>
               <Table
-                //bordered
                 rowKey={(record) => record.id}
                 size="small"
                 dataSource={
@@ -330,8 +247,6 @@ export class DeviceArea extends Component {
                     }, // click row
                   };
                 }}
-                //scroll={{ y: 500 }}
-                //expandRowByClick={true}
                 expandedRowRender={(record) => (
                   <ReactJson
                     src={record}
@@ -347,14 +262,9 @@ export class DeviceArea extends Component {
     );
   }
 
-  componentDidMount() {
-    //add something if needed
-  }
-
   createDeviceTwin = async () => {
     logger.info(this.state.new_device);
     var device = Thing.fromObject(this.state.new_device);
-    logger.info(device);
     const thingsHandle = this.context.ditto_client.getThingsHandle();
     thingsHandle
       .putThing(device)
@@ -364,53 +274,20 @@ export class DeviceArea extends Component {
             result
           )}`
         )
+      )
+      .catch((e) =>
+        logger.error("Failed to create the device twin: " + e.message)
       );
   };
 
   deleteDeviceTwin = async (thingId) => {
-    const thingsHandle = this.context.ditto_client.getThingsHandle();
-    thingsHandle
-      .deleteThing(thingId)
-      .then((result) =>
-        logger.info(
-          `Finished deleting the device twin with the result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
+    return deleteThing(this.context.ditto_client, thingId, "device twin");
   };
 
   deleteAllTwins = async () => {
     this.context.devices.forEach((device) => {
-      //logger.info(device.id);
       this.deleteDeviceTwin(device.id);
     });
-  };
-
-  //FIXME: this function is redundant
-  deployTrustAgent_old = async (thingId, desired_agent) => {
-    //FIXME: this overwrites all of desired properties under same feature! Solution: read the desired properties first, append some new value and put them back.
-    //FIXME: do not include features in desired trust agents, only attributes!
-    desired_agent.status = "running";
-    logger.info("Desired agent", desired_agent);
-    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    featuresHandle
-      .putDesiredProperties("cyber", { trustAgent: desired_agent })
-      .then((result) =>
-        logger.info(
-          `Finished updating the device twin with result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
-    //var desired_agent =
-    //featuresHandle.putProperties("agent", {
-    //  version: "hi there!",
-    //  status: "oh no",
-    //});
-
-    // TODO: send an MQTT message to an adapter
-    logger.info("Sending a MQTT message to deploy a trust agent");
   };
 
   undeployTrustAgent = async (thingId) => {
@@ -424,111 +301,19 @@ export class DeviceArea extends Component {
             result
           )}`
         )
+      )
+      .catch((e) =>
+        logger.error("Failed to undeploy the trust agent: " + e.message)
       );
   };
 
   deployTrustAgent = async (thingId, desired_agent) => {
     //TODO: how to pass the meta information about the trust agent?
-    //desired_agent.status = "running";
-
-    //logger.warn("###################### TIMESTAMP ######################")
-    //logger.warn("Update device twin: start")
-    //logger.warn(Date.now())
-    //logger.warn(new Date().toISOString())
-    //logger.warn("###################### TIMESTAMP ######################")
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "deployTrustAgent",
-      event: "start"
-    });
-
     logger.debug("Desired agent: " + desired_agent);
-    const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-    let trust_agent;
-    if (desired_agent._attributes.type === "trust_agent_docker") {
-      trust_agent = {
-        //name: desired_agent._thingId,
-        container_image: desired_agent._attributes.image,
-        container_version: desired_agent._attributes.version,
-        container_status: "running",
-        ta_meta: desired_agent._attributes,
-        //  ? desired_agent._attributes.version
-        //  : "unknown",
-      };
-    } else if (desired_agent._attributes.type === "trust_agent_ssh") {
-      trust_agent = {
-        //name: desired_agent._thingId,
-        process_name: "trust-agent.sh",
-        //container_version: desired_agent._attributes.version,
-        process_status: "running",
-        ta_meta: desired_agent._attributes,
-        //  ? desired_agent._attributes.version
-        //  : "unknown",
-      };
-    }
-    featuresHandle
-      .putDesiredProperty("cyber", "trustAgent", trust_agent)
-      .then((result) =>
-        logger.info(
-          `Finished updating the device twin with result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
-    //logger.warn("###################### TIMESTAMP ######################")
-    //logger.warn("Update device twin: finish")
-    //logger.warn(Date.now())
-    //logger.warn(new Date().toISOString())
-    //logger.warn("###################### TIMESTAMP ######################")
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "deployTrustAgent",
-      event: "finish"
-    });
-  };
-
-  updateDeviceTwin = async () => {
-    //TODO: sort out how it is different from deployTrustAgent()
-    //logger.warn("###################### TIMESTAMP ######################")
-    //logger.warn("updateDeviceTwin: start")
-    //logger.warn(Date.now())
-    //logger.warn(new Date().toISOString())
-    //logger.warn("###################### TIMESTAMP ######################")
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "updateDeviceTwin",
-      event: "start"
-    });
-
-
-    logger.info(this.state.edited_device.features);
-    var features = Features.fromObject(this.state.edited_device._features);
-    logger.info("DEVICE FEATURES: ", features);
-    logger.info("DEVICE ID: ", this.state.edited_device._thingId);
-    const featuresHandle = this.context.ditto_client.getFeaturesHandle(
-      this.state.edited_device._thingId
+    return deployTrustAgentAction(
+      this.context.ditto_client,
+      thingId,
+      desired_agent
     );
-    featuresHandle
-      .putFeatures(features)
-      .then((result) =>
-        logger.info(
-          `Finished updating the device with result: ${JSON.stringify(result)}`
-        )
-      );
-
-    //logger.warn("###################### TIMESTAMP ######################")
-    //logger.warn("updateDeviceTwin: finish")
-    //logger.warn(Date.now())
-    //logger.warn(new Date().toISOString())
-    //logger.warn("###################### TIMESTAMP ######################")
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "updateDeviceTwin",
-      event: "finish"
-    });
   };
 }

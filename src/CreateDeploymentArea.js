@@ -6,89 +6,28 @@ import {
   Row,
   Table,
   Badge,
-  //Tooltip,
   Select,
   Steps,
   message,
-  //Form,
   Input,
-  //Icon,
   Checkbox,
 } from "antd";
 import ReactJson from "react-json-view";
 import winston_logger from "./logger.js";
 import { GlobalContext } from "./GlobalContext.js";
-import {
-  Thing,
-  DefaultSearchOptions,
-} from "sintef-ditto-javascript-client-dom";
+import { Thing } from "sintef-ditto-javascript-client-dom";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-powershell.js";
 import "prismjs/themes/prism.css"; //Example style, you can use another
 import { DITTO_NAMESPACE } from "./config";
+import { deployTrustAgent, findMatchingDevices } from "./dittoActions";
 
 const logger = winston_logger.child({ source: "CreateDeploymentArea.js" });
 
-const { logTimestampJS } = require("./TimestampLogger");
-
 const { Content } = Layout;
-//const ButtonGroup = Button.Group;
 const { Option } = Select;
 const { Step } = Steps;
-//const { TextArea } = Input;
-
-//let id = 0;
-
-/* const CustomizedForm = Form.create({
-  name: "rql_expression",
-  onFieldsChange(props, changedFields) {
-    props.onChange(changedFields);
-  },
-  mapPropsToFields(props) {
-    return {
-      rql: Form.createFormField({
-        ...props.rql,
-        value: props.rql.value,
-      }),
-    };
-  },
-  onValuesChange(_, values) {
-    console.log(values);
-  },
-})((props) => {
-  const { getFieldDecorator } = props.form;
-  return (
-    <Form layout="inline">
-      <Form.Item
-        label="RQL expression"
-        wrapperCol={{ sm: 24 }}
-        style={{ width: "100%" }}
-      >
-        {getFieldDecorator("rql", {
-          rules: [{ required: true, message: "RQL expression is required!" }],
-        })(
-          <TextArea
-            rows={4}
-            size="large"
-            suffix={
-              <Tooltip
-                title={
-                  <a href="https://connect.cloudblue.com/community/developers/api/rql/">
-                    More about RQL
-                  </a>
-                }
-              >
-                <Icon type="info-circle" />
-              </Tooltip>
-            }
-            allowClear
-          />
-        )}
-      </Form.Item>
-    </Form>
-  );
-}); */
 
 export class CreateDeploymentArea extends Component {
   static contextType = GlobalContext;
@@ -100,7 +39,6 @@ export class CreateDeploymentArea extends Component {
         title: "Device ID",
         dataIndex: "_thingId",
         align: "left",
-        //width: 100,
         render: (text, record) => (
           <span>
             <Badge
@@ -116,7 +54,6 @@ export class CreateDeploymentArea extends Component {
       },
     ];
     this.state = {
-      //add if needed
       current: 0,
       save: false,
       deployment_name: "",
@@ -125,38 +62,17 @@ export class CreateDeploymentArea extends Component {
       matching_devices: [],
       new_assignment_json: require("./resources/cps_assignment_template.json"),
       rql: "and(eq(features/cyber/properties/trustAgent/container_image,'rdautov/trust-agent'),eq(features/cyber/properties/trustAgent/container_version,'0.1'))",
-      fields: {
-        rql: {
-          value:
-            "and(eq(features/cyber/properties/trustAgent/container_image,'rdautov/trust-agent'),eq(features/cyber/properties/trustAgent/container_version,'0.1'))",
-        },
-      },
     };
     this.editor = React.createRef();
   }
 
-  handleDeploy = (values) => {
-    console.log("values: ", values);
+  handleDeploy = () => {
     this.state.matching_devices.forEach((device) => {
-      const featuresHandle = this.context.ditto_client.getFeaturesHandle(
-        device.thingId
+      deployTrustAgent(
+        this.context.ditto_client,
+        device.thingId,
+        this.state.current_agent
       );
-      let trust_agent = {
-        container_image: this.state.current_agent._attributes.image,
-        container_version: this.state.current_agent._attributes.version,
-        container_status: "running",
-        ta_meta: this.state.current_agent._attributes,
-      };
-      featuresHandle
-        .putDesiredProperty("cyber", "trustAgent", trust_agent)
-        .then((result) =>
-          logger.info(
-            device._thingId +
-              `Finished updating the device twin with result: ${JSON.stringify(
-                result
-              )}`
-          )
-        );
     });
     if (this.state.save && this.state.deployment_name !== "") {
       this.saveDeployment();
@@ -188,12 +104,14 @@ export class CreateDeploymentArea extends Component {
             result
           )}`
         )
+      )
+      .catch((e) =>
+        logger.error("Failed to save the deployment: " + e.message)
       );
   };
-  
 
   render() {
-    const { current, selected_tags, fields, rql } = this.state;
+    const { current, rql } = this.state;
 
     const steps = [
       {
@@ -210,40 +128,40 @@ export class CreateDeploymentArea extends Component {
                 </Option>
               ))}
             </Select>
-            <ReactJson src={this.state.current_agent === null ? {} : this.state.current_agent} />
+            <ReactJson
+              src={
+                this.state.current_agent === null
+                  ? {}
+                  : this.state.current_agent
+              }
+            />
           </>
         ),
       },
       {
         title: "Define target conditions",
         content: (
-          <>
-            {/* <CustomizedForm {...fields} onChange={this.handleFormChange} /> */}
-            <Editor
-              value={rql}
-              onValueChange={(code) => this.handleTypeChanges(code)}
-              highlight={(code) => highlight(code, languages.powershell)}
-              padding={10}
-              style={{
-                fontFamily: '"Fira code", "Fira Mono", monospace',
-                fontWeight: 'bold'
-              }}
-            />
-          </>
+          <Editor
+            value={rql}
+            onValueChange={(code) => this.handleTypeChanges(code)}
+            highlight={(code) => highlight(code, languages.powershell)}
+            padding={10}
+            style={{
+              fontFamily: '"Fira code", "Fira Mono", monospace',
+              fontWeight: "bold",
+            }}
+          />
         ),
       },
       {
         title: "Confirm matching devices",
         content: (
           <Table
-            //bordered
             rowKey={(record) => record.id}
             size="small"
             dataSource={this.state.matching_devices}
             columns={this.columns}
             pagination={{ pageSize: 50 }}
-            //scroll={{ y: 500 }}
-            //expandRowByClick={true}
             expandedRowRender={(record) => (
               <ReactJson src={record} enableClipboard={false} collapsed="1" />
             )}
@@ -275,7 +193,11 @@ export class CreateDeploymentArea extends Component {
                 style={{ display: "flex", justifyContent: "center" }}
               >
                 {current < steps.length - 1 && (
-                  <Button type="primary" disabled={!this.state.current_agent} onClick={() => this.next()}>
+                  <Button
+                    type="primary"
+                    disabled={!this.state.current_agent}
+                    onClick={() => this.next()}
+                  >
                     Next
                   </Button>
                 )}
@@ -314,42 +236,27 @@ export class CreateDeploymentArea extends Component {
     );
   }
 
-  componentDidMount() {
-    //add if needed
-  }
-
   handleTypeChanges = (value) => {
-    this.setState({rql: value});
-  }
-  
-  handleFormChange = (changedFields) => {
-    this.setState(({ fields }) => ({
-      fields: { ...fields, ...changedFields },
-    }));
-    //logger.info("changed fields" + JSON.stringify(changedFields));
-    //logger.info(" fields" + JSON.stringify(this.state.fields));
+    this.setState({ rql: value });
   };
 
   onCheckboxChange = (e) => {
-    //logger.info(`checked = ${e.target.checked}`);
     this.setState({ save: e.target.checked });
   };
 
   onDeploymentNameChange = (e) => {
-    //logger.debug(JSON.stringify(e.target.value))
     this.setState({ deployment_name: e.target.value });
   };
 
   next() {
-    logger.info(this.state.current);
     const current = this.state.current + 1;
     if (current === 2) {
-      this.handleFormChange();
       logger.debug("RQL query is: " + this.state.rql);
-      this.findMatchingDevices(
-        this.state.current_agent,
-        this.state.rql
-      ).then((result) => this.setState({ matching_devices: result }));
+      findMatchingDevices(this.context.ditto_client, this.state.rql)
+        .then((result) => this.setState({ matching_devices: result }))
+        .catch((e) =>
+          logger.error("Failed to find matching devices: " + e.message)
+        );
     }
     this.setState({ current });
     logger.info("Next", current);
@@ -361,99 +268,7 @@ export class CreateDeploymentArea extends Component {
     logger.info("Prev", current);
   }
 
-  /**
-   * Find matching devices in Ditto according to the RQL query
-   */
-  findMatchingDevices = async (trustAgent, rqlExpression) => {
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "findMatchingDevices",
-      event: "start"
-    });
-
-    const searchHandle = this.context.ditto_client.getSearchHandle();
-
-    var options = DefaultSearchOptions.getInstance()
-      .withFilter(rqlExpression)
-      .withSort("+thingId")
-      .withLimit(0, 200);
-    //searchHandle.search(options).then(result => console.log("returned",result.items))
-    var devices = (await searchHandle.search(options)).items;
-    //console.info(devices);
-    logger.debug("Found matching devices: " + JSON.stringify(devices));
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "findMatchingDevices",
-      event: "finish"
-    });
-
-    return devices;
-  };
-
-  /** Deploys the selected trust agent to all suitable devices */
-  assignTrustAgentToAll = async (trustAgent, rqlExpression) => {
-    
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "assignTrustAgentToAll",
-      event: "start"
-    });
-    
-    //FIXME: what if a device has both docker and ssh?
-    //FIXME: there must only one check whether the device is suitable
-    this.context.devices.forEach((device) => {
-      const featuresHandle = this.context.ditto_client.getFeaturesHandle(
-        device.thingId
-      );
-      if (trustAgent._attributes.type === "trust_agent_docker") {
-        let trust_agent = {
-          container_image: trustAgent._attributes.image,
-          container_version: trustAgent._attributes.version,
-          container_status: "running",
-          ta_meta: trustAgent._attributes,
-        };
-        featuresHandle
-          .putDesiredProperty("cyber", "trustAgent", trust_agent)
-          .then((result) =>
-            logger.info(
-              `Finished updating the device twin with result: ${JSON.stringify(
-                result
-              )}`
-            )
-          );
-      } else if (trustAgent._attributes.type === "trust_agent_ssh") {
-        let trust_agent = {
-          process_name: "trust-agent.sh",
-          process_status: "running",
-          ta_meta: trustAgent._attributes,
-        };
-        featuresHandle
-          .putDesiredProperty("cyber", "trustAgent", trust_agent)
-          .then((result) =>
-            logger.info(
-              `Finished updating the device twin with result: ${JSON.stringify(
-                result
-              )}`
-            )
-          );
-      } else {
-        logger.info(
-          device._thingId + " is not suitable for " + trustAgent._thingId
-        );
-      }
-    });
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "assignTrustAgentToAll",
-      event: "finish"
-    });
-  };
-
   handleDropdownChange = (value) => {
-    //logger.info("value", value);
-    //logger.info("trust_agent", this.state.trust_agent);
     this.setState({ current_agent: JSON.parse(value) });
   };
 }

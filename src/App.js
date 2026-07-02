@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
 import winston_logger from "./logger.js";
-// import axios from "axios";
 import { Layout, Tabs, Icon, Row, Col } from "antd";
 
 import {
@@ -10,123 +9,76 @@ import {
   DefaultSearchOptions,
 } from "sintef-ditto-javascript-client-dom";
 
-//"@eclipse-ditto/ditto-javascript-client-dom"; //"../ditto-client-extensions/lib/api/dist/model/things.model.js";
-//import { DomHttpBasicAuth } from "./build/dom/src/dom-auth.js";
-//import { DefaultSearchOptions } from "./build/options/request.options.js";
-//import { DittoDomClient } from "./build/dom/src/ditto-dom-client.js";
-
 import { DeviceArea } from "./DeviceArea";
 import { TrustAgentArea } from "./TrustAgentArea";
 import { DeploymentArea } from "./DeploymentArea";
 import { CreateDeploymentArea } from "./CreateDeploymentArea.js";
 import { GlobalContext } from "./GlobalContext";
-
-const { logTimestampJS } = require("./TimestampLogger");
-
-const { Footer, Content } = Layout;
-const { TabPane } = Tabs;
-
 import {
   DITTO_DOMAIN as ditto_domain,
   DITTO_USERNAME as ditto_username,
   DITTO_PASSWORD as ditto_password,
 } from "./config";
 
+const { Footer, Content } = Layout;
+const { TabPane } = Tabs;
+
 const PROJECT = process.env.REACT_APP_PROJECT;
 const PROJECT_URL = process.env["REACT_APP_" + PROJECT + "_URL"];
 const PROJECT_LOGO = "../" + PROJECT.toLowerCase() + "_logo.png";
 
 const logger = winston_logger.child({ source: "App.js" });
-//logger.info("Current project: " + PROJECT + " (" + PROJECT_URL + ")");
 
-//logger.warn("###################### TIMESTAMP ######################")
-//logger.warn(new Date().toISOString())
-//logger.warn("###################### TIMESTAMP ######################")
+const buildDittoClient = () =>
+  DittoDomClient.newHttpClient()
+    .withoutTls()
+    .withDomain(ditto_domain)
+    .withAuthProvider(
+      DomHttpBasicAuth.newInstance(ditto_username, ditto_password)
+    )
+    .build();
 
-logTimestampJS({
-    workflowId: "wf009",
-    step: "dummy function",
-    event: "start"
-  });
-
-const ditto_client = DittoDomClient.newHttpClient()
-  .withoutTls()
-  .withDomain(ditto_domain)
-  .withAuthProvider(
-    DomHttpBasicAuth.newInstance(ditto_username, ditto_password)
-  )
-  .build();
+const ditto_client = buildDittoClient();
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      //area: AreaEnum.GLOBAL,
-      //templates: [],
-      //variants: [],
       devices: [],
       physical_devices: [],
       virtual_devices: [],
       trust_agents: [],
       deployments: [],
-      //cyber_properties: [],      
-      //forEdit: null,
-      //edited: null,
-      //appliedDevices: {},
-      //targetedDevices: {},
-      //templateTags: {},
-      //deviceTags: {},
-      //deviceProperties: {},
-      //activeDeployments: {},
       activeTab: "1",
       handleTabChange: this.handleTabChange,
-      //addVariant: this.addVariant,
-      //addTemplate: this.addTemplate,
       ditto_client,
     };
     this.Tabs = React.createRef();
   }
 
   componentDidMount() {
-    this.initDittoClient().then((result) =>
-      this.setState({ ditto_client: result })
-    );
-    /* this.getDeployments()
+    this.initDittoClient()
+      .then((result) => this.setState({ ditto_client: result }))
+      .catch((e) => logger.error("Failed to init Ditto client: " + e.message));
+    this.getAllDevices()
+      .then((result) => this.setState({ devices: result }))
+      .catch((e) => logger.error("Failed to fetch devices: " + e.message));
+    this.getAllPhysicalDevices()
+      .then((result) => this.setState({ physical_devices: result }))
+      .catch((e) =>
+        logger.error("Failed to fetch physical devices: " + e.message)
+      );
+    this.getAllVirtualDevices()
+      .then((result) => this.setState({ virtual_devices: result }))
+      .catch((e) =>
+        logger.error("Failed to fetch virtual devices: " + e.message)
+      );
+    this.getAllTrustAgents()
+      .then((result) => this.setState({ trust_agents: result }))
+      .catch((e) => logger.error("Failed to fetch trust agents: " + e.message));
+    this.getAllDeployments()
       .then((result) => this.setState({ deployments: result }))
-      .then(() => this.getAppliedDevices())
-      .then((result) => this.setState({ appliedDevices: result }))
-      .then(() => this.getTargetedDevices())
-      .then((result) => this.setState({ targetedDevices: result }))
-      .then(() => this.getActiveDeployments())
-      .then((result) => this.setState({ activeDeployments: result })); */
-    this.getAllDevices().then((result) => this.setState({ devices: result }));
-
-    this.getAllPhysicalDevices().then((result) =>
-      this.setState({ physical_devices: result })
-    );
-    this.getAllVirtualDevices().then((result) =>
-      this.setState({ virtual_devices: result })
-    );
-    this.getAllTrustAgents().then((result) =>
-      this.setState({ trust_agents: result })
-    );
-    this.getAllDeployments().then((result) =>
-      this.setState({ deployments: result })
-    );
-    //.then(() => this.getDeviceTags())
-    //.then((result) => this.setState({ deviceTags: result }))
-    //.then(() => this.getDeviceProperties())
-    //.then((result) => this.setState({ deviceProperties: result}));
-    /* this.getTemplates()
-      .then((result) => {
-        this.setState({ templates: result });
-      })
-      .then(() => this.getTemplateTags())
-      .then((result) => this.setState({ templateTags: result })); */
-    /* this.getVariants().then((result) => {
-      this.setState({ variants: result });
-    }); */
-    //this.getActiveDeployments();
+      .catch((e) => logger.error("Failed to fetch deployments: " + e.message));
   }
 
   handleTabChange = (tabNo) => {
@@ -140,8 +92,6 @@ class App extends Component {
       <GlobalContext.Provider value={this.state}>
         <div className="App">
           <Layout style={{ minHeight: "100vh" }}>
-            {/* <Header></Header> */}
-
             <Content
               style={{ background: "#fff", padding: 0, textAlign: "left" }}
             >
@@ -152,7 +102,6 @@ class App extends Component {
                     activeKey={activeTab}
                     ref={this.Tabs}
                     onTabClick={(tab) => this.handleTabChange(tab)}
-                    // tabBarExtraContent={operations}
                   >
                     <TabPane
                       disabled
@@ -176,14 +125,7 @@ class App extends Component {
                         </span>
                       }
                     >
-                      <DeviceArea
-                      //devices={devices}
-                      //deployments={deployments}
-                      //activeDeployments={activeDeployments}
-                      //appliedDevices={appliedDevices}
-                      //deviceTags={deviceTags}
-                      //callbackTabChange={this.handleTabChange}
-                      />
+                      <DeviceArea />
                     </TabPane>
                     <TabPane
                       key="2"
@@ -194,14 +136,7 @@ class App extends Component {
                         </span>
                       }
                     >
-                      <TrustAgentArea
-                      //devices={devices}
-                      //deployments={deployments}
-                      //activeDeployments={activeDeployments}
-                      //appliedDevices={appliedDevices}
-                      //deviceTags={deviceTags}
-                      //callbackTabChange={this.handleTabChange}
-                      />
+                      <TrustAgentArea />
                     </TabPane>
                     <TabPane
                       key="3"
@@ -212,14 +147,7 @@ class App extends Component {
                         </span>
                       }
                     >
-                      <DeploymentArea
-                      //devices={devices}
-                      //deployments={deployments}
-                      //activeDeployments={activeDeployments}
-                      //appliedDevices={appliedDevices}
-                      //deviceTags={deviceTags}
-                      //callbackTabChange={this.handleTabChange}
-                      />
+                      <DeploymentArea />
                     </TabPane>
                     <TabPane
                       key="4"
@@ -230,14 +158,7 @@ class App extends Component {
                         </span>
                       }
                     >
-                      <CreateDeploymentArea
-                      //devices={devices}
-                      //deployments={deployments}
-                      //activeDeployments={activeDeployments}
-                      //appliedDevices={appliedDevices}
-                      //deviceTags={deviceTags}
-                      //callbackTabChange={this.handleTabChange}
-                      />
+                      <CreateDeploymentArea />
                     </TabPane>
                   </Tabs>
                 </Col>
@@ -251,7 +172,7 @@ class App extends Component {
                 <a href="https://www.eclipse.org/ditto/">Eclipse Ditto</a>.
               </p>
               <p>The project has received funding from the European Union's Horizon 2020 research and innovation programme under grant agreement No 101020416.</p>
-              <img src="h2020_logo.png" width="200"/>              
+              <img src="h2020_logo.png" width="200" alt="H2020 logo" />
               <p>
                 {" "}
                 Please visit{" "}
@@ -268,29 +189,24 @@ class App extends Component {
   }
 
   /**
-   * Get all things from Ditto
+   * Get all devices (any type) from Ditto
    */
   getAllDevices = async () => {
     const searchHandle = ditto_client.getSearchHandle();
 
     var options = DefaultSearchOptions.getInstance()
-
       .withFilter(
         'in(attributes/type,"device","physical_device","virtual_device")'
       )
       .withSort("+attributes/type")
-      //.withFilter('eq(attributes/type,"device")')
-      //.withSort("+thingId")
       .withLimit(0, 200);
-    //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
-    //console.info(devices);
     logger.debug(JSON.stringify(devices));
     return devices;
   };
 
   /**
-   * Get all physical things from Ditto
+   * Get all physical devices from Ditto
    */
   getAllPhysicalDevices = async () => {
     const searchHandle = ditto_client.getSearchHandle();
@@ -299,15 +215,12 @@ class App extends Component {
       .withFilter('eq(attributes/type,"physical_device")')
       .withSort("+thingId")
       .withLimit(0, 200);
-    //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
-    //console.info(devices);
-    //logger.debug(JSON.stringify(devices));
     return devices;
   };
 
   /**
-   * Get all virtual things from Ditto
+   * Get all virtual devices from Ditto
    */
   getAllVirtualDevices = async () => {
     const searchHandle = ditto_client.getSearchHandle();
@@ -316,10 +229,7 @@ class App extends Component {
       .withFilter('eq(attributes/type,"virtual_device")')
       .withSort("+thingId")
       .withLimit(0, 200);
-    //searchHandle.search(options).then(result => console.log("returned",result.items))
     var devices = (await searchHandle.search(options)).items;
-    //console.info(devices);
-    //logger.debug(JSON.stringify(devices));
     return devices;
   };
 
@@ -335,14 +245,13 @@ class App extends Component {
       )
       .withSort("+thingId")
       .withLimit(0, 200);
-    //searchHandle.search(options).then(result => console.log("returned",result.items))
     var trust_agents = (await searchHandle.search(options)).items;
     logger.debug(JSON.stringify(trust_agents));
     return trust_agents;
   };
 
   /**
-   * Get all trust agents from Ditto
+   * Get all deployments from Ditto
    */
   getAllDeployments = async () => {
     const searchHandle = ditto_client.getSearchHandle();
@@ -351,41 +260,13 @@ class App extends Component {
       .withFilter('eq(attributes/type,"deployment")')
       .withSort("+thingId")
       .withLimit(0, 200);
-    //searchHandle.search(options).then(result => console.log("returned",result.items))
     var deployments = (await searchHandle.search(options)).items;
     logger.debug(JSON.stringify(deployments));
     return deployments;
   };
 
-  /*  populatePropertyTags = async () => {
-    logger.info(this.state.devices);
-    let cyber_properties = new Set();
-    this.state.devices.forEach((device) => {
-      if (device._features.hasOwnProperty("cyber")) {
-        Object.entries(device._features.cyber._properties).forEach(
-          ([key, value]) => {
-            cyber_properties.add(key);
-            //logger.info(key);
-          }
-        );
-      }
-    });
-    cyber_properties.forEach(function (entry) {
-      logger.info(entry);
-    });
-    let a = Array.from(cyber_properties);
-    return a;
-  }; */
-
   initDittoClient = async () => {
-    const ditto_client = DittoDomClient.newHttpClient()
-      .withoutTls()
-      .withDomain(ditto_domain)
-      .withAuthProvider(
-        DomHttpBasicAuth.newInstance(ditto_username, ditto_password)
-      )
-      .build();
-    return ditto_client;
+    return buildDittoClient();
   };
 }
 

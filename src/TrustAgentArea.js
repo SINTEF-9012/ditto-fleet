@@ -16,6 +16,7 @@ import { Thing } from "sintef-ditto-javascript-client-dom";
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 import winston_logger from "./logger.js";
+import { deployTrustAgent, deleteThing } from "./dittoActions";
 
 const logger = winston_logger.child({ source: "TrustAgentArea.js" });
 
@@ -51,44 +52,26 @@ export class TrustAgentArea extends Component {
         align: "center",
         render: (text, record) => (
           <span style={{ float: "center" }}>
-            {/* <Modal
-              mask={false}
-              title="Basic modal"
-              visible={this.state.visible}
-              onOk={this.handleOk}
-              onCancel={this.handleCancel}
-            >
-              <p>Some contents...</p>
-              <p>Some contents...</p>
-              <p>Some contents...</p>
-            </Modal> */}
             <ButtonGroup size="small" type="dashed">
               <Tooltip title="Deploy on all suitable devices">
-              <Popconfirm
+                <Popconfirm
                   title={"Deploy on all devices: " + record.id}
                   onConfirm={() => this.assignTrustAgentToAll(record)}
                   okText="Yes"
-                  cancelText="No"                >
+                  cancelText="No"
+                >
                   <Button type="primary" icon="deployment-unit" ghost />
-                </Popconfirm>                
+                </Popconfirm>
               </Tooltip>
-              {/* <Tooltip title="Deploy on selected devices">
-                <Button
-                  type="primary"
-                  icon="deployment-unit"
-                  onClick={() => this.deployTrustAgentToSelected(record.id, record.id)}
-                  ghost
-                />
-              </Tooltip> */}
               <Tooltip title="De-register">
-              <Popconfirm
+                <Popconfirm
                   title={"De-register software/firmware: " + record.id}
                   onConfirm={() => this.deleteTrustAgent(record.id)}
                   okText="Yes"
                   cancelText="No"
                 >
                   <Button type="primary" icon="delete" ghost />
-                </Popconfirm>                
+                </Popconfirm>
               </Tooltip>
             </ButtonGroup>
           </span>
@@ -111,39 +94,12 @@ export class TrustAgentArea extends Component {
       },
     ];
     this.state = {
-      //add if needed
-      visible: false,
-      payload: "Hello world!",
       new_trust_agent_docker: require("./resources/docker_agent_template.json"),
       new_trust_agent_ssh: require("./resources/ssh_agent_template.json"),
       new_trust_agent_json: "",
     };
     this.editor = React.createRef();
   }
-
-  /** Handles the opening of the modal window by making it visible */
-  showModal = () => {
-    logger.info("showModal");
-    this.setState({
-      visible: true,
-    });
-  };
-
-  /** Handles the OK button of the modal window */
-  handleOk = (e) => {
-    logger.info(e);
-    this.setState({
-      visible: false,
-    });
-  };
-
-  /** Handles the closing of the modal window by making it invisible */
-  handleCancel = (e) => {
-    logger.info(e);
-    this.setState({
-      visible: false,
-    });
-  };
 
   /** Handles the changes in the JSON editor when creating a new trust agent  */
   handleChange = (value) => {
@@ -172,38 +128,12 @@ export class TrustAgentArea extends Component {
                     onOk: () => {
                       this.createTrustAgent(this.state.new_trust_agent_docker);
                     },
-                    onCancel: () => {
-                      //this.setState({ payload: "Hello world!" });
-                    },
+                    onCancel: () => {},
                   })
                 }
               >
                 New Docker-based software
               </Button>
-              {/* <Button
-                type="primary"
-                style={{ marginTop: 16, marginBottom: 16, marginRight: 16 }}
-                onClick={() =>
-                  Modal.confirm({
-                    title: "Register new SSH-based software",
-                    width: 800,
-                    content: (
-                      <Editor
-                        value={this.state.new_trust_agent_ssh}
-                        onChange={this.handleChange}
-                      />
-                    ),
-                    onOk: () => {
-                      this.createTrustAgent(this.state.new_trust_agent_ssh);
-                    },
-                    onCancel: () => {
-                      //this.setState({ payload: "Hello world!" });
-                    },
-                  })
-                }
-              >
-                New SSH-based software
-              </Button> */}
               <Popconfirm
                 title="Un-register all software?"
                 onConfirm={this.deleteAllTrustAgents}
@@ -222,28 +152,14 @@ export class TrustAgentArea extends Component {
           <Row>
             <Col>
               <Table
-                //bordered
                 rowKey={(record) => record.id}
                 size="small"
                 dataSource={this.context.trust_agents}
                 columns={this.columns}
                 pagination={{ pageSize: 50 }}
-                //scroll={{ y: 500 }}
-                //expandRowByClick={true}
                 expandedRowRender={(record) => (
                   <span>
                     <ReactJson src={record} enableClipboard={false} />
-                    {/* <Table
-                      columns={this.nestedColumns}
-                      dataSource={
-                        this.context.activeDeployments[record.id]
-                          ? Object.values(
-                              this.context.activeDeployments[record.id]
-                            )
-                          : []
-                      }
-                      pagination={false}
-                    /> */}
                   </span>
                 )}
               />
@@ -254,14 +170,8 @@ export class TrustAgentArea extends Component {
     );
   }
 
-  /** Executes code after all visual React components are loaded */
-  componentDidMount() {
-    //add something if needed
-  }
-
   /** Creates a new trust agent in Ditto */
   createTrustAgent = async () => {
-    //var json = require("./resources/thing_template.json");
     const trust_agent = Thing.fromObject(this.state.new_trust_agent_json);
     logger.debug("NEW TRUST AGENT: " + JSON.stringify(trust_agent));
     const thingsHandle = this.context.ditto_client.getThingsHandle();
@@ -273,74 +183,29 @@ export class TrustAgentArea extends Component {
             result
           )}`
         )
+      )
+      .catch((e) =>
+        logger.error("Failed to create the trust agent: " + e.message)
       );
   };
 
   /** Deletes the selected trust agent from Ditto */
   deleteTrustAgent = async (trustAgentId) => {
-    const thingsHandle = this.context.ditto_client.getThingsHandle();
-    thingsHandle
-      .deleteThing(trustAgentId)
-      .then((result) =>
-        logger.info(
-          `Finished deleting the trust agent with result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
+    return deleteThing(this.context.ditto_client, trustAgentId, "trust agent");
   };
 
   /** Deletes all trust agents from Ditto */
   deleteAllTrustAgents = async () => {
     this.context.trust_agents.forEach((agent) => {
-      //logger.info(agent.id);
       this.deleteTrustAgent(agent.id);
     });
   };
 
   /** Deploys the selected trust agent to all suitable devices */
   assignTrustAgentToAll = async (trustAgent) => {
-    //FIXME: what if a device has both docker and ssh?
-    //FIXME: there must only one check whether the device is suitable
+    //FIXME: there must be only one check whether the device is suitable
     this.context.devices.forEach((device) => {
-      const featuresHandle = this.context.ditto_client.getFeaturesHandle(
-        device.thingId
-      );
-      // let trust_agent;
-      if (trustAgent._attributes.type === "trust_agent_docker") {
-        let trust_agent = {
-          container_image: trustAgent._attributes.image,
-          container_version: trustAgent._attributes.version,
-          container_status: "running",
-          ta_meta: trustAgent._attributes,
-        };
-        featuresHandle
-          .putDesiredProperty("cyber", "trustAgent", trust_agent)
-          .then((result) =>
-            logger.info(
-              `Finished updating the device twin with result: ${JSON.stringify(
-                result
-              )}`
-            )
-          );
-      } else if (trustAgent._attributes.type === "trust_agent_ssh") {
-        let trust_agent = {
-          process_name: "trust-agent.sh",
-          process_status: "running",
-          ta_meta: trustAgent._attributes,
-        };
-        featuresHandle
-          .putDesiredProperty("cyber", "trustAgent", trust_agent)
-          .then((result) =>
-            logger.info(
-              `Finished updating the device twin with result: ${JSON.stringify(
-                result
-              )}`
-            )
-          );
-      } else {
-        logger.info(device._thingId + " is not suitable for " + trustAgent._thingId)
-      }
+      deployTrustAgent(this.context.ditto_client, device.thingId, trustAgent);
     });
   };
 }

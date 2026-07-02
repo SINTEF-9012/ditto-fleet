@@ -6,7 +6,6 @@ import {
   Row,
   Table,
   Badge,
-  Modal,
   Tooltip,
   Popconfirm,
   message,
@@ -14,9 +13,11 @@ import {
 import ReactJson from "react-json-view";
 import winston_logger from "./logger.js";
 import { GlobalContext } from "./GlobalContext";
-import { DefaultSearchOptions } from "sintef-ditto-javascript-client-dom";
-
-const { logTimestampJS } = require("./TimestampLogger");
+import {
+  deployTrustAgent,
+  deleteThing,
+  findMatchingDevices,
+} from "./dittoActions";
 
 const logger = winston_logger.child({ source: "DeploymentArea.js" });
 
@@ -88,7 +89,6 @@ export class DeploymentArea extends Component {
       },
     ];
     this.state = {
-      //add if needed
       current: 0,
       matching_device: [],
     };
@@ -119,14 +119,11 @@ export class DeploymentArea extends Component {
           <Row>
             <Col>
               <Table
-                //bordered
                 rowKey={(record) => record.id}
                 size="small"
                 dataSource={this.context.deployments}
                 columns={this.columns}
                 pagination={{ pageSize: 50 }}
-                //scroll={{ y: 500 }}
-                //expandRowByClick={true}
                 expandedRowRender={(record) => (
                   <span>
                     <ReactJson src={record} enableClipboard={false} />
@@ -140,121 +137,39 @@ export class DeploymentArea extends Component {
     );
   }
 
-  componentDidMount() {}
-
   /** Deletes selected deployment from Ditto */
   deleteDeployment = async (thingId) => {
-    const thingsHandle = this.context.ditto_client.getThingsHandle();
-    thingsHandle
-      .deleteThing(thingId)
-      .then((result) =>
-        logger.info(
-          `Finished deleting the deployment with the result: ${JSON.stringify(
-            result
-          )}`
-        )
-      );
+    return deleteThing(this.context.ditto_client, thingId, "deployment");
   };
 
   /** Deletes all deployments from Ditto */
   deleteAllDeployments = async () => {
     this.context.deployments.forEach((deployment) => {
-      //logger.info(deployment._thingId);
       this.deleteDeployment(deployment._thingId);
     });
   };
 
-  /** Apply the selected to deployment to matching devices */
+  /** Apply the selected deployment to matching devices */
   enactDeployment = async (deployment) => {
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "enactDeployment",
-      event: "start"
-    });
-    
     logger.debug("Enacting deployment: " + deployment._thingId);
-    //TODO:
-    this.findMatchingDevices(deployment._attributes.rql_expression).then(
-      (result) =>
+    findMatchingDevices(
+      this.context.ditto_client,
+      deployment._attributes.rql_expression
+    )
+      .then((result) =>
         this.handleDeploy(deployment._attributes.trust_agent_id, result)
-    );
+      )
+      .catch((e) =>
+        logger.error("Failed to enact the deployment: " + e.message)
+      );
     message.success("Deployment complete!");
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "enactDeployment",
-      event: "finish"
-    });
-  };
-
-  /**
-   * Find matching devices in Ditto according to the RQL query
-   */
-  findMatchingDevices = async (rqlExpression) => {
-    
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "findMatchingDevices",
-      event: "start"
-    });
-    
-    const searchHandle = this.context.ditto_client.getSearchHandle();
-    var options = DefaultSearchOptions.getInstance()
-      .withFilter(rqlExpression)
-      .withSort("+thingId")
-      .withLimit(0, 200);
-    var devices = (await searchHandle.search(options)).items;
-    //logger.debug("Found matching devices: " + JSON.stringify(devices));
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "findMatchingDevices",
-      event: "finish"
-    });
-
-    return devices;
   };
 
   /** Deploys the selected trust agent to the matching devices */
   handleDeploy = (trustAgentId, matchingDevices) => {
-    
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "handleDeploy",
-      event: "start"
-    });
-
     let ta = this.context.trust_agents.find((x) => x._thingId === trustAgentId);
-    //logger.debug("Current trust agent: " + JSON.stringify(ta));
     matchingDevices.forEach((device) => {
-      //logger.debug("matching device: " + JSON.stringify(device));
-      const featuresHandle = this.context.ditto_client.getFeaturesHandle(
-        device._thingId
-      );
-      let trust_agent = {
-        container_image: ta._attributes.image,
-        container_version: ta._attributes.version,
-        container_status: "running",
-        ta_meta: ta._attributes,
-      };
-      //logger.debug("ta: " + JSON.stringify(trust_agent));
-      featuresHandle
-        .putDesiredProperty("cyber", "trustAgent", trust_agent)
-        .then((result) =>
-          logger.info(
-            device._thingId +
-              `Finished updating the device twin with result: ${JSON.stringify(
-                result
-              )}`
-          )
-        );
-    });
-
-    logTimestampJS({
-      workflowId: "wf001",
-      step: "handleDeploy",
-      event: "finish"
+      deployTrustAgent(this.context.ditto_client, device._thingId, ta);
     });
   };
 }

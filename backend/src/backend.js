@@ -1,22 +1,5 @@
 // server/backend.js
 
-//import { DittoNodeClient } from "../build/node/src/ditto-node-client.js"
-//import { NodeWebSocketBasicAuth, NodeHttpBasicAuth } from "@eclipse-ditto/ditto-javascript-client-node"
-//import { DefaultSearchOptions } from "../build/api/src/options/request.options.js"
-//import { Features, Thing } from "../build/model/things.model.js"
-
-//import {
-//  DittoNodeClient,
-//  NodeWebSocketBasicAuth,
-//  NodeHttpBasicAuth,
-//  DefaultSearchOptions,
-//  Features,
-//  Thing,
-//  connectionLostError
-//} from "@eclipse-ditto/ditto-javascript-client-node";
-
-//const DittoNodeClient = require("@eclipse-ditto/ditto-javascript-client-node").DittoNodeClient;
-
 import {
   DittoNodeClient,
   NodeWebSocketBasicAuth,
@@ -26,8 +9,6 @@ import {
   Thing,
   connectionLostError,
 } from "sintef-ditto-javascript-client-node";
-//import {  } from "../dist/node/dist/node/src/node-auth.js";
-//"@eclipse-ditto/ditto-javascript-client-dom";
 
 import { logger as winston_logger } from "./logger.js";
 
@@ -37,7 +18,6 @@ import fs from "fs";
 import express from "express";
 import { DOMParser } from "xmldom";
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
-//import convert from "xml-js";
 
 import schedule from "node-schedule";
 import _ from "lodash";
@@ -61,12 +41,8 @@ const parser = new XMLParser();
 const logger = winston_logger.child({ source: "backend.js" });
 
 //MQTT connection config
-//const mqtt_host = "localhost";
-//const mqtt_port = "1883";
 const clientId = "ditto-fleet-backend";
 
-//const connectUrl = "mqtt://test.mosquitto.org:1883"; //test.mosquitto.org
-//const connectUrl = "mqtt://localhost:1883";
 const downstream_mqtt_topic = "no.sintef.sct.giot.things/downstream";
 const upstream_mqtt_topic = "no.sintef.sct.giot.things/upstream";
 const request_mqtt_topic = "no.sintef.sct.giot.things/request";
@@ -365,12 +341,6 @@ const job = schedule.scheduleJob("*/2 * * * *", checkDesiredReportedTrustAgent);
 /** Fully update the digital twin in Ditto (i.e. all its reported properties within features). */
 async function updateTwinProperties(twin) {
 
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: updateTwinProperties: start")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################")*/
-
   logTimestamp({
     workflowId: "wf001",
     step: "updateTwinProperties",
@@ -383,12 +353,6 @@ async function updateTwinProperties(twin) {
     logger.debug(JSON.stringify(value.properties));
     featuresHandle.putProperties(key, value.properties);
   });
-
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: updateTwinProperties: finish")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
 
   logTimestamp({
     workflowId: "wf001",
@@ -404,19 +368,6 @@ async function updateTwinProperty(
   propertyPath,
   propertyValue
 ) {
-
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: updateTwinProperty: start")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
-
-  //logTimestamp({
-  //  workflowId: "wf001",
-  //  step: "updateTwinProperty",
-  //  event: "start"
-  //});
-
   const thingsHandle = http_ditto_client.getThingsHandle();
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
@@ -428,35 +379,10 @@ async function updateTwinProperty(
   } catch (error) {
     logger.error("UpdateTwinProperty error: " + error.message);
   }
-
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: updateTwinProperty: finish")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
-
-  //logTimestamp({
-  //  workflowId: "wf001",
-  //  step: "updateTwinProperty",
-  //  event: "finish"
-  //});
 }
 
 /** Update the value of an attribute in Ditto with a value reported from the monitoring agent. */
 async function updateTwinAttribute(thingId, attribute, attributeValue) {
-
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: updateTwinAttribute: start")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
-
-  //logTimestamp({
-  //  workflowId: "wf001",
-  //  step: "updateTwinAttribute",
-  //  event: "start"
-  //});
-
   const thingsHandle = http_ditto_client.getThingsHandle();
   try {
     let thing = await thingsHandle.getThing(namespace + ":" + thingId);
@@ -471,28 +397,10 @@ async function updateTwinAttribute(thingId, attribute, attributeValue) {
   } catch (error) {
     logger.error("UpdateTwinAttribute error: " + error.message);
   }
-
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: updateTwinAttribute: finish")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
-
-  //logTimestamp({
-  //  workflowId: "wf001",
-  //  step: "updateTwinAttribute",
-  //  event: "finish"
-  //});
 }
 
 /** Fetch a device twin from Ditto and publish it to the downstream MQTT channel.*/
 async function sendDeviceTwin(thingId) {
-
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: sendDeviceTwin: start")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
 
   logTimestamp({
     workflowId: "wf001",
@@ -502,18 +410,6 @@ async function sendDeviceTwin(thingId) {
 
   const thing = await ws_ditto_client.getThingsHandle().getThing(thingId);
   logger.debug("[Ditto] Device twin: " + JSON.stringify(thing));
-  //logger.info("[Ditto] Reported properties: ", thing.features.agent.properties);
-  //logger.info(
-  //  "[Ditto] Desired properties: ",
-  //  thing.features.agent.desiredProperties
-  //);
-
-  //TODO: this is an ugly fix - it is not needed?
-  //if (
-  //  thing.features.agent.desiredProperties.status !== "" &&
-  //  thing.features.agent.properties.status !==
-  //    thing.features.agent.desiredProperties.status
-  //) {
 
   if (thing.attributes.type == "physical_device") {
     mqtt_client.publish(
@@ -527,18 +423,8 @@ async function sendDeviceTwin(thingId) {
       }
     );
     logger.info(
-      "Device twin with updated desired properties sent to the dowsntream channel."
+      "Device twin with updated desired properties sent to the downstream channel."
     );
-    //} else {
-    //  logger.info(
-    //    "Trust agent already in sync or not assigned yet, not sending device twin to dowsntream channel."
-    //  );
-    //}
-    /* logger.warn("###################### TIMESTAMP ######################")
-    logger.warn("Backend: sendDeviceTwin: finish")
-    logger.warn(Date.now())
-    logger.warn(new Date().toISOString())
-    logger.warn("###################### TIMESTAMP ######################") */
     logTimestamp({
       workflowId: "wf001",
       step: "sendDeviceTwin",
@@ -569,24 +455,6 @@ async function getAllDeviceTwins() {
         }
       }
     );
-  });
-}
-
-/** Check if any of the devices is running an older version of the TA. */
-async function checkExistingTrustAgents(new_ta) {
-  const searchHandle = http_ditto_client.getSearchHandle();
-  var options = DefaultSearchOptions.getInstance()
-    .withFilter(
-      'in(attributes/type,"device","physical_device","virtual_device")'
-    )
-    .withSort("+thingId")
-    .withLimit(0, 200);
-  var devices = (await searchHandle.search(options)).items;
-  devices.forEach((device) => {
-    let trustAgent = device._features.cyber._properties.trustAgent;
-
-    //FIXME: uncomment
-    //deployTrustAgent(device._thingId, new_ta);
   });
 }
 
@@ -633,71 +501,13 @@ async function checkDesiredReportedTrustAgent() {
   });
 }
 
-async function deployTrustAgent(thingId, desired_agent) {
-  //TODO: how to pass the meta information about the trust agent?
-  //desired_agent.status = "running";
-  logger.debug("Desired agent: " + desired_agent);
-  const featuresHandle = this.context.ditto_client.getFeaturesHandle(thingId);
-  let trust_agent;
-  if (desired_agent._attributes.type === "trust_agent_docker") {
-    trust_agent = {
-      //name: desired_agent._thingId,
-      container_image: desired_agent._attributes.image,
-      container_version: desired_agent._attributes.version,
-      container_status: "running",
-      ta_meta: desired_agent._attributes,
-      //  ? desired_agent._attributes.version
-      //  : "unknown",
-    };
-  }
-  else if (desired_agent._attributes.type === "trust_agent_ssh") {
-    trust_agent = {
-      //name: desired_agent._thingId,
-      process_name: "trust-agent.sh",
-      //container_version: desired_agent._attributes.version,
-      process_status: "running",
-      ta_meta: desired_agent._attributes,
-      //  ? desired_agent._attributes.version
-      //  : "unknown",
-    };
-  }
-  featuresHandle
-    .putDesiredProperty("cyber", "trustAgent", trust_agent)
-    .then((result) =>
-      logger.info(
-        `Finished updating the device twin with result: ${JSON.stringify(
-          result
-        )}`
-      )
-    );
-}
-
-/** Creates a new trust agent in Ditto */
-async function createTrustAgent(new_ta_string) {
-  //var json = require("./resources/thing_template.json");
-  const trust_agent = Thing.fromObject(new_ta_string);
-  logger.debug("NEW TRUST AGENT CREATED: " + JSON.stringify(trust_agent));
-  const thingsHandle = http_ditto_client.getThingsHandle();
-  thingsHandle.putThing(trust_agent).then((result) => {
-    logger.info(
-      `Finished putting the new trust agent with result: ${JSON.stringify(
-        result
-      )}`
-    );
-    return trust_agent;
-  });
-}
-
 /** Creates new software in Ditto after receiving and parsing an MSPL file */
 async function createSoftware(softwareId, imageName, imageVersion) {
-  //var json = require("./resources/thing_template.json");
   let software = software_template;
-  software.thingId = "no.sintef.sct.giot:" + softwareId;
+  software.thingId = namespace + ":" + softwareId;
   software.attributes.image = imageName;
   software.attributes.version = imageVersion;
 
-  //let trust_agent = Thing.fromObject(new_ta_string);
-  //logger.debug("NEW TRUST AGENT CREATED: " + JSON.stringify(trust_agent.));
   const thingsHandle = http_ditto_client.getThingsHandle();
 
   let thing = Thing.fromObject(software);
@@ -713,12 +523,6 @@ async function createSoftware(softwareId, imageName, imageVersion) {
 /** Creates a new deployment in Ditto after receiving and parsing an MSPL file */
 async function createDeployment(thingId, softwareId, rql) {
 
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: createDeployment: start")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
-
   logTimestamp({
     workflowId: "wf001",
     step: "createDeployment",
@@ -726,7 +530,7 @@ async function createDeployment(thingId, softwareId, rql) {
   });
 
   let deployment = deployment_template;
-  deployment.thingId = "no.sintef.sct.giot:" + thingId;
+  deployment.thingId = namespace + ":" + thingId;
   deployment.attributes.trust_agent_id = softwareId;
   deployment.attributes.rql_expression = rql;
 
@@ -742,11 +546,6 @@ async function createDeployment(thingId, softwareId, rql) {
         )}`
       )
     );
-  /* logger.warn("###################### TIMESTAMP ######################")
-  logger.warn("Backend: createDeployment: finish")
-  logger.warn(Date.now())
-  logger.warn(new Date().toISOString())
-  logger.warn("###################### TIMESTAMP ######################") */
 
   logTimestamp({
     workflowId: "wf001",
