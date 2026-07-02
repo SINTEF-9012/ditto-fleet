@@ -26,10 +26,11 @@ const { logTimestampJS } = require("./TimestampLogger");
 const { Footer, Content } = Layout;
 const { TabPane } = Tabs;
 
-// Ditto connection config
-const ditto_domain = "localhost:8080";
-const ditto_username = "ditto";
-const ditto_password = "ditto";
+import {
+  DITTO_DOMAIN as ditto_domain,
+  DITTO_USERNAME as ditto_username,
+  DITTO_PASSWORD as ditto_password,
+} from "./config";
 
 const PROJECT = process.env.REACT_APP_PROJECT;
 const PROJECT_URL = process.env["REACT_APP_" + PROJECT + "_URL"];

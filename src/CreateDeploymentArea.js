@@ -26,6 +26,7 @@ import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-powershell.js";
 import "prismjs/themes/prism.css"; //Example style, you can use another
+import { DITTO_NAMESPACE } from "./config";
 
 const logger = winston_logger.child({ source: "CreateDeploymentArea.js" });
 
@@ -172,7 +173,7 @@ export class CreateDeploymentArea extends Component {
 
   saveDeployment = () => {
     let json = this.state.new_deployment;
-    json.thingId = "no.sintef.sct.giot:" + this.state.deployment_name;
+    json.thingId = DITTO_NAMESPACE + ":" + this.state.deployment_name;
     json.attributes.trust_agent_id = this.state.current_agent._thingId;
     json.attributes.rql_expression = this.state.rql;
 

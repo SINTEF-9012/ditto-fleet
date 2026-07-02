@@ -10,11 +10,13 @@ import WebSocket from "ws";
 import fs from "fs";
 
 //Ditto connection config
-const ditto_domain = "localhost:8080";
-const ditto_username = "ditto";
-const ditto_password = "ditto";
+const ditto_domain = process.env.DITTO_SERVER || "localhost:8080";
+const ditto_username = process.env.DITTO_USERNAME || "ditto";
+const ditto_password = process.env.DITTO_PASSWORD || "ditto";
 
-let socket = new WebSocket("ws://ditto:ditto@localhost:8080/ws/2");
+let socket = new WebSocket(
+  `ws://${ditto_username}:${ditto_password}@${ditto_domain}/ws/2`
+);
 
 const ditto_client = DittoNodeClient.newHttpClient()
   .withoutTls()

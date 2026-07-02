@@ -47,9 +47,12 @@ import software_template from "../resources/software_template.json" assert { typ
 
 import { logTimestamp } from "./TimestampLogger.js";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const PORT = process.env.PORT || 4000;
-const MQTT_BROKER = "mqtt://test.mosquitto.org:1883" //"mqtt://localhost:1883" //process.env.MQTT_BROKER; //"localhost:1883" "mqtt://test.mosquitto.org:1883" //
-const DITTO_SERVER = "localhost:8080" //process.env.DITTO_SERVER //"localhost:8080"
+const MQTT_BROKER = process.env.MQTT_BROKER || "mqtt://test.mosquitto.org:1883";
+const DITTO_SERVER = process.env.DITTO_SERVER || "localhost:8080";
 
 const app = express();
 
@@ -323,22 +326,22 @@ mqtt_client.on("message", (topic, payload) => {
 });
 
 //Ditto connection config
-//const ditto_domain = "localhost:8080";
-const ditto_username = "ditto";
-const ditto_password = "ditto";
+const ditto_username = process.env.DITTO_USERNAME || "ditto";
+const ditto_password = process.env.DITTO_PASSWORD || "ditto";
 
 logger.info("[DITTO SERVER] " + DITTO_SERVER);
 
 let socket, ws_ditto_client
 
 try {
-  //socket = new WebSocket("ws://ditto:ditto@" + DITTO_SERVER + "/ws/2");
-  socket = new WebSocket("http://ditto:ditto@" + DITTO_SERVER + "/ws/2")
+  socket = new WebSocket(
+    `http://${ditto_username}:${ditto_password}@` + DITTO_SERVER + "/ws/2"
+  )
   ws_ditto_client = DittoNodeClient.newWebSocketClient()
     .withoutTls()
     .withDomain(DITTO_SERVER)
     .withAuthProvider(
-      NodeWebSocketBasicAuth.newInstance("ditto", "ditto")
+      NodeWebSocketBasicAuth.newInstance(ditto_username, ditto_password)
     )
     .withBuffer(15)
     .twinChannel()
