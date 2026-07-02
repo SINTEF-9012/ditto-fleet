@@ -17,11 +17,11 @@ services:
       interval: 10s 
       timeout: 5s 
       retries: 5 
-  # ----------------------------- 
-  # Subfleet Manager Service 
-  # ----------------------------- 
-  subfleet-manager: 
-    image: rdautov/ditto-submanager:amd64 
+  # -----------------------------
+  # Submanager Service
+  # -----------------------------
+  submanager:
+    image: rdautov/ditto-submanager:amd64
     container_name: ditto-submanager 
     restart: unless-stopped 
     volumes:

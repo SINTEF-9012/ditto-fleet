@@ -34,16 +34,10 @@ services:
       - MQTT_BROKER=mqtt://broker.hivemq.com:1883
       - DITTO_SERVER=127.0.0.1:8080
 
-  subfleet-manager:
-    container_name: subfleet-manager
-    image: rdautov/ditto-subfleet-manager:linux
+  submanager:
+    container_name: ditto-submanager
+    image: rdautov/ditto-submanager:amd64
     network_mode: host
-    #restart: always
-    #network_mode: host
-    #networks:
-    #  default:
-    #    aliases:
-    #      - subfleet-manager
     environment:
-      - MQTT_BROKER=broker.hivemq.com:1883
-      - DITTO_SERVER=127.0.0.1:8080
+      - MQTT_BROKER_URL=mqtt://broker.hivemq.com:1883
+      - HOST_NAME=fleet-host

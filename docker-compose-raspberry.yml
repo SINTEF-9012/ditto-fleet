@@ -1,17 +1,12 @@
 services:
-  subfleet-manager:
-    image: rdautov/ditto-subfleet-manager:arm64
-    container_name: subfleet-manager
+  submanager:
+    image: rdautov/ditto-submanager:arm64
+    container_name: ditto-submanager
     restart: always
     network_mode: host
-    #restart: always
-    #network_mode: host
-    #networks:
-    #  default:
-    #    aliases:
-    #      - subfleet-manager
     environment:
-      - MQTT_BROKER=test.mosquitto.org:1883
+      - MQTT_BROKER_URL=mqtt://test.mosquitto.org:1883
+      - HOST_NAME=raspberrypi
 
   monitoring-agent:
     image: rdautov/ditto-monitoring-agent:arm64
@@ -21,7 +16,7 @@ services:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
     restart: always
     depends_on:
-      subfleet-manager:
+      submanager:
         condition: service_started
     network_mode: host
     user: root
