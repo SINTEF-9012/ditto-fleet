@@ -41,6 +41,31 @@ export function logTimestamp({ workflowId, step, event, nodeId = os.hostname(), 
   console.log("Timestamp logged at " + timestampISO, line.trim());
 }
 
+const EVENT_COLUMNS = ["ts", "component", "event", "workflowId", "thingId", "package", "stage", "detail"];
+
+function csvCell(value) {
+  if (value === undefined || value === null) return "";
+  const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/**
+ * Lifecycle event log (CSV, one row per event, epoch-millisecond timestamps).
+ * Returns a no-op when no file is configured.
+ */
+export function createEventLog(file) {
+  if (!file) return () => {};
+  const filePath = path.resolve(file);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  const isNew = !fs.existsSync(filePath) || fs.statSync(filePath).size === 0;
+  const stream = fs.createWriteStream(filePath, { flags: "a" });
+  if (isNew) stream.write(EVENT_COLUMNS.join(",") + "\n");
+  return (entry) => {
+    const row = { ts: Date.now(), ...entry };
+    stream.write(EVENT_COLUMNS.map((column) => csvCell(row[column])).join(",") + "\n");
+  };
+}
+
 /**
  * Append a structured timestamp entry into the console in browser.
  *

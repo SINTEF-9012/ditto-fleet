@@ -22,10 +22,11 @@ import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
 import schedule from "node-schedule";
 import _ from "lodash";
 
-import deployment_template from "../resources/deployment_template.json" assert { type: "json" };
-import software_template from "../resources/software_template.json" assert { type: "json" };
+import deployment_template from "../resources/deployment_template.json" with { type: "json" };
+import software_template from "../resources/software_template.json" with { type: "json" };
 
-import { logTimestamp } from "./TimestampLogger.js";
+import { createEventLog, logTimestamp } from "./TimestampLogger.js";
+import { startSoftwareLifecycle } from "./software-lifecycle.js";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -33,6 +34,7 @@ dotenv.config();
 const PORT = process.env.PORT || 4000;
 const MQTT_BROKER = process.env.MQTT_BROKER || "mqtt://test.mosquitto.org:1883";
 const DITTO_SERVER = process.env.DITTO_SERVER || "localhost:8080";
+const LEGACY_TRUST_AGENT = process.env.LEGACY_TRUST_AGENT !== "off";
 
 const app = express();
 
@@ -54,6 +56,8 @@ logger.info("[MQTT] " + MQTT_BROKER);
 
 const mqtt_client = mqtt.connect(MQTT_BROKER, {
   clientId,
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD,
   clean: true,
   connectTimeout: 4000,
   reconnectPeriod: 1000,
@@ -297,6 +301,7 @@ mqtt_client.on("message", (topic, payload) => {
         _received_time: received_time,
       };
       updateTwinProperty(obj.tags.host, "cyber", "packages", packages);
+      lifecycle.recordMonitoredPackages(obj.tags.host, packages.packages);
     }
   }
 });
@@ -309,21 +314,23 @@ logger.info("[DITTO SERVER] " + DITTO_SERVER);
 
 let socket, ws_ditto_client
 
-try {
-  socket = new WebSocket(
-    `http://${ditto_username}:${ditto_password}@` + DITTO_SERVER + "/ws/2"
-  )
-  ws_ditto_client = DittoNodeClient.newWebSocketClient()
-    .withoutTls()
-    .withDomain(DITTO_SERVER)
-    .withAuthProvider(
-      NodeWebSocketBasicAuth.newInstance(ditto_username, ditto_password)
+if (LEGACY_TRUST_AGENT) {
+  try {
+    socket = new WebSocket(
+      `http://${ditto_username}:${ditto_password}@` + DITTO_SERVER + "/ws/2"
     )
-    .withBuffer(15)
-    .twinChannel()
-    .build();
-} catch (error) {
-  logger.error("WebSocket error: " + error.message);
+    ws_ditto_client = DittoNodeClient.newWebSocketClient()
+      .withoutTls()
+      .withDomain(DITTO_SERVER)
+      .withAuthProvider(
+        NodeWebSocketBasicAuth.newInstance(ditto_username, ditto_password)
+      )
+      .withBuffer(15)
+      .twinChannel()
+      .build();
+  } catch (error) {
+    logger.error("WebSocket error: " + error.message);
+  }
 }
 
 const http_ditto_client = DittoNodeClient.newHttpClient()
@@ -336,7 +343,23 @@ const http_ditto_client = DittoNodeClient.newHttpClient()
   //.twinChannel()
   .build();
 
-const job = schedule.scheduleJob("*/2 * * * *", checkDesiredReportedTrustAgent);
+const lifecycle = startSoftwareLifecycle({
+  dittoUrl: `http://${DITTO_SERVER}`,
+  username: ditto_username,
+  password: ditto_password,
+  namespace,
+  mqttClient: mqtt_client,
+  eventLog: createEventLog(process.env.SW_EVENT_LOG),
+  reconcileIntervalMs: Number(process.env.SW_RECONCILE_INTERVAL_MS ?? 0),
+  staleAfterMs: Number(process.env.SW_STALE_AFTER_MS ?? 30000),
+  httpConcurrency: Number(process.env.SW_HTTP_CONCURRENCY ?? 32),
+  logger: winston_logger.child({ source: "software-lifecycle.js" }),
+});
+
+const TRUST_AGENT_SYNC_CRON = process.env.TRUST_AGENT_SYNC_CRON ?? "*/2 * * * *";
+if (LEGACY_TRUST_AGENT && TRUST_AGENT_SYNC_CRON !== "off") {
+  schedule.scheduleJob(TRUST_AGENT_SYNC_CRON, checkDesiredReportedTrustAgent);
+}
 
 /** Fully update the digital twin in Ditto (i.e. all its reported properties within features). */
 async function updateTwinProperties(twin) {
@@ -471,9 +494,10 @@ async function checkDesiredReportedTrustAgent() {
   devices.forEach((device) => {
     // iterate through cyber, physical, and social
     //logger.debug("DESIRED VS REPORED" + JSON.stringify(device._features));
-    let desiredTrustAgent =
-      device._features.cyber._desiredProperties.trustAgent;
-    let reportedTrustAgent = device._features.cyber._properties.trustAgent;
+    const cyber = device._features?.cyber;
+    if (!cyber?._desiredProperties) return;
+    let desiredTrustAgent = cyber._desiredProperties.trustAgent;
+    let reportedTrustAgent = cyber._properties?.trustAgent;
     //logger.debug("desiredTrustAgent: " + JSON.stringify(desiredTrustAgent));
     //logger.debug("reportedTrustAgent: " + JSON.stringify(reportedTrustAgent));
     //logger.debug(
@@ -554,60 +578,61 @@ async function createDeployment(thingId, softwareId, rql) {
   });
 }
 
-socket.onopen = function (event) {
-  logger.info("[WebSocket] Connected to Ditto server via WebSocket");
-  socket.send("START-SEND-EVENTS");
-  logger.info(
-    "[WebSocket] Initiating WebSocket communication with START-SEND-EVENTS"
-  );
-
-  const events_handle = ws_ditto_client.getEventsHandle();
-
-  try {
-    events_handle.requestEvents().then(() => {
-      events_handle.subscribeToAllEvents((event) => {
-        logger.debug("Message received via Ditto event handler", event.message);
-        if (
-          event.action === "modified" &&
-          //event.path.includes("/features/cyber/desiredProperties/trustAgent")
-          event.path.includes("desiredProperties")
-        ) {
-          const name_array = event.topic.split("/");
-          logger.info("Device ID: " + name_array[0] + ":" + name_array[1]);
-          logger.info(
-            "Desired property changed to: " +
-            JSON.stringify(event.value, null, 2)
-          );
-          sendDeviceTwin(name_array[0] + ":" + name_array[1]);
-        }
-      });
-    });
-  } catch (error) {
-    logger.error(error.message);
-  }
-};
-
-socket.onmessage = function (event) {
-  logger.debug(
-    `[WebSocket] Data received from Ditto via WebSocket: ${event.data}`
-  );
-};
-
-socket.onclose = function (event) {
-  if (event.wasClean) {
+if (socket) {
+  socket.onopen = function (event) {
+    logger.info("[WebSocket] Connected to Ditto server via WebSocket");
+    socket.send("START-SEND-EVENTS");
     logger.info(
-      `[WebSocket] Connection closed cleanly, code=${event.code} reason=${event.reason}`
+      "[WebSocket] Initiating WebSocket communication with START-SEND-EVENTS"
     );
-  } else {
-    // e.g. server process killed or network down
-    // event.code is usually 1006 in this case
-    logger.warn("[WebSocket] Connection died");
-  }
-};
 
-socket.onerror = function (error) {
-  logger.error("WebSocket Eror!" + error.message);
-};
+    const events_handle = ws_ditto_client.getEventsHandle();
+
+    try {
+      events_handle.requestEvents().then(() => {
+        events_handle.subscribeToAllEvents((event) => {
+          logger.debug("Message received via Ditto event handler", event.message);
+          if (
+            event.action === "modified" &&
+            event.path.includes("/features/cyber/desiredProperties/trustAgent")
+          ) {
+            const name_array = event.topic.split("/");
+            logger.info("Device ID: " + name_array[0] + ":" + name_array[1]);
+            logger.info(
+              "Desired property changed to: " +
+              JSON.stringify(event.value, null, 2)
+            );
+            sendDeviceTwin(name_array[0] + ":" + name_array[1]);
+          }
+        });
+      });
+    } catch (error) {
+      logger.error(error.message);
+    }
+  };
+
+  socket.onmessage = function (event) {
+    logger.debug(
+      `[WebSocket] Data received from Ditto via WebSocket: ${event.data}`
+    );
+  };
+
+  socket.onclose = function (event) {
+    if (event.wasClean) {
+      logger.info(
+        `[WebSocket] Connection closed cleanly, code=${event.code} reason=${event.reason}`
+      );
+    } else {
+      // e.g. server process killed or network down
+      // event.code is usually 1006 in this case
+      logger.warn("[WebSocket] Connection died");
+    }
+  };
+
+  socket.onerror = function (error) {
+    logger.error("WebSocket Eror!" + error.message);
+  };
+}
 
 app.listen(PORT, () => {
   logger.info("Starting Fleet Manager + Eclipse Ditto backend");
