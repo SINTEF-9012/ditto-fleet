@@ -53,13 +53,14 @@ The platform extends Eclipse Ditto with additional software management functiona
 | Component | Folder | Tech | Port | Role |
 |---|---|---|---|---|
 | Fleet-manager GUI | `src/`, `public/` | React (CRA) | 3000 | Web UI for software assignment and monitoring: manage device twins, register software, create and enact deployments |
-| Backend API | `backend/` | Node.js | 4000 | Bridge between Ditto and MQTT: ingests monitoring data into twins, watches desired-property changes, publishes device twins downstream, parses MSPL security policies |
+| Backend API | `backend/` | Node.js | 4000 | Bridge between Ditto and MQTT: ingests monitoring data into twins, watches desired-property changes, publishes device twins downstream, parses MSPL security policies. Its software lifecycle service dispatches desired software state of the `softwareManagement` feature to devices, writes their statuses back into the twins and detects convergence; `src/assignment-engine.js` assigns updates to the twins that need them |
+| Device agents | `device-agents/` | Node.js | — | Installation and Verification Agents that apply apt package updates on Debian-based gateways and check the result; also an emulator of whole gateway fleets for experiments |
 | Submanager | `submanager/` | Node.js | — | Edge-side deployment coordinator: receives twins via MQTT, relays to proxy (gateway) devices for hierarchical updates, or installs containers via the Docker Engine API |
 | Monitoring agent | `monitoring-agent/` | Telegraf | — | Runs on devices; reports CPU/memory/disk/temperature/Docker/package metrics back to the Digital Twins via MQTT |
 | Trust agent | `trust-agent/` | Python | — | Minimal containerized agent deployed to devices as the managed "software" |
-| Eclipse Ditto | external | Java | 8080 | Digital Twin repository (things, policies, search, connectivity) |
+| Eclipse Ditto | external | Java | 8080 | Digital Twin repository (things, policies, search, connectivity, history) |
 
-Communication: the GUI talks to Ditto's HTTP API (port 8080); the backend uses Ditto's HTTP + WebSocket APIs and an MQTT broker (default `test.mosquitto.org:1883`); devices (submanager, monitoring agent) communicate over MQTT only.
+Communication: the GUI talks to Ditto's HTTP API (port 8080); the backend uses Ditto's HTTP + WebSocket APIs and an MQTT broker (the authenticated Mosquitto of `docker-compose-ditto.yml`; the backend falls back to `test.mosquitto.org:1883` when `MQTT_BROKER` is unset); devices (device agents, submanager, monitoring agent) communicate over MQTT only.
 
 The former TypeScript **Subfleet Manager** — which coordinated deployments through device-specific adapters (Docker, SSH, Axis camera API) — was superseded by the lighter `submanager/` component and removed from the working tree; it remains available in git history.
 
@@ -68,7 +69,8 @@ The former TypeScript **Subfleet Manager** — which coordinated deployments thr
 All connection settings are environment variables with development defaults (`ditto`/`ditto` against `localhost:8080`).
 
 * GUI: `REACT_APP_DITTO_DOMAIN`, `REACT_APP_DITTO_USERNAME`, `REACT_APP_DITTO_PASSWORD`, `REACT_APP_DITTO_NAMESPACE` — defaults in [.env](.env), local overrides (and any real credentials) go in `.env.local`, which is git-ignored. CRA bakes these in at build time.
-* Backend: `PORT`, `MQTT_BROKER`, `DITTO_SERVER`, `DITTO_USERNAME`, `DITTO_PASSWORD` — see [backend/.env.example](backend/.env.example).
+* Backend: `PORT`, `MQTT_BROKER`, `MQTT_USERNAME`, `MQTT_PASSWORD`, `DITTO_SERVER`, `DITTO_USERNAME`, `DITTO_PASSWORD`, the software lifecycle settings `SW_*` and `LEGACY_TRUST_AGENT` — see [backend/.env.example](backend/.env.example).
+* Device agents: `AGENT_ROLE` (`installer`, `verifier` or `emulator`), `THING_ID`, `MQTT_BROKER_URL`, `MQTT_USERNAME`, `MQTT_PASSWORD` — see [device-agents/src/main.js](device-agents/src/main.js).
 * Submanager: `MQTT_BROKER_URL`, `HOST_NAME`, `DOCKER_PORT`, `NAMESPACE_PREFIX` — see [submanager/.env](submanager/.env).
 
 ---
@@ -89,7 +91,9 @@ Start Eclipse Ditto with the compose file included in this repository:
 docker compose -f docker-compose-ditto.yml up -d
 ```
 
-or follow the upstream [Eclipse Ditto Docker deployment](https://github.com/eclipse-ditto/ditto/tree/master/deployment/docker).
+This runs Eclipse Ditto 3.9.7 (pinned by `DITTO_VERSION` in [.env](.env)) behind nginx on http://localhost:8080, with the Ditto UI at http://localhost:8080/ui/, plus a Mosquitto broker on port 1883 that accepts only the `MQTT_USERNAME`/`MQTT_PASSWORD` from `.env`. The things service keeps 30 days of twin history, including the `correlation-id` and `ditto-originator` of every change, so each step of a software update can be traced with Ditto's history API.
+
+Alternatively, follow the upstream [Eclipse Ditto Docker deployment](https://github.com/eclipse-ditto/ditto/tree/master/deployment/docker).
 
 The Ditto policy and example twins can be set up with the scripts and JSON files in `src/ditto-scripts/` (see its README).
 
@@ -128,10 +132,11 @@ The backend communicates with Eclipse Ditto and handles MQTT-based communication
 
 | File | Purpose |
 |---|---|
-| `docker-compose-ditto.yml` | Eclipse Ditto stack only (things, policies, search, gateway, MongoDB, Mosquitto, nginx, swagger) |
+| `docker-compose-ditto.yml` | Eclipse Ditto 3.9.7 stack (policies, things, things-search, connectivity, gateway, UI, MongoDB 7, nginx) plus an authenticated Mosquitto broker |
 | `docker-compose-fleet.yml` | Full fleet stack: GUI + backend + submanager images on top of a running Ditto |
 | `docker-compose-raspberry.yml` | Device-side stack for a Raspberry Pi: submanager + monitoring agent |
 | `Dockerfile`, `backend/Dockerfile` | Images for the GUI (`rdautov/ditto-fleet-gui`) and backend (`rdautov/ditto-backend`) |
+| `device-agents/Dockerfile` | Image for the Installation, Verification and emulator agents |
 
 ## Stand-alone GUI container
 
@@ -147,7 +152,8 @@ The container launches the React application on http://localhost:3000.
 
 # Experiments
 
-The scripts and data used for the D6.2 scalability experiments (frozen submanager load-test variants, twin generator, the 100 generated twins) live in [experiments/d6.2-scalability/](experiments/d6.2-scalability/README.md).
+* [experiments/ssu-revision/](experiments/ssu-revision/README.md): evaluation of the software lifecycle model with a real Debian 12 gateway container updated through apt, emulated gateway fleets and registered-only twins (experiments E0–E4), including campaign scripts and analysis.
+* [experiments/d6.2-scalability/](experiments/d6.2-scalability/README.md): the scripts and data used for the D6.2 scalability experiments (frozen submanager load-test variants, twin generator, the 100 generated twins).
 
 ---
 

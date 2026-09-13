@@ -1,0 +1,3 @@
+# Pilot, validation and superseded runs stay local; campaign results in results/raw/ are archived.
+results/raw/_*/
+__pycache__/
