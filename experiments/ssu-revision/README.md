@@ -115,6 +115,11 @@ python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.
 - **E4 design:** every rep updates the same fleet twice, in alternating order: once without the
   annotator and the extra metadata (`baseline`) and once with both (`extended`). The summary
   reports both variants and their paired per-rep differences.
+- **Drift within a campaign:** despite the platform warm-up, E4's runs got faster over the campaign
+  in both variants (device latency p50 about a quarter lower in the last four reps than in the
+  first four); interleaving the variants keeps the paired differences free of this drift. The first
+  E2 conditions after the restart (zero profile, 1 and 10 devices) may still include warm-up
+  effects: their measured reps vary by up to about 140 ms.
 - **Lifecycle service concurrency:** the lifecycle service sends at most `SW_HTTP_CONCURRENCY`
   requests to Ditto at a time; the lab uses 128. In a check with 1000 simultaneous devices, 32 left
   status writes queued inside the service (device latency p50 10.8 s), while 128 moved the waiting into

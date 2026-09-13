@@ -1,0 +1,5 @@
+query,question,runs,expected,returned,truePositives,falsePositives,falseNegatives,precision,recall,latency_mean,latency_sd,latency_median,latency_p95,latency_min,latency_max
+Q1-still-vulnerable,Which gateways still run the vulnerable OpenSSL version?,5,117,117,117,0,0,1.0,1.0,36.1,23.4,33.1,75.8,15.1,75.8
+Q2-completed,Which gateways have successfully completed the update?,5,2303,2303,2303,0,0,1.0,1.0,197.5,50.4,176.6,287.0,164.8,287.0
+Q3a-failed-installation,Which gateways failed the update at the installation stage?,5,117,117,117,0,0,1.0,1.0,20.0,5.0,20.5,27.1,14.5,27.1
+Q3b-failed-verification,Which gateways failed the update at the verification stage?,5,80,80,80,0,0,1.0,1.0,21.0,5.4,20.2,29.7,15.4,29.7

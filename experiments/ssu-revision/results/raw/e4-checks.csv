@@ -1,0 +1,12 @@
+experiment,rep,workflowId,devices,twinsFound,desiredMetadataPresent,sbomResolvable,annotated,annotationsConsistentWithVersion
+E4,0,wf-e4-extended-calibrated-100-0,100,100,100,true,100,100
+E4,1,wf-e4-extended-calibrated-100-1,100,100,100,true,100,100
+E4,2,wf-e4-extended-calibrated-100-2,100,100,100,true,100,100
+E4,3,wf-e4-extended-calibrated-100-3,100,100,100,true,100,100
+E4,4,wf-e4-extended-calibrated-100-4,100,100,100,true,100,100
+E4,5,wf-e4-extended-calibrated-100-5,100,100,100,true,100,100
+E4,6,wf-e4-extended-calibrated-100-6,100,100,100,true,100,100
+E4,7,wf-e4-extended-calibrated-100-7,100,100,100,true,100,100
+E4,8,wf-e4-extended-calibrated-100-8,100,100,100,true,100,100
+E4,9,wf-e4-extended-calibrated-100-9,100,100,100,true,100,100
+E4,10,wf-e4-extended-calibrated-100-10,100,100,100,true,100,100

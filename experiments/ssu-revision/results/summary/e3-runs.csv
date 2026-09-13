@@ -1,0 +1,12 @@
+metric,n,mean,sd,median,p95,min,max
+completed,5,460.6,3.9,462.0,465.0,456.0,465.0
+failedInstallation,5,23.4,4.4,24.0,29.0,18.0,29.0
+failedVerification,5,16.0,5.4,14.0,24.0,11.0,24.0
+offline,5,50.2,10.2,54.0,60.0,37.0,60.0
+offlineCompleted,5,45.6,7.3,50.0,52.0,35.0,52.0
+terminalMs,5,59838.8,409.6,60031.0,60158.0,59137.0,60158.0
+indexSettleMs,5,483.6,100.2,448.0,610.0,359.0,610.0
+meanLatencyOnlineMs,5,3120.9,592.7,2919.9,4096.6,2651.9,4096.6
+meanLatencyOfflineMs,5,49914.7,2465.7,49654.5,52606.3,46204.9,52606.3
+runsAllTerminal,5,5,,,,,
+runsIndexSettled,5,5,,,,,

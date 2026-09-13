@@ -1,0 +1,389 @@
+{
+  "workflow": "wf-e3-500-4",
+  "histories": {
+    "completedAfterOffline": {
+      "thingId": "no.sintef.sct.giot:emu-0001",
+      "revisions": [
+        {
+          "revision": 581,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 581
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 582,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 582
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2",
+            "installationStatus": "installing",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "pending"
+          }
+        },
+        {
+          "revision": 583,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 583
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "pending",
+            "installationFinishedAt": "2026-09-13T22:22:10.743Z",
+            "installDurationMs": 1365
+          }
+        },
+        {
+          "revision": 584,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 584
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "passed",
+            "installationFinishedAt": "2026-09-13T22:22:10.743Z",
+            "installDurationMs": 1365,
+            "verificationFinishedAt": "2026-09-13T22:22:11.045Z",
+            "verifyDurationMs": 298
+          }
+        },
+        {
+          "revision": 585,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "f5ca3d52-e6d3-4a16-b747-7400d6fbe323",
+            "entity-revision": 585
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 586,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 586
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 587,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 587
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2",
+            "installationStatus": "installing",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "pending"
+          }
+        },
+        {
+          "revision": 588,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 588
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "pending",
+            "installationFinishedAt": "2026-09-13T22:24:37.649Z",
+            "installDurationMs": 1255
+          }
+        },
+        {
+          "revision": 589,
+          "historicalHeaders": null,
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "passed",
+            "installationFinishedAt": "2026-09-13T22:24:37.649Z",
+            "installDurationMs": 1255,
+            "verificationFinishedAt": "2026-09-13T22:24:37.948Z",
+            "verifyDurationMs": 296
+          }
+        }
+      ]
+    },
+    "failedInstallation": {
+      "thingId": "no.sintef.sct.giot:emu-0013",
+      "revisions": [
+        {
+          "revision": 423,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "b5113947-a18a-41e4-a3e2-01b48a47aa16",
+            "entity-revision": 423
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 424,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 424
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 425,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 425
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2",
+            "installationStatus": "installing",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "pending"
+          }
+        },
+        {
+          "revision": 426,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 426
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "pending",
+            "installationFinishedAt": "2026-09-13T22:22:10.725Z",
+            "installDurationMs": 1320
+          }
+        },
+        {
+          "revision": 427,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 427
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "passed",
+            "installationFinishedAt": "2026-09-13T22:22:10.725Z",
+            "installDurationMs": 1320,
+            "verificationFinishedAt": "2026-09-13T22:22:11.042Z",
+            "verifyDurationMs": 315
+          }
+        },
+        {
+          "revision": 428,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "efdc594c-1668-4f0f-ac49-a73c77f02a84",
+            "entity-revision": 428
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 429,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 429
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 430,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 430
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2",
+            "installationStatus": "installing",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "pending"
+          }
+        },
+        {
+          "revision": 431,
+          "historicalHeaders": null,
+          "openssl": {
+            "version": "3.0.11-1~deb12u2",
+            "installationStatus": "failed",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "pending",
+            "installationFinishedAt": "2026-09-13T22:23:41.330Z",
+            "installDurationMs": 1406,
+            "lastError": "emulated installation failure"
+          }
+        }
+      ]
+    },
+    "failedVerification": {
+      "thingId": "no.sintef.sct.giot:emu-0014",
+      "revisions": [
+        {
+          "revision": 424,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 424
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 425,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 425
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2",
+            "installationStatus": "installing",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "pending"
+          }
+        },
+        {
+          "revision": 426,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 426
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "pending",
+            "installationFinishedAt": "2026-09-13T22:22:10.982Z",
+            "installDurationMs": 1407
+          }
+        },
+        {
+          "revision": 427,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-3",
+            "entity-revision": 427
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-3",
+            "verificationStatus": "passed",
+            "installationFinishedAt": "2026-09-13T22:22:10.982Z",
+            "installDurationMs": 1407,
+            "verificationFinishedAt": "2026-09-13T22:22:11.300Z",
+            "verifyDurationMs": 306
+          }
+        },
+        {
+          "revision": 428,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "b42037da-b55c-4dd9-baa2-425f62a4a228",
+            "entity-revision": 428
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 429,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 429
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2"
+          }
+        },
+        {
+          "revision": 430,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 430
+          },
+          "openssl": {
+            "version": "3.0.11-1~deb12u2",
+            "installationStatus": "installing",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "pending"
+          }
+        },
+        {
+          "revision": 431,
+          "historicalHeaders": {
+            "ditto-originator": "nginx:ditto",
+            "correlation-id": "wf-e3-500-4",
+            "entity-revision": 431
+          },
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "pending",
+            "installationFinishedAt": "2026-09-13T22:23:41.183Z",
+            "installDurationMs": 1247
+          }
+        },
+        {
+          "revision": 432,
+          "historicalHeaders": null,
+          "openssl": {
+            "version": "3.0.14-1~deb12u2",
+            "installationStatus": "installed",
+            "workflowId": "wf-e3-500-4",
+            "verificationStatus": "failed",
+            "installationFinishedAt": "2026-09-13T22:23:41.183Z",
+            "installDurationMs": 1247,
+            "verificationFinishedAt": "2026-09-13T22:23:41.509Z",
+            "verifyDurationMs": 325
+          }
+        }
+      ]
+    }
+  }
+}

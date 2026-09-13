@@ -1,0 +1,8 @@
+stage meanMs
+eventMs 35.9
+dispatchMs 22.2
+deliveryMs 1.0
+installMs 1305.3
+verifyWaitMs 0.8
+verifyMs 308.8
+verifyReportMs 30.9

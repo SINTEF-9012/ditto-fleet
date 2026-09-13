@@ -1,0 +1,6 @@
+experiment,run,rep,workflowId,devices,startedAt,completed,failedInstallation,failedVerification,offline,offlineCompleted,allTerminal,terminalMs,indexSettleMs,indexSettled,meanLatencyOnlineMs,meanLatencyOfflineMs,fleet100Ms,queryMs,requestMs
+E3,e3-500-1,1,wf-e3-500-1,500,2026-09-13T22:19:03.887Z,463,18,19,54,50,true,59830,448,true,4096.6,46204.9,59520,1216.37,30183.96
+E3,e3-500-2,2,wf-e3-500-2,500,2026-09-13T22:20:36.698Z,456,20,24,58,52,true,60158,559,true,3238.6,49452.7,59710,837.43,23270.11
+E3,e3-500-3,3,wf-e3-500-3,500,2026-09-13T22:22:08.957Z,462,26,12,42,41,true,59137,610,true,2651.9,49654.5,58770,1275.98,18763.11
+E3,e3-500-4,4,wf-e3-500-4,500,2026-09-13T22:23:39.468Z,457,29,14,60,50,true,60031,359,true,2919.9,51655.2,59496,994.57,17377.02
+E3,e3-500-5,5,wf-e3-500-5,500,2026-09-13T22:25:07.890Z,465,24,11,37,35,true,60038,442,true,2697.7,52606.3,59549,620.24,14141.97

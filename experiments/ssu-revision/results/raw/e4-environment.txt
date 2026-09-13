@@ -1,0 +1,25 @@
+campaign: e4
+started: 2026-09-13T22:28:31Z
+git commit: 7a100be962e62eac40c5c4dfdd74395ebd37b855
+modified tracked files: 0
+docker: 29.7.2, 8 CPUs, 8229257216 bytes memory, Docker Desktop, kernel 5.15.153.1-microsoft-standard-WSL2
+host CPU: Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz
+twins in Ditto: 11001
+containers (image, image digest, memory limit in bytes, start time):
+  ditto-fleet-connectivity-1 docker.io/eclipse/ditto-connectivity:3.9.7 sha256:d7e5ef0e4562b63810c8028ef6cd177387569a70da790d78ef53a2faffc36578 memLimit=805306368 started=2026-09-13T22:26:38.582809746Z
+  ditto-fleet-ditto-ui-1 docker.io/eclipse/ditto-ui:3.9.7 sha256:5515c41cde98e5b1c573a621d3a1f348e9fe338eac0bdad1c77e83fb2ee1b034 memLimit=33554432 started=2026-09-13T15:37:23.291396906Z
+  ditto-fleet-gateway-1 docker.io/eclipse/ditto-gateway:3.9.7 sha256:1eb08b140a0d1638aefc6c998e38442d91ad98500eaac698a46fc9f0c4392775 memLimit=1073741824 started=2026-09-13T22:26:37.551359486Z
+  ditto-fleet-mongodb-1 docker.io/mongo:7.0 sha256:afc88244d9e7cd1881688f8952bd120bddbf8814e7a0fc683d296f52a71f375d memLimit=1073741824 started=2026-09-13T22:26:34.646548042Z
+  ditto-fleet-mosquitto-1 docker.io/eclipse-mosquitto:2.0 sha256:93a0bdfcbd9b7a86b36127cb81f54e1afd2019f12f39033458df405a027c03e3 memLimit=0 started=2026-09-13T16:45:50.611898439Z
+  ditto-fleet-nginx-1 docker.io/nginx:1.27-alpine sha256:6769dc3a703c719c1d2756bda113659be28ae16cf0da58dd5fd823d6b9a050ea memLimit=33554432 started=2026-09-13T22:27:24.938630793Z
+  ditto-fleet-policies-1 docker.io/eclipse/ditto-policies:3.9.7 sha256:d7bcc7da7bb271ddf9d6abac66061b16e17a1279c4eb35ec9c5006c5a50c194a memLimit=805306368 started=2026-09-13T22:26:35.352310047Z
+  ditto-fleet-things-1 docker.io/eclipse/ditto-things:3.9.7 sha256:7b5fa6b443a7e7fecd4ed74924fd5eae21ede43dbed25e2b03975357b064aba3 memLimit=1610612736 started=2026-09-13T22:26:35.891577939Z
+  ditto-fleet-things-search-1 docker.io/eclipse/ditto-things-search:3.9.7 sha256:0711c6b083cd6b82d88a119b2a33914104041390b53fee413f0b0b93742aec1e memLimit=1610612736 started=2026-09-13T22:26:36.69092349Z
+  ssu-lab-apt-repo-1 docker.io/nginx:1.27-alpine sha256:6769dc3a703c719c1d2756bda113659be28ae16cf0da58dd5fd823d6b9a050ea memLimit=0 started=2026-09-13T16:07:31.208414921Z
+  ssu-lab-backend-1 ditto-fleet/backend:dev sha256:c2de17c0d8e417d7b8e9c899f349df8bc2003c64c1095407ae6054e9427d3c39 memLimit=0 started=2026-09-13T22:28:24.482324889Z
+  ssu-lab-gw1-1 ditto-fleet/lab-gateway:dev sha256:6268ae51cb64e0e6f64e5f1adfdcad67ecf5b0629baafc81841e846ad1385a08 memLimit=0 started=2026-09-13T19:33:38.9278845Z
+  ssu-lab-gw1-installer-1 ditto-fleet/device-agents:dev sha256:2b58a58a2d1084860472a0064a600b055132c93683f7af7879da9366fb2c79bd memLimit=0 started=2026-09-13T19:33:39.449280454Z
+  ssu-lab-gw1-verifier-1 ditto-fleet/device-agents:dev sha256:2b58a58a2d1084860472a0064a600b055132c93683f7af7879da9366fb2c79bd memLimit=0 started=2026-09-13T19:33:40.712356877Z
+broker at 22:28:41Z: $SYS/broker/clients/disconnected 0 $SYS/broker/store/messages/count 53 
+finished: 2026-09-13T22:38:41Z
+broker at 22:38:41Z: $SYS/broker/clients/disconnected 0 $SYS/broker/store/messages/count 53 
