@@ -8,6 +8,7 @@
 /node_modules
 /backend/node_modules
 /submanager/node_modules
+/device-agents/node_modules
 /.pnp
 .pnp.js
 

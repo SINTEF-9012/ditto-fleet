@@ -13,7 +13,8 @@ services:
     container_name: ditto-monitoring-agent
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /:/hostfs:ro
+      - ./monitoring-agent/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     restart: always
     depends_on:
       submanager:
@@ -32,3 +33,4 @@ services:
       - HOST_VAR=/hostfs/var
       - HOST_RUN=/hostfs/run
       - HOST_MOUNT_PREFIX=/hostfs
+      - DPKG_ADMINDIR=/hostfs/var/lib/dpkg
