@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Summarises the raw results of the SSU revision experiments (E0-E4).
 
-Reads the CSV files in results/raw/ and writes to results/summary/:
+Reads the files in results/raw/ (bulky ones gzip-compressed by analysis/pack_raw.py) and writes to
+results/summary/:
   *.csv  summary tables (mean, sample standard deviation, median, p95, min, max)
   *.dat  whitespace-separated tables for pgfplots
 Warm-up runs are excluded everywhere. Only the Python standard library is used,
@@ -10,6 +11,7 @@ and the output depends only on the raw files, so re-running reproduces it exactl
 
 import bisect
 import csv
+import gzip
 import json
 import math
 import re
@@ -24,8 +26,19 @@ OUT = ROOT / "results" / "summary"
 STAT_COLUMNS = ["n", "mean", "sd", "median", "p95", "min", "max"]
 
 
-def read_csv(path):
-    with open(path, newline="", encoding="utf-8") as handle:
+def raw_exists(name):
+    return (RAW / name).exists() or (RAW / f"{name}.gz").exists()
+
+
+def open_raw(name):
+    """A raw result file, stored as is or gzip-compressed as name.gz."""
+    if (RAW / name).exists():
+        return open(RAW / name, newline="", encoding="utf-8")
+    return gzip.open(RAW / f"{name}.gz", "rt", newline="", encoding="utf-8")
+
+
+def read_csv(name):
+    with open_raw(name) as handle:
         return list(csv.DictReader(handle))
 
 
@@ -87,7 +100,7 @@ E0_CHAIN = ["eventMs", "dispatchMs", "deliveryMs", "installMs", "verifyWaitMs", 
 
 
 def summarize_e0():
-    rows = [r for r in read_csv(RAW / "e0-runs.csv") if not_warmup(r)]
+    rows = [r for r in read_csv("e0-runs.csv") if not_warmup(r)]
     table = []
     for direction in ("upgrade", "downgrade"):
         subset = [r for r in rows if r["direction"] == direction and r["converged"] == "true"]
@@ -101,7 +114,7 @@ def summarize_e0():
     on_device = sum(mean[s] or 0 for s in ("installMs", "verifyMs"))
     failed = sum(1 for r in rows if r["converged"] != "true")
     return (
-        f"E0: {len(upgrades)} converged measured upgrades ({failed} measured runs did not converge); "
+        f"E0: {len(upgrades)} converged measured upgrades ({failed} measured runs without convergence); "
         f"mean total {mean['totalMs']} ms, of which {on_device:.0f} ms installation and verification on gw1"
     )
 
@@ -112,7 +125,7 @@ E1_METRICS = ("targets", "queryMs", "writeMs", "totalMs", "writeMeanMs", "writeP
 
 
 def summarize_e1():
-    rows = [r for r in read_csv(RAW / "e1-assignment.csv") if not_warmup(r)]
+    rows = [r for r in read_csv("e1-assignment.csv") if not_warmup(r)]
     groups = defaultdict(list)
     for row in rows:
         groups[int(row["registeredTwins"])].append(row)
@@ -139,36 +152,27 @@ def summarize_e1():
 # ---------------------------------------------------------------- E2 / E4
 
 E2_METRICS = ("fleet50Ms", "fleet95Ms", "fleet100Ms", "deviceMeanMs", "deviceP50Ms", "deviceP95Ms", "requestMs")
+E2_METRIC_COLUMNS = [f"{m}_{k}" for m in E2_METRICS for k in STAT_COLUMNS if k != "n"]
 
 
-def coordination_table(rows):
-    groups = defaultdict(list)
-    for row in rows:
-        groups[(row["mode"], row["profile"], int(row["devices"]))].append(row)
-    table = []
-    for (mode, profile, devices) in sorted(groups):
-        subset = groups[(mode, profile, devices)]
-        entry = {
-            "mode": mode, "profile": profile, "devices": devices, "runs": len(subset),
-            "incompleteRuns": sum(1 for r in subset if r["complete"] != "true"),
-        }
-        for metric in E2_METRICS:
-            stats = describe(num(r[metric]) for r in subset if r["complete"] == "true")
-            entry.update({f"{metric}_{k}": v for k, v in stats.items() if k != "n"})
-        table.append(entry)
-    return table
-
-
-def coordination_columns():
-    return ["mode", "profile", "devices", "runs", "incompleteRuns"] + [
-        f"{m}_{k}" for m in E2_METRICS for k in STAT_COLUMNS if k != "n"
-    ]
+def coordination_stats(subset):
+    entry = {"runs": len(subset), "incompleteRuns": sum(1 for r in subset if r["complete"] != "true")}
+    for metric in E2_METRICS:
+        stats = describe(num(r[metric]) for r in subset if r["complete"] == "true")
+        entry.update({f"{metric}_{k}": v for k, v in stats.items() if k != "n"})
+    return entry
 
 
 def summarize_e2():
-    rows = [r for r in read_csv(RAW / "e2-coordination.csv") if not_warmup(r)]
-    table = coordination_table(rows)
-    write_csv("e2-coordination.csv", table, coordination_columns())
+    rows = [r for r in read_csv("e2-coordination.csv") if not_warmup(r)]
+    groups = defaultdict(list)
+    for row in rows:
+        groups[(row["mode"], row["profile"], int(row["devices"]))].append(row)
+    table = [
+        {"mode": mode, "profile": profile, "devices": devices, **coordination_stats(groups[(mode, profile, devices)])}
+        for (mode, profile, devices) in sorted(groups)
+    ]
+    write_csv("e2-coordination.csv", table, ["mode", "profile", "devices", "runs", "incompleteRuns", *E2_METRIC_COLUMNS])
 
     for mode, profile in sorted({(e["mode"], e["profile"]) for e in table}):
         write_dat(
@@ -230,7 +234,7 @@ def e2_step(row, detail):
 def summarize_e2_stages():
     """Per-device stage breakdown of the DT-mediated E2 runs, from the lifecycle service's event log."""
     devices = defaultdict(dict)
-    with open(RAW / "e2-lifecycle.csv", newline="", encoding="utf-8") as handle:
+    with open_raw("e2-lifecycle.csv") as handle:
         for row in csv.DictReader(handle):
             match = WORKFLOW_RUN.match(row["workflowId"] or "")
             if not match or match["rep"] == "0":
@@ -268,24 +272,30 @@ def summarize_e2_stages():
     return f"E2 stages: {sum(t['deviceRuns'] for t in table)} device updates broken down"
 
 
-def summarize_e4():
-    e4_rows = [r for r in read_csv(RAW / "e4-coordination.csv") if not_warmup(r)]
-    e4 = coordination_table(e4_rows)
-    e2_path = RAW / "e2-coordination.csv"
-    e2 = coordination_table([r for r in read_csv(e2_path) if not_warmup(r)]) if e2_path.exists() else []
-    e2_by_key = {(e["mode"], e["profile"], e["devices"]): e for e in e2}
-    comparison = []
-    for entry in e4:
-        baseline = e2_by_key.get((entry["mode"], entry["profile"], entry["devices"]), {})
-        comparison.append({
-            "profile": entry["profile"], "devices": entry["devices"], "runs": entry["runs"],
-            "e4Fleet": entry["fleet100Ms_mean"], "e4FleetSd": entry["fleet100Ms_sd"],
-            "e2Fleet": baseline.get("fleet100Ms_mean"), "e2FleetSd": baseline.get("fleet100Ms_sd"),
-            "e4DeviceP50": entry["deviceP50Ms_mean"], "e2DeviceP50": baseline.get("deviceP50Ms_mean"),
-        })
-    write_csv("e4-vs-e2.csv", comparison, ["profile", "devices", "runs", "e4Fleet", "e4FleetSd", "e2Fleet", "e2FleetSd", "e4DeviceP50", "e2DeviceP50"])
+def e4_variant(row):
+    return row.get("variant") or "extended"
 
-    checks = [r for r in read_csv(RAW / "e4-checks.csv") if r["rep"] != "0"]
+
+def summarize_e4():
+    rows = [r for r in read_csv("e4-coordination.csv") if not_warmup(r)]
+    by_variant = defaultdict(list)
+    for row in rows:
+        by_variant[e4_variant(row)].append(row)
+    table = [{"variant": variant, **coordination_stats(subset)} for variant, subset in sorted(by_variant.items())]
+    write_csv("e4-variants.csv", table, ["variant", "runs", "incompleteRuns", *E2_METRIC_COLUMNS])
+
+    pairs = defaultdict(dict)
+    for row in rows:
+        if row["complete"] == "true":
+            pairs[row["rep"]][e4_variant(row)] = row
+    deltas = defaultdict(list)
+    for pair in pairs.values():
+        if "baseline" in pair and "extended" in pair:
+            for metric in ("fleet100Ms", "deviceP50Ms", "deviceP95Ms", "requestMs"):
+                deltas[metric].append(num(pair["extended"][metric]) - num(pair["baseline"][metric]))
+    write_csv("e4-paired-deltas.csv", [{"metric": m, **describe(v)} for m, v in deltas.items()], ["metric", *STAT_COLUMNS])
+
+    checks = [r for r in read_csv("e4-checks.csv") if r["rep"] != "0"]
     totals = {
         key: sum(int(r[key]) for r in checks)
         for key in ("twinsFound", "desiredMetadataPresent", "annotated", "annotationsConsistentWithVersion")
@@ -293,13 +303,14 @@ def summarize_e4():
     totals["runs"] = len(checks)
     totals["runsWithResolvableSbom"] = sum(1 for r in checks if r.get("sbomResolvable") == "true")
     write_csv("e4-checks.csv", [totals], list(totals))
-    return f"E4: {len(e4_rows)} measured runs; annotation checks {totals}"
+    counts = ", ".join(f"{variant} {len(subset)}" for variant, subset in sorted(by_variant.items()))
+    return f"E4: {len(rows)} measured runs ({counts}), {len(deltas.get('fleet100Ms', []))} paired reps; checks {totals}"
 
 
 # ---------------------------------------------------------------- E3
 
 def summarize_e3():
-    queries = read_csv(RAW / "e3-queries.csv")
+    queries = read_csv("e3-queries.csv")
     groups = defaultdict(list)
     for row in queries:
         groups[row["query"]].append(row)
@@ -320,7 +331,7 @@ def summarize_e3():
          "precision", "recall", *[f"latency_{k}" for k in STAT_COLUMNS if k != "n"]],
     )
 
-    runs = read_csv(RAW / "e3-runs.csv")
+    runs = read_csv("e3-runs.csv")
     metrics = ("completed", "failedInstallation", "failedVerification", "offline", "offlineCompleted",
                "terminalMs", "indexSettleMs", "meanLatencyOnlineMs", "meanLatencyOfflineMs")
     summary = [{"metric": m, **describe(num(r.get(m)) for r in runs)} for m in metrics]
@@ -349,11 +360,11 @@ RESOURCE_GROUPS = (
 RESOURCE_COLUMNS = [f"{group}{kind}" for group, _ in RESOURCE_GROUPS for kind in ("Cpu", "MemMiB", "PeakMemMiB")]
 
 
-def load_resource_samples(path):
+def load_resource_samples(name):
     samples = []
-    with open(path, newline="", encoding="utf-8") as handle:
+    with open_raw(name) as handle:
         for row in csv.DictReader(handle):
-            group = next((name for name, pattern in RESOURCE_GROUPS if pattern.match(row["container"])), None)
+            group = next((g for g, pattern in RESOURCE_GROUPS if pattern.match(row["container"])), None)
             if group:
                 samples.append((float(row["ts"]), group, row["container"], float(row["cpuPercent"]), float(row["memBytes"])))
     samples.sort()
@@ -377,7 +388,7 @@ def window_usage(samples, timestamps, start, end):
 def summarize_resources(campaign, runs, key_columns, window):
     """Container resource use per condition over the time window of every measured run: the mean of the
     runs' mean CPU and memory, and the highest peak memory."""
-    samples = load_resource_samples(RAW / f"{campaign}-resources.csv")
+    samples = load_resource_samples(f"{campaign}-resources.csv")
     timestamps = [sample[0] for sample in samples]
     values = defaultdict(lambda: defaultdict(list))
     run_counts = Counter()
@@ -428,16 +439,16 @@ def coordination_window(run):
 
 
 def measured_coordination_runs(name):
-    return [r for r in read_csv(RAW / name) if not_warmup(r) and r["complete"] == "true"]
+    return [r for r in read_csv(name) if not_warmup(r) and r["complete"] == "true"]
 
 
 def summarize_e0_resources():
-    runs = [r for r in read_csv(RAW / "e0-runs.csv") if not_warmup(r) and r["converged"] == "true"]
+    runs = [r for r in read_csv("e0-runs.csv") if not_warmup(r) and r["converged"] == "true"]
     return summarize_resources("e0", runs, ["direction"], duration_window("totalMs"))
 
 
 def summarize_e1_resources():
-    runs = [r for r in read_csv(RAW / "e1-assignment.csv") if not_warmup(r)]
+    runs = [r for r in read_csv("e1-assignment.csv") if not_warmup(r)]
     return summarize_resources("e1", runs, ["registeredTwins"], duration_window("totalMs"))
 
 
@@ -447,12 +458,14 @@ def summarize_e2_resources():
 
 
 def summarize_e3_resources():
-    return summarize_resources("e3", read_csv(RAW / "e3-runs.csv"), ["devices"], duration_window("terminalMs"))
+    return summarize_resources("e3", read_csv("e3-runs.csv"), ["devices"], duration_window("terminalMs"))
 
 
 def summarize_e4_resources():
     runs = measured_coordination_runs("e4-coordination.csv")
-    return summarize_resources("e4", runs, ["profile", "devices"], coordination_window)
+    for run in runs:
+        run["variant"] = e4_variant(run)
+    return summarize_resources("e4", runs, ["variant", "profile", "devices"], coordination_window)
 
 
 def main():
@@ -470,7 +483,7 @@ def main():
         ("e4-resources.csv", summarize_e4_resources),
     ]
     for required, step in steps:
-        if (RAW / required).exists():
+        if raw_exists(required):
             print(step())
         else:
             print(f"skipped {step.__name__}: {required} not found")

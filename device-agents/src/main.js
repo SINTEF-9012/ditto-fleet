@@ -4,7 +4,7 @@ import { connect, publishJson } from "./agent-core.js";
 import { DEFAULT_TOPIC_PREFIX, downstreamTopic, statusTopic } from "./contract.js";
 import { createInstaller } from "./installer.js";
 import { createVerifier } from "./verifier.js";
-import { createVirtualDevice, mulberry32 } from "./emulator.js";
+import { createVirtualDevice, deviceRng } from "./emulator.js";
 import { runInTarget } from "./system.js";
 
 const env = process.env;
@@ -129,12 +129,12 @@ async function startEmulator() {
   for (let i = 0; i < count; i += 1) {
     const index = startIndex + i;
     const thingId = `${thingPrefix}${String(index).padStart(4, "0")}`;
-    const auxRng = mulberry32(seed * 7919 + index);
+    const auxRng = deviceRng(seed, index, 1);
     let client;
     const device = createVirtualDevice({
       thingId,
       profile,
-      rng: mulberry32(seed + index),
+      rng: deviceRng(seed, index),
       sleep,
       log,
       topicPrefix,

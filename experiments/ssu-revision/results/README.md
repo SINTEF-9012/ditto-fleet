@@ -1,9 +1,11 @@
 # Results of the SSU revision experiments
 
-`raw/` holds what the campaign scripts wrote, unmodified; `summary/` is generated from it by
-`analysis/summarize.py`. All timestamps are epoch milliseconds from the clock of the Docker host
-that ran every component. Durations end in `Ms`. Rows with `warmup=true` are excluded from all
-summaries.
+`raw/` holds what the campaign scripts wrote; `summary/` is generated from it by
+`analysis/summarize.py`. Before committing, `analysis/pack_raw.py` gzip-compresses raw files larger
+than 1 MiB (`<name>.gz`) and concatenates each campaign's emulator ground-truth files into
+`<id>-truth.csv.gz` (every row carries its run id); their contents are unchanged. All timestamps are
+epoch milliseconds from the clock of the Docker host that ran every component. Durations end in
+`Ms`. Rows with `warmup=true` are excluded from all summaries.
 
 ## Per campaign
 
@@ -73,7 +75,9 @@ is memory use without the page cache.
 **`e2-coordination.csv`**, **`e4-coordination.csv`**: one row per fleet update of `devices`
 emulated gateways.
 - **Condition:** `mode` is `dt` (through Ditto and the lifecycle service) or `direct` (MQTT only);
-  `profile` is the emulator profile.
+  `profile` is the emulator profile. E4 rows also have `variant`: `baseline` (without the annotator
+  and the extra metadata) or `extended` (with both); `summary/e4-variants.csv` summarises each
+  variant and `summary/e4-paired-deltas.csv` the per-rep differences, extended minus baseline.
 - **Request timing:** `queryMs` (dt only), `requestMs` (issuing all requests).
 - **Completion:** `completed`, `complete`.
 - **Fleet times:** `fleet50Ms`, `fleet95Ms`, `fleet100Ms`, measured from the first request until

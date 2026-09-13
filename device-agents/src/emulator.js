@@ -7,6 +7,22 @@ import {
   statusTopic,
 } from "./contract.js";
 
+function mix32(value) {
+  let x = value >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x85ebca6b);
+  x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35);
+  return (x ^ (x >>> 16)) >>> 0;
+}
+
+/**
+ * Random stream of one emulated device for one purpose. Run seed, device index and purpose are hashed
+ * together: with a plain seed + index, run seed s + 1 would give device i the stream that run s gave
+ * device i + 1, so injected failures would repeat, shifted by one device, in every repetition.
+ */
+export function deviceRng(seed, index, purpose = 0) {
+  return mulberry32(mix32(mix32(mix32(seed) ^ index) ^ purpose));
+}
+
 /** Small seeded PRNG, so that injected delays and failures are reproducible per device. */
 export function mulberry32(seed) {
   let state = seed >>> 0;

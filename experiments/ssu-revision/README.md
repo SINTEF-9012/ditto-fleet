@@ -53,7 +53,7 @@ Each script lives in `harness/` and writes raw CSV files to `results/raw/`;
 | E1 | How does DT-based assignment scale with the number of registered twins? | `harness/run-e1.sh` | `e1-assignment.csv` |
 | E2 | How long does a fleet update take through the DT platform, and what does the twin layer add compared with sending requests directly over MQTT? | `harness/run-e2.sh` | `e2-coordination.csv`, `e2-lifecycle.csv`, `e2-*-truth.csv` |
 | E3 | Do the twins answer "which gateways are still vulnerable / completed / failed at which stage" correctly under failures and offline devices? | `harness/run-e3.sh` | `e3-runs.csv`, `e3-queries.csv`, `e3-*-history.json` |
-| E4 | Can a new lifecycle component and new artefact metadata be added without changing existing components? | `harness/run-e4.sh` | `e4-coordination.csv`, `e4-checks.csv`, `e4-annotator.csv` |
+| E4 | Can a new lifecycle component and new artefact metadata be added without changing existing components, and what do they cost? | `harness/run-e4.sh` | `e4-coordination.csv`, `e4-checks.csv`, `e4-annotator.csv` |
 
 Every campaign also writes `<id>-environment.txt` and `<id>-resources.csv`.
 
@@ -103,6 +103,18 @@ python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.
   lifecycle service's `converged` event. In the direct baseline it is the time from the
   MQTT publish acknowledgement to the receipt of the verification status. *Fleet* times
   are measured from the first request.
+- **Fleet time in E2:** for larger fleets it is dominated by the assignment engine's
+  desired-state writes (concurrency 10), which Ditto accepts more slowly while it also processes
+  the lifecycle service's status writes: at 1000 devices these writes took 20–26 s of the 22–28 s
+  fleet time. The device completion time, measured from each device's own write, isolates the
+  coordination per device.
+- **Emulator seeds:** E2 and E4 use the emulator seed 42 in every run, so each device draws the same
+  installation and verification delays in every rep and in both modes or variants, and the reps
+  differ only in platform timing. E3 uses the rep number as seed, so each rep places failures and
+  offline devices differently.
+- **E4 design:** every rep updates the same fleet twice, in alternating order: once without the
+  annotator and the extra metadata (`baseline`) and once with both (`extended`). The summary
+  reports both variants and their paired per-rep differences.
 - **Lifecycle service concurrency:** the lifecycle service sends at most `SW_HTTP_CONCURRENCY`
   requests to Ditto at a time; the lab uses 128. In a check with 1000 simultaneous devices, 32 left
   status writes queued inside the service (device latency p50 10.8 s), while 128 moved the waiting into

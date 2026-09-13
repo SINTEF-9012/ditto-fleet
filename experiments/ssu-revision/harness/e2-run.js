@@ -17,6 +17,7 @@ const { values: args } = parseArgs({
     events: { type: "string", default: "/results/e2-lifecycle.csv" },
     out: { type: "string", default: "/results/e2-coordination.csv" },
     experiment: { type: "string", default: "E2" },
+    variant: { type: "string" },
     concurrency: { type: "string", default: "10" },
     metadata: { type: "string" },
     "timeout-ms": { type: "string", default: "900000" },
@@ -58,6 +59,7 @@ while (converged.size < n && Date.now() < deadline) {
 const summary = convergenceSummary(result.writes, converged, n);
 appendCsvRow(fs, args.out, {
   experiment: args.experiment,
+  ...(args.variant ? { variant: args.variant } : {}),
   mode: "dt",
   profile: args.profile,
   devices: n,
@@ -73,7 +75,8 @@ appendCsvRow(fs, args.out, {
   dittoVersion: process.env.DITTO_VERSION ?? "",
 });
 console.log(
-  `${args.experiment} dt ${args.profile} N=${n} rep=${args.rep}: ${summary.completed}/${n} converged, ` +
-    `fleet ${summary.fleet100Ms} ms, device p50 ${summary.deviceP50Ms} ms, p95 ${summary.deviceP95Ms} ms`,
+  `${args.experiment}${args.variant ? ` ${args.variant}` : ""} dt ${args.profile} N=${n} rep=${args.rep}: ` +
+    `${summary.completed}/${n} converged, fleet ${summary.fleet100Ms} ms, ` +
+    `device p50 ${summary.deviceP50Ms} ms, p95 ${summary.deviceP95Ms} ms`,
 );
 if (!summary.complete) process.exitCode = 1;
