@@ -91,7 +91,7 @@ Start Eclipse Ditto with the compose file included in this repository:
 docker compose -f docker-compose-ditto.yml up -d
 ```
 
-This runs Eclipse Ditto 3.9.7 (pinned by `DITTO_VERSION` in [.env](.env)) behind nginx on http://localhost:8080, with the Ditto UI at http://localhost:8080/ui/, plus a Mosquitto broker on port 1883 that accepts only the `MQTT_USERNAME`/`MQTT_PASSWORD` from `.env`. The things service keeps 30 days of twin history, including the `correlation-id` and `ditto-originator` of every change, so each step of a software update can be traced with Ditto's history API.
+This runs Eclipse Ditto 3.9.7 (pinned by `DITTO_VERSION` in [.env](.env)) behind nginx on http://localhost:8080, with the Ditto UI at http://localhost:8080/ui/, plus a Mosquitto broker on port 1883 that accepts only the `MQTT_USERNAME`/`MQTT_PASSWORD` from `.env`. The things service keeps 30 days of twin history, including the `correlation-id` and `ditto-originator` of every change, so each step of a software update can be traced with Ditto's history API. The containers' memory limits add up to about 6.6 GB (raised above upstream's, which were exhausted by 10,000 twins), so give Docker about 8 GB of memory.
 
 Alternatively, follow the upstream [Eclipse Ditto Docker deployment](https://github.com/eclipse-ditto/ditto/tree/master/deployment/docker).
 
