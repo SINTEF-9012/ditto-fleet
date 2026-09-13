@@ -44,15 +44,27 @@ do {
 let metadataPresent = 0;
 let annotated = 0;
 let consistent = 0;
+let assigned;
 for (const twin of twins) {
   const reported = twin.features?.softwareManagement?.properties?.packages?.openssl ?? {};
   const desired = twin.features?.softwareManagement?.desiredProperties?.packages?.openssl ?? {};
-  if (desired.workflowId === args.workflow && Array.isArray(desired.cveIds) && desired.sbomRef) metadataPresent += 1;
+  if (desired.workflowId === args.workflow && Array.isArray(desired.cveIds) && desired.sbomRef) {
+    metadataPresent += 1;
+    assigned ??= desired;
+  }
   if (Array.isArray(reported.knownVulnerabilities)) {
     annotated += 1;
     const expected = expectedVulnerabilities(reported.version);
     if (JSON.stringify(expected) === JSON.stringify(reported.knownVulnerabilities)) consistent += 1;
   }
+}
+
+// The SBOM reference must resolve to an SPDX document describing the assigned version.
+let sbomResolvable = false;
+if (assigned) {
+  const response = await fetch(assigned.sbomRef).catch(() => null);
+  const sbom = response?.ok ? await response.json().catch(() => null) : null;
+  sbomResolvable = (sbom?.packages ?? []).some((p) => p.name === "openssl" && p.versionInfo === assigned.version);
 }
 
 appendCsvRow(fs, args.out, {
@@ -62,10 +74,11 @@ appendCsvRow(fs, args.out, {
   devices: n,
   twinsFound: twins.length,
   desiredMetadataPresent: metadataPresent,
+  sbomResolvable,
   annotated,
   annotationsConsistentWithVersion: consistent,
 });
 console.log(
   `E4 check rep=${args.rep}: ${twins.length} twins, metadata on ${metadataPresent}, ` +
-    `annotated ${annotated}, consistent ${consistent}`,
+    `SBOM resolvable ${sbomResolvable}, annotated ${annotated}, consistent ${consistent}`,
 );

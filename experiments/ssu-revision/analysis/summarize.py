@@ -284,6 +284,8 @@ def summarize_e4():
         key: sum(int(r[key]) for r in checks)
         for key in ("twinsFound", "desiredMetadataPresent", "annotated", "annotationsConsistentWithVersion")
     }
+    totals["runs"] = len(checks)
+    totals["runsWithResolvableSbom"] = sum(1 for r in checks if r.get("sbomResolvable") == "true")
     write_csv("e4-checks.csv", [totals], list(totals))
     return f"E4: {len(e4_rows)} measured runs; annotation checks {totals}"
 

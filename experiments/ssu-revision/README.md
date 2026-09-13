@@ -43,7 +43,8 @@ agents, the lifecycle backend and the emulators.
 
 ## Running the experiments
 
-Each script lives in `harness/` and writes raw CSV files to `results/raw/`.
+Each script lives in `harness/` and writes raw CSV files to `results/raw/`;
+[results/README.md](results/README.md) describes their columns.
 
 | ID | Question | Command | Raw output |
 |---|---|---|---|
@@ -65,7 +66,7 @@ container images, the Docker resources and the broker's stored sessions.
 Summaries and pgfplots tables:
 
 ```bash
-python3 analysis/summarize.py   # writes results/summary/*.csv and *.dat
+python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.csv and *.dat
 ```
 
 ## Measurement notes
@@ -84,6 +85,10 @@ python3 analysis/summarize.py   # writes results/summary/*.csv and *.dat
   lifecycle service's `converged` event. In the direct baseline it is the time from the
   MQTT publish acknowledgement to the receipt of the verification status. *Fleet* times
   are measured from the first request.
+- **E4 metadata:** assignments carry `cveIds` and an `sbomRef`. The SBOM is a minimal SPDX 2.3
+  document that the repository builder generates for each OpenSSL version (package names,
+  versions, SHA-256 checksums, purls). `harness/e4-check.js` checks that the reference resolves
+  and describes the assigned version.
 - **Background load:** `gw1`'s monitoring agent runs only during E0. In the other campaigns it
   would make the backend write `gw1`'s package inventory to Ditto every 10 s.
 - **MQTT sessions:** E2 and E4 use clean sessions, so a stopped emulator leaves nothing behind.

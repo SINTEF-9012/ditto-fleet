@@ -15,6 +15,8 @@ METADATA='{"cveIds":["CVE-2024-4603"],"sbomRef":"http://apt-repo/sbom/openssl_3.
 
 require_fresh e4
 stop_gateway_monitoring
+# The lab apt repository also publishes the SPDX document that METADATA's sbomRef points to.
+lab up -d apt-repo
 start_backend e4
 docker rm -f ssu-e4-annotator >/dev/null 2>&1 || true
 lab --profile harness run -d --name ssu-e4-annotator harness /harness/e4-annotator.js >/dev/null

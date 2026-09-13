@@ -35,6 +35,31 @@ for version in $VERSIONS; do
   done
 done
 
+# One minimal SPDX 2.3 document per OpenSSL version; E4 assignments reference it as artefact metadata.
+mkdir -p sbom
+created=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+for version in $VERSIONS; do
+  for binary in $BINARIES; do
+    deb="${binary}_${version}_${ARCH}.deb"
+    jq -n --arg name "$binary" --arg version "$version" --arg arch "$ARCH" --arg deb "$deb" \
+      --arg sha256 "$(sha256sum "$deb" | cut -d' ' -f1)" \
+      '{name: $name, SPDXID: ("SPDXRef-Package-" + $name), versionInfo: $version,
+        supplier: "Organization: Debian", downloadLocation: ("http://apt-repo/" + $deb),
+        filesAnalyzed: false, checksums: [{algorithm: "SHA256", checksumValue: $sha256}],
+        externalRefs: [{referenceCategory: "PACKAGE-MANAGER", referenceType: "purl",
+          referenceLocator: ("pkg:deb/debian/" + $name + "@" + $version + "?arch=" + $arch)}]}'
+  done | jq -s --arg version "$version" --arg created "$created" \
+    '{spdxVersion: "SPDX-2.3", dataLicense: "CC0-1.0", SPDXID: "SPDXRef-DOCUMENT",
+      name: ("openssl " + $version + " in the ditto-fleet lab repository"),
+      documentNamespace: ("http://apt-repo/sbom/openssl_" + $version),
+      creationInfo: {created: $created, creators: ["Tool: ditto-fleet lab build-repo.sh"]},
+      packages: .,
+      relationships: [.[] | {spdxElementId: "SPDXRef-DOCUMENT", relationshipType: "DESCRIBES",
+        relatedSpdxElement: .SPDXID}]}' \
+    > "sbom/openssl_${version}.spdx.json"
+  echo "wrote sbom/openssl_${version}.spdx.json"
+done
+
 if [ ! -s /keys/keyring.gpg ]; then
   mkdir -p "$GNUPGHOME"
   chmod 700 "$GNUPGHOME"
