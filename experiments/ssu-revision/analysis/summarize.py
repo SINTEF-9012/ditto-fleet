@@ -322,9 +322,10 @@ def summarize_e3():
 
     runs = read_csv(RAW / "e3-runs.csv")
     metrics = ("completed", "failedInstallation", "failedVerification", "offline", "offlineCompleted",
-               "terminalMs", "meanLatencyOnlineMs", "meanLatencyOfflineMs")
-    summary = [{"metric": m, **describe(num(r[m]) for r in runs)} for m in metrics]
+               "terminalMs", "indexSettleMs", "meanLatencyOnlineMs", "meanLatencyOfflineMs")
+    summary = [{"metric": m, **describe(num(r.get(m)) for r in runs)} for m in metrics]
     summary.append({"metric": "runsAllTerminal", "n": len(runs), "mean": sum(1 for r in runs if r["allTerminal"] == "true")})
+    summary.append({"metric": "runsIndexSettled", "n": len(runs), "mean": sum(1 for r in runs if r.get("indexSettled") == "true")})
     write_csv("e3-runs.csv", summary, ["metric", *STAT_COLUMNS])
     wrong = sum(t["falsePositives"] + t["falseNegatives"] for t in table)
     return f"E3: {len(runs)} runs, {len(queries)} query executions, {wrong} misclassified devices in total"

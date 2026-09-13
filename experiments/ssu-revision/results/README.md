@@ -96,6 +96,8 @@ log; events `annotated` and `annotation_failed`).
 - **Outcomes:** `completed`, `failedInstallation`, `failedVerification`, `offline`,
   `offlineCompleted`, `allTerminal`.
 - **Timing:** `startedAt`, `terminalMs` (first request until every device is terminal),
+  `indexSettleMs` (from then until the search index reflects every device's final state; the
+  queries run afterwards) with `indexSettled` (false if that took longer than 120 s),
   `meanLatencyOnlineMs` and `meanLatencyOfflineMs` (converged devices that were online or offline
   at assignment), `fleet100Ms`, `queryMs`, `requestMs`.
 

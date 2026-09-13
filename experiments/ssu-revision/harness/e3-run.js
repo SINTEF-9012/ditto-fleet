@@ -64,19 +64,27 @@ while (converged.size + failedInstall.size + failedVerify.size < n && Date.now()
   }
   await sleep(250);
 }
-const terminalMs = Date.now() - assignedAt;
+const terminalAt = Date.now();
+const terminalMs = terminalAt - assignedAt;
 const completed = new Set(converged.keys());
 
+// The search index follows twin updates asynchronously: record how long it takes to reflect the final state.
+let indexSettled = true;
+const notSettled = (err) => {
+  indexSettled = false;
+  console.warn(`search index not settled: ${err.message}`);
+};
 await waitForCount(
   `and(${scope},eq(${P}/workflowId,"${workflow}"),eq(${P}/verificationStatus,"passed"))`,
   completed.size,
-  { timeoutMs: 120000 },
-).catch((err) => console.warn(`search index not settled: ${err.message}`));
+  { timeoutMs: 120000, intervalMs: 100 },
+).catch(notSettled);
 await waitForCount(
   `and(${scope},eq(${P}/workflowId,"${workflow}"),or(eq(${P}/installationStatus,"failed"),eq(${P}/verificationStatus,"failed")))`,
   failedInstall.size + failedVerify.size,
-  { timeoutMs: 120000 },
-).catch((err) => console.warn(`search index not settled: ${err.message}`));
+  { timeoutMs: 120000, intervalMs: 100 },
+).catch(notSettled);
+const indexSettleMs = Date.now() - terminalAt;
 
 async function searchIds(filter) {
   const ids = new Set();
@@ -165,6 +173,8 @@ appendCsvRow(fs, args["runs-out"], {
   offlineCompleted: [...offline].filter((id) => completed.has(id)).length,
   allTerminal: completed.size + failedInstall.size + failedVerify.size === n,
   terminalMs,
+  indexSettleMs,
+  indexSettled,
   meanLatencyOnlineMs: meanLatency(online),
   meanLatencyOfflineMs: meanLatency(offline),
   fleet100Ms: summary.fleet100Ms,
