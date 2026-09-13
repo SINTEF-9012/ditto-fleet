@@ -1,0 +1,64 @@
+{
+  "source": "E0: 20 converged upgrade runs of gw1, warm-up runs excluded (/results/e0-runs.csv)",
+  "initialVersions": {
+    "openssl": "3.0.11-1~deb12u2",
+    "libssl3": "3.0.11-1~deb12u2"
+  },
+  "install": {
+    "type": "empirical",
+    "samplesMs": [
+      3486,
+      1961,
+      1750,
+      3398,
+      1609,
+      1454,
+      1746,
+      1686,
+      1511,
+      3554,
+      1902,
+      1534,
+      1462,
+      1687,
+      1564,
+      1690,
+      1982,
+      1444,
+      1124,
+      1311
+    ]
+  },
+  "verify": {
+    "type": "empirical",
+    "samplesMs": [
+      326,
+      347,
+      350,
+      349,
+      342,
+      146,
+      2136,
+      349,
+      429,
+      348,
+      331,
+      331,
+      2030,
+      373,
+      316,
+      2162,
+      322,
+      346,
+      292,
+      299
+    ]
+  },
+  "installFailureRate": 0,
+  "verifyFailureRate": 0,
+  "monitoredPackages": [
+    "openssl"
+  ],
+  "monitorIntervalMs": 0,
+  "offline": null
+}
