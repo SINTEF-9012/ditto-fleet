@@ -8,10 +8,11 @@ summaries.
 ## Per campaign
 
 **`<id>-environment.txt`**: git commit, count of modified tracked files, Docker resources, host CPU,
-number of twins in Ditto, container images with digests, and the broker's stored sessions at the
-start; the end time and the final broker state are appended when the campaign finishes (the
-lifecycle service is stopped then, so its event log ends with the campaign). A campaign continued
-with `CONTINUE=1` after an interruption appends a further record, marked "(continued)".
+number of twins in Ditto, every container's image, image digest, memory limit and start time, and
+the broker's stored sessions at the start. The end time and the final broker state are appended
+when the campaign finishes (the lifecycle service is stopped then, so its event log ends with the
+campaign). A campaign continued with `CONTINUE=1` after an interruption appends a further record,
+marked "(continued)".
 
 **`<id>-lifecycle.csv`**: event log of the lifecycle service (`backend/src/TimestampLogger.js`)
 with columns `ts, component, event, workflowId, thingId, package, stage, detail` (`detail` is JSON).
@@ -30,14 +31,20 @@ with columns `ts, component, event, workflowId, thingId, package, stage, detail`
 workflowId, event` with event `installed`, `installation_failed`, `verified`,
 `verification_failed`, `offline_start` or `offline_end`.
 
-**`<id>-resources.csv`** (E2–E4): `ts, container, cpuPercent, memBytes`, recorded by
+**`<id>-resources.csv`**: `ts, container, cpuPercent, memBytes`, recorded by
 `harness/resource-sampler.js` through the Docker Engine API about once per second per container.
 `cpuPercent` is CPU use in percent of one core (computed as `docker stats` does), and `memBytes`
 is memory use without the page cache.
-- **Summary:** `summary/<id>-resources-by-condition.csv` averages the samples over the time window
-  of each measured run, from its start until the last device completed.
-- **Container groups:** the values are summed per group — Ditto services, MongoDB, Mosquitto,
-  lifecycle backend and emulator.
+- **Summary:** `summary/<id>-resources-by-condition.csv` takes, for each measured run, the samples
+  within the run's time window. For each group of containers it reports the mean CPU (`…Cpu`), the
+  mean memory (`…MemMiB`, averaged over runs) and the highest memory seen in any run
+  (`…PeakMemMiB`).
+- **Run windows:** from the run's start until convergence (E0), until the assignment finished (E1),
+  until the last device completed (E2, E4), or until every device was terminal (E3).
+- **Container groups:** `things`, `search` (things-search), `policies`, `gateway` (gateway and
+  nginx), `mongodb`, `mosquitto`, `backend` (lifecycle service), `emulator`, `gw1` (gateway
+  container and its agents), `harness` (assignment engine and other harness scripts) and
+  `annotator` (E4).
 
 ## E0
 
@@ -88,7 +95,7 @@ log; events `annotated` and `annotation_failed`).
 **`e3-runs.csv`**: one row per run.
 - **Outcomes:** `completed`, `failedInstallation`, `failedVerification`, `offline`,
   `offlineCompleted`, `allTerminal`.
-- **Timing:** `terminalMs` (first request until every device is terminal),
+- **Timing:** `startedAt`, `terminalMs` (first request until every device is terminal),
   `meanLatencyOnlineMs` and `meanLatencyOfflineMs` (converged devices that were online or offline
   at assignment), `fleet100Ms`, `queryMs`, `requestMs`.
 

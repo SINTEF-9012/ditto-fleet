@@ -20,8 +20,9 @@ Everything runs on a single Docker host, so all timestamps come from one clock.
 
 ## Prerequisites
 
-- Docker with Compose v2 and about 6 GB of memory for Docker; bash (Git Bash on Windows);
-  Python 3 for the analysis.
+- Docker with Compose v2 and about 8 GB of memory for Docker: the memory limits of the platform in
+  `docker-compose-ditto.yml` add up to about 6.6 GB. bash (Git Bash on Windows) and Python 3 for
+  the analysis.
 - Internet access when the lab starts: the repository builder downloads the archived OpenSSL
   packages from snapshot.debian.org and checks their hashes.
 - The platform stack and the policy of the twins, from the repository root:
@@ -54,6 +55,8 @@ Each script lives in `harness/` and writes raw CSV files to `results/raw/`;
 | E3 | Do the twins answer "which gateways are still vulnerable / completed / failed at which stage" correctly under failures and offline devices? | `harness/run-e3.sh` | `e3-runs.csv`, `e3-queries.csv`, `e3-*-history.json` |
 | E4 | Can a new lifecycle component and new artefact metadata be added without changing existing components? | `harness/run-e4.sh` | `e4-coordination.csv`, `e4-checks.csv`, `e4-annotator.csv` |
 
+Every campaign also writes `<id>-environment.txt` and `<id>-resources.csv`.
+
 Run the campaigns one after another, never in parallel, and E0 first: it derives the emulator
 profiles used by E2–E4. Every script documents its parameters at the top. Warm-up runs are recorded
 but excluded from the profiles and summaries: the first two E0 runs, the first two repetitions of
@@ -61,10 +64,10 @@ every E1 fleet size, and rep 0 of every E2/E4 condition.
 
 A campaign refuses to start while `results/raw/` holds files of an earlier campaign with the same
 ID (`e0-*` … `e4-*`). It writes `results/raw/<id>-environment.txt` with the git commit, the
-container images, the Docker resources and the broker's stored sessions. To complete an interrupted
-campaign, run it again with `CONTINUE=1` and parameters that cover only the missing part, for
-example `CONTINUE=1 COUNTS=10000 harness/run-e1.sh`; its results and a second environment record
-are appended to the same files.
+container images and memory limits, the Docker resources and the broker's stored sessions. To
+complete an interrupted campaign, run it again with `CONTINUE=1` and parameters that cover only the
+missing part, for example `CONTINUE=1 COUNTS=10000 harness/run-e1.sh`; its results and a second
+environment record are appended to the same files.
 
 Summaries and pgfplots tables:
 
@@ -74,6 +77,15 @@ python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.
 
 ## Measurement notes
 
+- **Platform state:** every campaign first restarts MongoDB, the Ditto services and nginx, so that
+  it does not inherit caches or memory state from an earlier campaign. E1 first deletes the
+  registered-only twins of earlier runs and grows the population from 100 to 10,000 twins. E2–E4
+  then run with those 10,000 registered-only twins still in the platform; the environment record
+  gives the number of twins in Ditto.
+- **Platform sizing:** the memory limits in `docker-compose-ditto.yml` are higher than upstream's.
+  A first E1 run with the upstream limits (512 MiB per Ditto service, 256 MiB for MongoDB) was
+  discarded: things-search ran out of memory while the harness seeded 10,000 twins, and the
+  smaller sizes may already have run under memory pressure.
 - **Search index:** Ditto's search index is eventually consistent. Harness scripts wait until
   it reflects the prepared state before timing an assignment.
 - **Assignment:** the query and the desired-state writes (concurrency 10) are timed
@@ -99,8 +111,8 @@ python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.
   After each rep, `harness/purge-sessions.js` removes the stored sessions so that later reps do not
   publish into them. The lifecycle service also re-dispatches non-converged twins
   (`SW_RECONCILE_INTERVAL_MS=10000`, `SW_STALE_AFTER_MS=120000`).
-- **Resource use:** during E2–E4, `harness/resource-sampler.js` records every container's CPU and
-  memory use about once per second through the Docker Engine API, on the clock of the
+- **Resource use:** during every campaign, `harness/resource-sampler.js` records every container's
+  CPU and memory use about once per second through the Docker Engine API, on the clock of the
   measurements. The summary averages the samples over the time window of each run.
 - **Host:** `<id>-environment.txt` records the Docker resources; report the host CPU and memory
   together with the results.

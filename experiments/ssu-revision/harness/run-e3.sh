@@ -12,6 +12,7 @@ N="${N:-500}"
 REPS="${REPS:-5}"
 
 require_fresh e3
+restart_platform
 stop_gateway_monitoring
 start_backend e3 SW_RECONCILE_INTERVAL_MS="${SW_RECONCILE_INTERVAL_MS:-10000}" \
   SW_STALE_AFTER_MS="${SW_STALE_AFTER_MS:-120000}"

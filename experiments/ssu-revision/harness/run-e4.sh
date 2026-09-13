@@ -14,6 +14,7 @@ PROFILE="${PROFILE:-calibrated}"
 METADATA='{"cveIds":["CVE-2024-4603"],"sbomRef":"http://apt-repo/sbom/openssl_3.0.14-1~deb12u2.spdx.json"}'
 
 require_fresh e4
+restart_platform
 stop_gateway_monitoring
 # The lab apt repository also publishes the SPDX document that METADATA's sbomRef points to.
 lab up -d apt-repo

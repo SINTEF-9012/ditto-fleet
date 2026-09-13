@@ -33,17 +33,23 @@ export async function pool(items, concurrency, worker) {
   await Promise.all(runners);
 }
 
-export async function count(filter, { attempts = 20, retryDelayMs = 3000 } = {}) {
+/**
+ * Like ditto(), but retries timeouts (HTTP 408), 5xx responses and network errors, which occur while the
+ * platform catches up with bulk writes. Only for idempotent requests.
+ */
+export async function dittoRetrying(method, path, options = {}, { attempts = 20, retryDelayMs = 3000 } = {}) {
   for (let attempt = 1; ; attempt += 1) {
-    const response = await ditto("GET", `/api/2/search/things/count?filter=${encodeURIComponent(filter)}`).catch(
-      (err) => ({ ok: false, status: 0, text: err.message }),
-    );
-    if (response.ok) return Number(response.text);
-    // While the search index catches up with bulk writes, counts can time out (HTTP 408) or fail transiently.
+    const response = await ditto(method, path, options).catch((err) => ({ ok: false, status: 0, text: err.message }));
     const transient = response.status === 0 || response.status === 408 || response.status >= 500;
-    if (!transient || attempt >= attempts) throw new Error(`count failed: HTTP ${response.status} ${response.text}`);
+    if (response.ok || !transient || attempt >= attempts) return response;
     await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
   }
+}
+
+export async function count(filter) {
+  const response = await dittoRetrying("GET", `/api/2/search/things/count?filter=${encodeURIComponent(filter)}`);
+  if (!response.ok) throw new Error(`count failed: HTTP ${response.status} ${response.text}`);
+  return Number(response.text);
 }
 
 /** Ditto's search index is eventually consistent: wait until it reflects the expected state. */

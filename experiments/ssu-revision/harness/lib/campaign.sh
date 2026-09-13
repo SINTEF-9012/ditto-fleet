@@ -2,6 +2,7 @@
 export MSYS_NO_PATHCONV=1
 export DITTO_VERSION="${DITTO_VERSION:-3.9.7}"
 RAW=../results/raw
+PLATFORM=../../../docker-compose-ditto.yml
 
 lab() { docker compose -f docker-compose.lab.yml "$@"; }
 harness() { lab --profile harness run --rm -T harness "$@"; }
@@ -30,6 +31,33 @@ require_fresh() {
     echo "results/raw already contains $1-* files; move them away before starting the $1 campaign" >&2
     exit 1
   fi
+}
+
+healthy_ditto_services() {
+  local service id healthy=0
+  for service in policies things things-search connectivity gateway; do
+    id=$(docker compose -f "$PLATFORM" ps -q "$service")
+    if [ -n "$id" ] && [ "$(docker inspect --format '{{.State.Health.Status}}' "$id" 2>/dev/null)" = healthy ]; then
+      healthy=$((healthy + 1))
+    fi
+  done
+  echo "$healthy"
+}
+
+# restart_platform: restarts MongoDB, the Ditto services and nginx, so that no campaign inherits caches
+# or memory state from an earlier one, and waits until every Ditto service is healthy and search answers.
+restart_platform() {
+  docker compose -f "$PLATFORM" restart mongodb policies things things-search connectivity gateway nginx >/dev/null 2>&1
+  local deadline=$((SECONDS + 900))
+  until [ "$(healthy_ditto_services)" -eq 5 ] &&
+    curl -sf -u "${DITTO_USERNAME:-ditto}:${DITTO_PASSWORD:-ditto}" \
+      "http://localhost:${DITTO_EXTERNAL_PORT:-8080}/api/2/search/things/count" >/dev/null; do
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      echo "the Ditto platform did not become healthy after the restart" >&2
+      return 1
+    fi
+    sleep 5
+  done
 }
 
 # start_backend TAG [NAME=VALUE...]: (re)creates the lifecycle service, which then logs every event
@@ -85,7 +113,7 @@ finish_campaign() {
   } >> "$RAW/$1-environment.txt"
 }
 
-# record_environment ID: code version, container images, Docker resources and broker state of a campaign.
+# record_environment ID: code version, container images and limits, Docker resources and broker state of a campaign.
 record_environment() {
   {
     echo "campaign: $1$([ "${CONTINUE:-0}" = 1 ] && echo " (continued)")"
@@ -96,9 +124,9 @@ record_environment() {
     echo "host CPU: $(host_cpu)"
     echo "twins in Ditto: $(curl -s -u "${DITTO_USERNAME:-ditto}:${DITTO_PASSWORD:-ditto}" \
       "http://localhost:${DITTO_EXTERNAL_PORT:-8080}/api/2/search/things/count")"
-    echo "containers:"
+    echo "containers (image, image digest, memory limit in bytes, start time):"
     docker ps --format '{{.Names}}' | sort | while read -r name; do
-      docker inspect --format "  ${name} {{.Config.Image}} {{.Image}}" "$name"
+      docker inspect --format "  ${name} {{.Config.Image}} {{.Image}} memLimit={{.HostConfig.Memory}} started={{.State.StartedAt}}" "$name"
     done
     broker_sessions
   } >> "$RAW/$1-environment.txt"

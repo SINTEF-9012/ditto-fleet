@@ -330,16 +330,22 @@ def summarize_e3():
     return f"E3: {len(runs)} runs, {len(queries)} query executions, {wrong} misclassified devices in total"
 
 
-# ---------------------------------------------------------------- container resources (E2-E4)
+# ---------------------------------------------------------------- container resources
 
 RESOURCE_GROUPS = (
-    ("ditto", re.compile(r"^ditto-fleet-(gateway|things|things-search|policies|connectivity|nginx|ditto-ui)-\d+$")),
+    ("things", re.compile(r"^ditto-fleet-things-\d+$")),
+    ("search", re.compile(r"^ditto-fleet-things-search-\d+$")),
+    ("policies", re.compile(r"^ditto-fleet-policies-\d+$")),
+    ("gateway", re.compile(r"^ditto-fleet-(gateway|nginx)-\d+$")),
     ("mongodb", re.compile(r"^ditto-fleet-mongodb-\d+$")),
     ("mosquitto", re.compile(r"^ditto-fleet-mosquitto-\d+$")),
     ("backend", re.compile(r"^ssu-lab-backend-\d+$")),
     ("emulator", re.compile(r"^ssu-lab-emulator-\d+$")),
+    ("gw1", re.compile(r"^ssu-lab-gw1(-[a-z]+)?-\d+$")),
+    ("harness", re.compile(r"^ssu-lab-harness-run-[0-9a-f]+$")),
+    ("annotator", re.compile(r"^ssu-e4-annotator$")),
 )
-RESOURCE_COLUMNS = [f"{group}{kind}" for group, _ in RESOURCE_GROUPS for kind in ("Cpu", "MemMiB")]
+RESOURCE_COLUMNS = [f"{group}{kind}" for group, _ in RESOURCE_GROUPS for kind in ("Cpu", "MemMiB", "PeakMemMiB")]
 
 
 def load_resource_samples(path):
@@ -354,19 +360,22 @@ def load_resource_samples(path):
 
 
 def window_usage(samples, timestamps, start, end):
-    """CPU (percent of one core) and memory (MiB) per group: per-container means over [start, end], summed."""
+    """Per group over [start, end]: mean CPU (percent of one core), mean memory and peak memory (MiB),
+    each summed over the group's containers."""
     per_container = defaultdict(list)
     for _, group, container, cpu, memory in samples[bisect.bisect_left(timestamps, start):bisect.bisect_right(timestamps, end)]:
         per_container[(group, container)].append((cpu, memory))
-    usage = {}
+    usage = defaultdict(lambda: [0.0, 0.0, 0.0])
     for (group, _), values in per_container.items():
-        cpu, memory = usage.get(group, (0.0, 0.0))
-        usage[group] = (cpu + statistics.fmean(v[0] for v in values), memory + statistics.fmean(v[1] for v in values) / 2**20)
+        usage[group][0] += statistics.fmean(v[0] for v in values)
+        usage[group][1] += statistics.fmean(v[1] for v in values) / 2**20
+        usage[group][2] += max(v[1] for v in values) / 2**20
     return usage
 
 
 def summarize_resources(campaign, runs, key_columns, window):
-    """Mean container resource use per condition, over the time window of every measured run."""
+    """Container resource use per condition over the time window of every measured run: the mean of the
+    runs' mean CPU and memory, and the highest peak memory."""
     samples = load_resource_samples(RAW / f"{campaign}-resources.csv")
     timestamps = [sample[0] for sample in samples]
     values = defaultdict(lambda: defaultdict(list))
@@ -375,23 +384,41 @@ def summarize_resources(campaign, runs, key_columns, window):
         start, end = window(run)
         if start is None or end is None:
             continue
-        condition = tuple(int(run[c]) if c == "devices" else run[c] for c in key_columns)
+        condition = tuple(int(run[c]) if run[c].isdigit() else run[c] for c in key_columns)
         run_counts[condition] += 1
-        for group, (cpu, memory) in window_usage(samples, timestamps, start, end).items():
+        for group, (cpu, memory, peak) in window_usage(samples, timestamps, start, end).items():
             values[condition][f"{group}Cpu"].append(cpu)
             values[condition][f"{group}MemMiB"].append(memory)
+            values[condition][f"{group}PeakMemMiB"].append(peak)
     table = []
     for condition in sorted(run_counts):
         entry = {**dict(zip(key_columns, condition)), "runs": run_counts[condition]}
         for column in RESOURCE_COLUMNS:
             observed = values[condition][column]
-            entry[column] = round(statistics.fmean(observed), 1) if observed else None
+            if not observed:
+                entry[column] = None
+            elif column.endswith("PeakMemMiB"):
+                entry[column] = round(max(observed), 1)
+            else:
+                entry[column] = round(statistics.fmean(observed), 1)
         table.append(entry)
     write_csv(f"{campaign}-resources-by-condition.csv", table, [*key_columns, "runs", *RESOURCE_COLUMNS])
     return f"{campaign.upper()} resources: {len(table)} conditions"
 
 
+def duration_window(column):
+    """A run's window: from its startedAt for the duration in the given column."""
+    def window(run):
+        duration = num(run.get(column))
+        if duration is None or not run.get("startedAt"):
+            return None, None
+        start = epoch_ms(run["startedAt"])
+        return start, start + duration
+    return window
+
+
 def coordination_window(run):
+    """From the start of an E2/E4 run (before its assignment query) until its last device completed."""
     fleet = num(run["fleet100Ms"])
     if fleet is None or not run.get("startedAt"):
         return None, None
@@ -403,18 +430,23 @@ def measured_coordination_runs(name):
     return [r for r in read_csv(RAW / name) if not_warmup(r) and r["complete"] == "true"]
 
 
+def summarize_e0_resources():
+    runs = [r for r in read_csv(RAW / "e0-runs.csv") if not_warmup(r) and r["converged"] == "true"]
+    return summarize_resources("e0", runs, ["direction"], duration_window("totalMs"))
+
+
+def summarize_e1_resources():
+    runs = [r for r in read_csv(RAW / "e1-assignment.csv") if not_warmup(r)]
+    return summarize_resources("e1", runs, ["registeredTwins"], duration_window("totalMs"))
+
+
 def summarize_e2_resources():
     runs = measured_coordination_runs("e2-coordination.csv")
     return summarize_resources("e2", runs, ["mode", "profile", "devices"], coordination_window)
 
 
 def summarize_e3_resources():
-    def window(run):
-        if not run.get("startedAt"):
-            return None, None
-        start = epoch_ms(run["startedAt"])
-        return start, start + float(run["terminalMs"])
-    return summarize_resources("e3", read_csv(RAW / "e3-runs.csv"), ["devices"], window)
+    return summarize_resources("e3", read_csv(RAW / "e3-runs.csv"), ["devices"], duration_window("terminalMs"))
 
 
 def summarize_e4_resources():
@@ -425,7 +457,9 @@ def summarize_e4_resources():
 def main():
     steps = [
         ("e0-runs.csv", summarize_e0),
+        ("e0-resources.csv", summarize_e0_resources),
         ("e1-assignment.csv", summarize_e1),
+        ("e1-resources.csv", summarize_e1_resources),
         ("e2-coordination.csv", summarize_e2),
         ("e2-lifecycle.csv", summarize_e2_stages),
         ("e2-resources.csv", summarize_e2_resources),

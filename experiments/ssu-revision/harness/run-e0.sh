@@ -8,6 +8,7 @@ cd "$(dirname "$0")/../lab"
 . ../harness/lib/campaign.sh
 
 require_fresh e0
+restart_platform
 lab up -d apt-repo
 # A recreated gateway starts from OpenSSL 3.0.11, the state e0-prepare.js registers in its twin.
 lab up -d --no-deps --force-recreate gw1 gw1-installer gw1-verifier gw1-monitoring
@@ -17,6 +18,7 @@ wait_log "verifier agent for" lab logs gw1-verifier
 start_backend e0
 harness /harness/e0-prepare.js
 record_environment e0
+start_resource_sampler e0
 
 harness /harness/e0-walkthrough.js --runs "${RUNS:-40}" --warmup "${WARMUP:-2}"
 finish_campaign e0

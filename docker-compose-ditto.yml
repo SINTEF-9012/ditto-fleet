@@ -3,6 +3,10 @@
 #
 # Copyright (c) 2019 Contributors to the Eclipse Foundation
 # SPDX-License-Identifier: EPL-2.0
+#
+# Memory limits are higher than upstream's (MongoDB 256 MiB; policies, things, things-search and
+# gateway 512 MiB): with 10,000 twins those limits exhausted the heaps of things and things-search,
+# which may use 50% of their container limit (-XX:MaxRAMPercentage=50).
 
 services:
   mongodb:
@@ -10,9 +14,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256m
+          memory: 1g
     restart: always
-    command: mongod --storageEngine wiredTiger --noscripting
+    command: mongod --storageEngine wiredTiger --noscripting --wiredTigerCacheSizeGB 0.5
     user: mongodb
     ports:
       - 27017:27017
@@ -27,7 +31,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 768m
     restart: always
     networks:
       default:
@@ -53,7 +57,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 1536m
     restart: always
     networks:
       default:
@@ -84,7 +88,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 1536m
     restart: always
     networks:
       default:
@@ -140,7 +144,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 1g
     restart: always
     networks:
       default:

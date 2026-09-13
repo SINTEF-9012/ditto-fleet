@@ -13,6 +13,7 @@ PROFILES="${PROFILES:-zero calibrated}"
 MODES="${MODES:-dt direct}"
 
 require_fresh e2
+restart_platform
 stop_gateway_monitoring
 start_backend e2
 record_environment e2

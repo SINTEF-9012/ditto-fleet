@@ -22,7 +22,7 @@ import {
 
 const { values: args } = parseArgs({
   options: {
-    counts: { type: "string", default: "100,500,1000,2500,5000" },
+    counts: { type: "string", default: "100,500,1000,2500,5000,10000" },
     reps: { type: "string", default: "10" },
     warmup: { type: "string", default: "2" },
     vulnerable: { type: "string", default: "0.2" },
