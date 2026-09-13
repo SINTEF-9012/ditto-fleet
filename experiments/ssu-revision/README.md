@@ -78,7 +78,10 @@ python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.
 ## Measurement notes
 
 - **Platform state:** every campaign first restarts MongoDB, the Ditto services and nginx, so that
-  it does not inherit caches or memory state from an earlier campaign. E1 first deletes the
+  it does not inherit caches or memory state from an earlier campaign. The first requests after a
+  restart are several times slower, so `harness/warm-up.js` then runs ten rounds of the experiments'
+  request types (searches, counts, desired-state writes and deletions, merge patches, reads) on 50
+  temporary twins, which it deletes afterwards. E1 first deletes the
   registered-only twins of earlier runs and grows the population from 100 to 10,000 twins. E2–E4
   then run with those 10,000 registered-only twins still in the platform; the environment record
   gives the number of twins in Ditto.

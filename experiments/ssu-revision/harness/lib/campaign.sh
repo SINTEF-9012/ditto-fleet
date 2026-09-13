@@ -77,6 +77,8 @@ restart_platform() {
     fi
     sleep 5
   done
+  # The first requests after a restart are several times slower than later ones.
+  harness /harness/warm-up.js
 }
 
 # start_backend TAG [NAME=VALUE...]: (re)creates the lifecycle service, which then logs every event
