@@ -1,0 +1,13 @@
+{
+  "initialVersions": {
+    "openssl": "3.0.11-1~deb12u2",
+    "libssl3": "3.0.11-1~deb12u2"
+  },
+  "install": { "type": "fixed", "ms": 0 },
+  "verify": { "type": "fixed", "ms": 0 },
+  "installFailureRate": 0,
+  "verifyFailureRate": 0,
+  "monitoredPackages": ["openssl"],
+  "monitorIntervalMs": 0,
+  "offline": null
+}

@@ -1,0 +1,150 @@
+# Lab for the SSU revision experiments. Requires the platform from
+# docker-compose-ditto.yml (Ditto, nginx, Mosquitto) on the ditto-fleet network.
+
+name: ssu-lab
+
+services:
+  repo-builder:
+    image: docker.io/debian:bookworm
+    environment:
+      ARCH: ${LAB_ARCH:-amd64}
+    volumes:
+      - ./repo/build-repo.sh:/build-repo.sh:ro
+      - lab-repo:/repo
+      - lab-repo-key:/keys
+    command: ["bash", "/build-repo.sh"]
+
+  apt-repo:
+    image: docker.io/nginx:1.27-alpine
+    volumes:
+      - lab-repo:/usr/share/nginx/html:ro
+    depends_on:
+      repo-builder:
+        condition: service_completed_successfully
+
+  backend:
+    build: ../../../backend
+    image: ditto-fleet/backend:dev
+    environment:
+      DITTO_SERVER: nginx:80
+      MQTT_BROKER: mqtt://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-lab}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-lab}
+      LEGACY_TRUST_AGENT: "off"
+      LOG_LEVEL: info
+      SW_EVENT_LOG: /results/${RUN_TAG:-lab}-lifecycle.csv
+      SW_RECONCILE_INTERVAL_MS: ${SW_RECONCILE_INTERVAL_MS:-0}
+      SW_STALE_AFTER_MS: ${SW_STALE_AFTER_MS:-30000}
+      SW_HTTP_CONCURRENCY: ${SW_HTTP_CONCURRENCY:-32}
+    volumes:
+      - ../results/raw:/results
+
+  gw1:
+    build: ./gateway
+    image: ditto-fleet/lab-gateway:dev
+    hostname: gw1
+    environment:
+      INITIAL_OPENSSL_VERSION: 3.0.11-1~deb12u2
+    volumes:
+      - lab-repo:/lab-repo:ro
+    depends_on:
+      - apt-repo
+
+  gw1-installer:
+    build: ../../../device-agents
+    image: ditto-fleet/device-agents:dev
+    pid: "service:gw1"
+    privileged: true
+    environment:
+      AGENT_ROLE: installer
+      THING_ID: no.sintef.sct.giot:gw1
+      APT_EXEC: nsenter
+      TARGET_PID: "1"
+      MQTT_BROKER_URL: mqtt://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-lab}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-lab}
+    depends_on:
+      - gw1
+
+  gw1-verifier:
+    image: ditto-fleet/device-agents:dev
+    pid: "service:gw1"
+    privileged: true
+    environment:
+      AGENT_ROLE: verifier
+      THING_ID: no.sintef.sct.giot:gw1
+      APT_EXEC: nsenter
+      TARGET_PID: "1"
+      MQTT_BROKER_URL: mqtt://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-lab}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-lab}
+    depends_on:
+      - gw1-installer
+
+  gw1-monitoring:
+    build: ../../../monitoring-agent
+    image: ditto-fleet/monitoring-agent:dev
+    # Reads gw1's dpkg database through /proc/1/root of the shared PID namespace.
+    pid: "service:gw1"
+    cap_add:
+      - SYS_PTRACE
+    user: root
+    entrypoint: ["telegraf"]
+    environment:
+      HOST_NAME: gw1
+      IP_ADDRESS: gw1
+      MONITOR_INTERVAL: ${MONITOR_INTERVAL:-10s}
+      MQTT_BROKER: tcp://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-lab}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-lab}
+      DPKG_ADMINDIR: /proc/1/root/var/lib/dpkg
+    volumes:
+      - ./monitoring/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - gw1
+
+  emulator:
+    image: ditto-fleet/device-agents:dev
+    profiles: ["emulator"]
+    environment:
+      AGENT_ROLE: emulator
+      # Fixed name: every run then overwrites the same retained readiness announcement.
+      EMU_INSTANCE: emulator
+      MQTT_BROKER_URL: mqtt://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-lab}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-lab}
+      TOPIC_PREFIX: ${TOPIC_PREFIX:-no.sintef.sct.giot.things}
+      EMU_CLEAN_SESSION: ${EMU_CLEAN_SESSION:-false}
+      EMU_COUNT: ${EMU_COUNT:-10}
+      EMU_START_INDEX: ${EMU_START_INDEX:-1}
+      EMU_SEED: ${EMU_SEED:-42}
+      EMU_RUN_ID: ${RUN_TAG:-lab}
+      EMU_PROFILE: /profiles/${EMU_PROFILE:-zero}.json
+      EMU_TRUTH_FILE: /results/${RUN_TAG:-lab}-truth.csv
+    volumes:
+      - ./profiles:/profiles:ro
+      - ../results/raw:/results
+
+  harness:
+    image: ditto-fleet/backend:dev
+    profiles: ["harness"]
+    entrypoint: ["node"]
+    environment:
+      DITTO_SERVER: nginx:80
+      DITTO_VERSION: ${DITTO_VERSION:-}
+      MQTT_BROKER: mqtt://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-lab}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-lab}
+    volumes:
+      - ../harness:/harness:ro
+      - ./profiles:/profiles
+      - ../results/raw:/results
+
+networks:
+  default:
+    name: ditto-fleet
+    external: true
+
+volumes:
+  lab-repo:
+  lab-repo-key:

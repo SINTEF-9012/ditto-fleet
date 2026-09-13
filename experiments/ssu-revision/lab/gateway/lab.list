@@ -1,0 +1,1 @@
+deb [signed-by=/lab-repo/keyring.gpg] http://apt-repo/ ./
