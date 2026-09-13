@@ -16,6 +16,7 @@ stop_gateway_monitoring
 start_backend e3 SW_RECONCILE_INTERVAL_MS="${SW_RECONCILE_INTERVAL_MS:-10000}" \
   SW_STALE_AFTER_MS="${SW_STALE_AFTER_MS:-120000}"
 record_environment e3
+start_resource_sampler e3
 
 for rep in $(seq 1 "$REPS"); do
   run="e3-${N}-${rep}"

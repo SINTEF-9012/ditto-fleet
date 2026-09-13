@@ -29,6 +29,15 @@ with columns `ts, component, event, workflowId, thingId, package, stage, detail`
 workflowId, event` with event `installed`, `installation_failed`, `verified`,
 `verification_failed`, `offline_start` or `offline_end`.
 
+**`<id>-resources.csv`** (E2–E4): `ts, container, cpuPercent, memBytes`, recorded by
+`harness/resource-sampler.js` through the Docker Engine API about once per second per container.
+`cpuPercent` is CPU use in percent of one core (computed as `docker stats` does), and `memBytes`
+is memory use without the page cache.
+- **Summary:** `summary/<id>-resources-by-condition.csv` averages the samples over the time window
+  of each measured run, from its start until the last device completed.
+- **Container groups:** the values are summed per group — Ditto services, MongoDB, Mosquitto,
+  lifecycle backend and emulator.
+
 ## E0
 
 **`e0-runs.csv`**: one row per update of `gw1`.

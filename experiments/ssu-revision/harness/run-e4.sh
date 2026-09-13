@@ -22,6 +22,7 @@ docker rm -f ssu-e4-annotator >/dev/null 2>&1 || true
 lab --profile harness run -d --name ssu-e4-annotator harness /harness/e4-annotator.js >/dev/null
 wait_log "vulnerability annotator subscribed" docker logs ssu-e4-annotator
 record_environment e4
+start_resource_sampler e4
 
 for rep in $(seq 0 "$REPS"); do
   warmup=()

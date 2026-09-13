@@ -157,6 +157,7 @@ appendCsvRow(fs, args["runs-out"], {
   rep: Number(args.rep),
   workflowId: workflow,
   devices: n,
+  startedAt: new Date(assignedAt).toISOString(),
   completed: completed.size,
   failedInstallation: failedInstall.size,
   failedVerification: failedVerify.size,

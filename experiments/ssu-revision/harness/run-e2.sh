@@ -16,6 +16,7 @@ require_fresh e2
 stop_gateway_monitoring
 start_backend e2
 record_environment e2
+start_resource_sampler e2
 
 for profile in $PROFILES; do
   for n in $COUNTS; do

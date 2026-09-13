@@ -62,9 +62,20 @@ broker_sessions() {
     -t '$SYS/broker/store/messages/count' | tr '\n' ' ')"
 }
 
-# finish_campaign ID: stops the lifecycle service, so that its event log ends with the campaign,
-# and appends the end time and the broker state to the environment record.
+# start_resource_sampler ID: records every container's CPU and memory use, about once per second and on
+# the clock of the measurements, to results/raw/ID-resources.csv until the campaign finishes.
+start_resource_sampler() {
+  docker rm -f ssu-resource-sampler >/dev/null 2>&1 || true
+  lab --profile harness run -d --rm --name ssu-resource-sampler \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    harness /harness/resource-sampler.js --out "/results/$1-resources.csv" >/dev/null
+  wait_log "resource sampler started" docker logs ssu-resource-sampler
+}
+
+# finish_campaign ID: stops the resource sampler and the lifecycle service, so that their records end
+# with the campaign, and appends the end time and the broker state to the environment record.
 finish_campaign() {
+  docker stop ssu-resource-sampler >/dev/null 2>&1 || true
   lab stop backend >/dev/null 2>&1 || true
   {
     echo "finished: $(date -u +%Y-%m-%dT%H:%M:%SZ)"

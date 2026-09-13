@@ -8,12 +8,14 @@ Warm-up runs are excluded everywhere. Only the Python standard library is used,
 and the output depends only on the raw files, so re-running reproduces it exactly.
 """
 
+import bisect
 import csv
 import json
 import math
 import re
 import statistics
-from collections import defaultdict
+from collections import Counter, defaultdict
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -68,6 +70,10 @@ def write_dat(name, rows, columns):
 
 def not_warmup(row):
     return row.get("warmup", "false") != "true"
+
+
+def epoch_ms(iso):
+    return datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp() * 1000
 
 
 # ---------------------------------------------------------------- E0
@@ -324,14 +330,109 @@ def summarize_e3():
     return f"E3: {len(runs)} runs, {len(queries)} query executions, {wrong} misclassified devices in total"
 
 
+# ---------------------------------------------------------------- container resources (E2-E4)
+
+RESOURCE_GROUPS = (
+    ("ditto", re.compile(r"^ditto-fleet-(gateway|things|things-search|policies|connectivity|nginx|ditto-ui)-\d+$")),
+    ("mongodb", re.compile(r"^ditto-fleet-mongodb-\d+$")),
+    ("mosquitto", re.compile(r"^ditto-fleet-mosquitto-\d+$")),
+    ("backend", re.compile(r"^ssu-lab-backend-\d+$")),
+    ("emulator", re.compile(r"^ssu-lab-emulator-\d+$")),
+)
+RESOURCE_COLUMNS = [f"{group}{kind}" for group, _ in RESOURCE_GROUPS for kind in ("Cpu", "MemMiB")]
+
+
+def load_resource_samples(path):
+    samples = []
+    with open(path, newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            group = next((name for name, pattern in RESOURCE_GROUPS if pattern.match(row["container"])), None)
+            if group:
+                samples.append((float(row["ts"]), group, row["container"], float(row["cpuPercent"]), float(row["memBytes"])))
+    samples.sort()
+    return samples
+
+
+def window_usage(samples, timestamps, start, end):
+    """CPU (percent of one core) and memory (MiB) per group: per-container means over [start, end], summed."""
+    per_container = defaultdict(list)
+    for _, group, container, cpu, memory in samples[bisect.bisect_left(timestamps, start):bisect.bisect_right(timestamps, end)]:
+        per_container[(group, container)].append((cpu, memory))
+    usage = {}
+    for (group, _), values in per_container.items():
+        cpu, memory = usage.get(group, (0.0, 0.0))
+        usage[group] = (cpu + statistics.fmean(v[0] for v in values), memory + statistics.fmean(v[1] for v in values) / 2**20)
+    return usage
+
+
+def summarize_resources(campaign, runs, key_columns, window):
+    """Mean container resource use per condition, over the time window of every measured run."""
+    samples = load_resource_samples(RAW / f"{campaign}-resources.csv")
+    timestamps = [sample[0] for sample in samples]
+    values = defaultdict(lambda: defaultdict(list))
+    run_counts = Counter()
+    for run in runs:
+        start, end = window(run)
+        if start is None or end is None:
+            continue
+        condition = tuple(int(run[c]) if c == "devices" else run[c] for c in key_columns)
+        run_counts[condition] += 1
+        for group, (cpu, memory) in window_usage(samples, timestamps, start, end).items():
+            values[condition][f"{group}Cpu"].append(cpu)
+            values[condition][f"{group}MemMiB"].append(memory)
+    table = []
+    for condition in sorted(run_counts):
+        entry = {**dict(zip(key_columns, condition)), "runs": run_counts[condition]}
+        for column in RESOURCE_COLUMNS:
+            observed = values[condition][column]
+            entry[column] = round(statistics.fmean(observed), 1) if observed else None
+        table.append(entry)
+    write_csv(f"{campaign}-resources-by-condition.csv", table, [*key_columns, "runs", *RESOURCE_COLUMNS])
+    return f"{campaign.upper()} resources: {len(table)} conditions"
+
+
+def coordination_window(run):
+    fleet = num(run["fleet100Ms"])
+    if fleet is None or not run.get("startedAt"):
+        return None, None
+    start = epoch_ms(run["startedAt"])
+    return start, start + (num(run["queryMs"]) or 0) + fleet
+
+
+def measured_coordination_runs(name):
+    return [r for r in read_csv(RAW / name) if not_warmup(r) and r["complete"] == "true"]
+
+
+def summarize_e2_resources():
+    runs = measured_coordination_runs("e2-coordination.csv")
+    return summarize_resources("e2", runs, ["mode", "profile", "devices"], coordination_window)
+
+
+def summarize_e3_resources():
+    def window(run):
+        if not run.get("startedAt"):
+            return None, None
+        start = epoch_ms(run["startedAt"])
+        return start, start + float(run["terminalMs"])
+    return summarize_resources("e3", read_csv(RAW / "e3-runs.csv"), ["devices"], window)
+
+
+def summarize_e4_resources():
+    runs = measured_coordination_runs("e4-coordination.csv")
+    return summarize_resources("e4", runs, ["profile", "devices"], coordination_window)
+
+
 def main():
     steps = [
         ("e0-runs.csv", summarize_e0),
         ("e1-assignment.csv", summarize_e1),
         ("e2-coordination.csv", summarize_e2),
         ("e2-lifecycle.csv", summarize_e2_stages),
+        ("e2-resources.csv", summarize_e2_resources),
         ("e3-queries.csv", summarize_e3),
+        ("e3-resources.csv", summarize_e3_resources),
         ("e4-coordination.csv", summarize_e4),
+        ("e4-resources.csv", summarize_e4_resources),
     ]
     for required, step in steps:
         if (RAW / required).exists():

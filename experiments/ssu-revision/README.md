@@ -96,6 +96,9 @@ python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.
   After each rep, `harness/purge-sessions.js` removes the stored sessions so that later reps do not
   publish into them. The lifecycle service also re-dispatches non-converged twins
   (`SW_RECONCILE_INTERVAL_MS=10000`, `SW_STALE_AFTER_MS=120000`).
+- **Resource use:** during E2–E4, `harness/resource-sampler.js` records every container's CPU and
+  memory use about once per second through the Docker Engine API, on the clock of the
+  measurements. The summary averages the samples over the time window of each run.
 - **Host:** `<id>-environment.txt` records the Docker resources; report the host CPU and memory
   together with the results.
 
