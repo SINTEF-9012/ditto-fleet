@@ -33,6 +33,15 @@ require_fresh() {
   fi
 }
 
+# ditto_via_nginx PATH: GET request to Ditto through nginx inside the Docker network, the way every lab
+# component reaches Ditto (the published host port is not needed and can be unavailable on Docker Desktop).
+ditto_via_nginx() {
+  local credentials
+  credentials=$(printf '%s' "${DITTO_USERNAME:-ditto}:${DITTO_PASSWORD:-ditto}" | base64)
+  docker exec "$(docker compose -f "$PLATFORM" ps -q nginx)" wget -q -O - -T 60 \
+    --header "Authorization: Basic ${credentials}" "http://127.0.0.1:80$1"
+}
+
 healthy_ditto_services() {
   local service id healthy=0
   for service in policies things things-search connectivity gateway; do
@@ -47,8 +56,8 @@ healthy_ditto_services() {
 # restart_platform: restarts MongoDB, the Ditto services and nginx, so that no campaign inherits caches
 # or memory state from an earlier one, and waits until every Ditto service is healthy and search answers.
 # Every Ditto service is stopped before any starts, so that they form a fresh Pekko cluster (without
-# automatic downing, members that vanished would block it); nginx starts last because it resolves the
-# gateway's address only at startup.
+# automatic downing, members that vanished would block it). nginx is recreated last: it resolves the
+# gateway's address only at startup, and recreation also restores its published port.
 restart_platform() {
   local ditto="policies things things-search connectivity gateway" deadline=$((SECONDS + 900))
   docker compose -f "$PLATFORM" stop nginx $ditto mongodb >/dev/null 2>&1
@@ -60,9 +69,8 @@ restart_platform() {
     fi
     sleep 5
   done
-  docker compose -f "$PLATFORM" start nginx >/dev/null 2>&1
-  until curl -sf -u "${DITTO_USERNAME:-ditto}:${DITTO_PASSWORD:-ditto}" \
-    "http://localhost:${DITTO_EXTERNAL_PORT:-8080}/api/2/search/things/count" >/dev/null; do
+  docker compose -f "$PLATFORM" up -d --no-deps --force-recreate nginx >/dev/null 2>&1
+  until ditto_via_nginx /api/2/search/things/count >/dev/null 2>&1; do
     if [ "$SECONDS" -ge "$deadline" ]; then
       echo "Ditto does not answer through nginx after the restart" >&2
       return 1
@@ -133,8 +141,7 @@ record_environment() {
     echo "modified tracked files: $(git status --porcelain --untracked-files=no | wc -l)"
     docker info --format 'docker: {{.ServerVersion}}, {{.NCPU}} CPUs, {{.MemTotal}} bytes memory, {{.OperatingSystem}}, kernel {{.KernelVersion}}'
     echo "host CPU: $(host_cpu)"
-    echo "twins in Ditto: $(curl -s -u "${DITTO_USERNAME:-ditto}:${DITTO_PASSWORD:-ditto}" \
-      "http://localhost:${DITTO_EXTERNAL_PORT:-8080}/api/2/search/things/count")"
+    echo "twins in Ditto: $(ditto_via_nginx /api/2/search/things/count)"
     echo "containers (image, image digest, memory limit in bytes, start time):"
     docker ps --format '{{.Names}}' | sort | while read -r name; do
       docker inspect --format "  ${name} {{.Config.Image}} {{.Image}} memLimit={{.HostConfig.Memory}} started={{.State.StartedAt}}" "$name"
