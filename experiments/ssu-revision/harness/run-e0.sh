@@ -19,6 +19,6 @@ harness /harness/e0-prepare.js
 record_environment e0
 
 harness /harness/e0-walkthrough.js --runs "${RUNS:-40}" --warmup "${WARMUP:-2}"
+finish_campaign e0
 harness /harness/make-calibrated-profiles.js
-broker_sessions >> "$RAW/e0-environment.txt"
 echo "E0 campaign finished"

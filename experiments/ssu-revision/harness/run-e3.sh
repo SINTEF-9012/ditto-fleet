@@ -31,5 +31,5 @@ for rep in $(seq 1 "$REPS"); do
   # The next rep's dispatches would otherwise be queued in this rep's stored sessions.
   harness /harness/purge-sessions.js --client-prefix "emu-${run}-" --count "$N"
 done
-broker_sessions >> "$RAW/e3-environment.txt"
+finish_campaign e3
 echo "E3 campaign finished"

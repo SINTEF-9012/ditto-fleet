@@ -46,5 +46,5 @@ for profile in $PROFILES; do
     done
   done
 done
-broker_sessions >> "$RAW/e2-environment.txt"
+finish_campaign e2
 echo "E2 campaign finished"

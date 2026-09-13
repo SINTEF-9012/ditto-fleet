@@ -16,4 +16,5 @@ harness /harness/e1-assignment.js \
   --warmup "${WARMUP:-2}" \
   --vulnerable "${VULNERABLE:-0.2}" \
   --concurrency "${CONCURRENCY:-10}"
+finish_campaign e1
 echo "E1 campaign finished"

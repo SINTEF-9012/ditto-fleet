@@ -9,7 +9,8 @@ summaries.
 
 **`<id>-environment.txt`**: git commit, count of modified tracked files, Docker resources, host CPU,
 number of twins in Ditto, container images with digests, and the broker's stored sessions at the
-start and end of the campaign.
+start; the end time and the final broker state are appended when the campaign finishes (the
+lifecycle service is stopped then, so its event log ends with the campaign).
 
 **`<id>-lifecycle.csv`**: event log of the lifecycle service (`backend/src/TimestampLogger.js`)
 with columns `ts, component, event, workflowId, thingId, package, stage, detail` (`detail` is JSON).

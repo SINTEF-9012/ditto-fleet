@@ -62,6 +62,16 @@ broker_sessions() {
     -t '$SYS/broker/store/messages/count' | tr '\n' ' ')"
 }
 
+# finish_campaign ID: stops the lifecycle service, so that its event log ends with the campaign,
+# and appends the end time and the broker state to the environment record.
+finish_campaign() {
+  lab stop backend >/dev/null 2>&1 || true
+  {
+    echo "finished: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    broker_sessions
+  } >> "$RAW/$1-environment.txt"
+}
+
 # record_environment ID: code version, container images, Docker resources and broker state of a campaign.
 record_environment() {
   {

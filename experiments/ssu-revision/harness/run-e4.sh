@@ -39,5 +39,5 @@ for rep in $(seq 0 "$REPS"); do
 done
 
 docker rm -f ssu-e4-annotator >/dev/null
-broker_sessions >> "$RAW/e4-environment.txt"
+finish_campaign e4
 echo "E4 campaign finished"
