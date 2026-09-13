@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Scripts and configuration files that are executed or parsed inside Linux containers
+# must keep LF line endings on every platform (a CRLF shebang fails with "no such file").
+*.sh text eol=lf
+*.conf text eol=lf
+*.list text eol=lf
+Dockerfile text eol=lf

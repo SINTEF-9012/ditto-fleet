@@ -13,6 +13,7 @@ COPY telegraf.conf /etc/telegraf/telegraf.conf
 # COPY --chmod=777 geoip/geoip.conf /etc/telegraf/geoip/geoip.conf
 # COPY --chmod=777 geoip/GeoLite2-City.mmdb /etc/telegraf/geoip/GeoLite2-City.mmdb
 COPY dpkg/dpkg.sh /etc/telegraf/dpkg.sh
+RUN sed -i 's/\r$//' /etc/telegraf/dpkg.sh && chmod +x /etc/telegraf/dpkg.sh
 
 ## ENTRYPOINT [ "/bin/telegraf" ]
 ## ENTRYPOINT ["/usr/bin/telegraf"]
