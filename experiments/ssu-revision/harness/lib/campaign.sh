@@ -46,14 +46,25 @@ healthy_ditto_services() {
 
 # restart_platform: restarts MongoDB, the Ditto services and nginx, so that no campaign inherits caches
 # or memory state from an earlier one, and waits until every Ditto service is healthy and search answers.
+# Every Ditto service is stopped before any starts, so that they form a fresh Pekko cluster (without
+# automatic downing, members that vanished would block it); nginx starts last because it resolves the
+# gateway's address only at startup.
 restart_platform() {
-  docker compose -f "$PLATFORM" restart mongodb policies things things-search connectivity gateway nginx >/dev/null 2>&1
-  local deadline=$((SECONDS + 900))
-  until [ "$(healthy_ditto_services)" -eq 5 ] &&
-    curl -sf -u "${DITTO_USERNAME:-ditto}:${DITTO_PASSWORD:-ditto}" \
-      "http://localhost:${DITTO_EXTERNAL_PORT:-8080}/api/2/search/things/count" >/dev/null; do
+  local ditto="policies things things-search connectivity gateway" deadline=$((SECONDS + 900))
+  docker compose -f "$PLATFORM" stop nginx $ditto mongodb >/dev/null 2>&1
+  docker compose -f "$PLATFORM" start mongodb $ditto >/dev/null 2>&1
+  until [ "$(healthy_ditto_services)" -eq 5 ]; do
     if [ "$SECONDS" -ge "$deadline" ]; then
-      echo "the Ditto platform did not become healthy after the restart" >&2
+      echo "the Ditto services did not become healthy after the restart" >&2
+      return 1
+    fi
+    sleep 5
+  done
+  docker compose -f "$PLATFORM" start nginx >/dev/null 2>&1
+  until curl -sf -u "${DITTO_USERNAME:-ditto}:${DITTO_PASSWORD:-ditto}" \
+    "http://localhost:${DITTO_EXTERNAL_PORT:-8080}/api/2/search/things/count" >/dev/null; do
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      echo "Ditto does not answer through nginx after the restart" >&2
       return 1
     fi
     sleep 5
