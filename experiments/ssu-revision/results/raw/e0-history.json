@@ -1,0 +1,359 @@
+{
+  "thing": "no.sintef.sct.giot:gw1",
+  "workflowId": "wf-e0-1789328074334-3",
+  "revisions": [
+    {
+      "revision": 1727,
+      "historicalHeaders": {
+        "ditto-originator": "nginx:ditto",
+        "correlation-id": "b8956b2d-1afe-4543-aa06-02ed4650448a",
+        "entity-revision": 1727
+      },
+      "twin": {
+        "features": {
+          "softwareManagement": {
+            "properties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.11-1~deb12u2",
+                  "installationStatus": "installed",
+                  "workflowId": "wf-e0-1789328064314-2",
+                  "verificationStatus": "passed",
+                  "monitoredVersion": "3.0.11-1~deb12u2",
+                  "monitoredAt": "2026-09-13T19:34:32.026Z",
+                  "installationFinishedAt": "2026-09-13T19:34:25.856Z",
+                  "installDurationMs": 1375,
+                  "verificationChecks": {
+                    "dpkgState": true,
+                    "fileIntegrity": true,
+                    "binaryVersion": true,
+                    "tlsHandshake": true
+                  },
+                  "restartRequired": [],
+                  "verificationFinishedAt": "2026-09-13T19:34:26.173Z",
+                  "verifyDurationMs": 316
+                }
+              }
+            },
+            "desiredProperties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.11-1~deb12u2",
+                  "debs": [
+                    "openssl",
+                    "libssl3"
+                  ],
+                  "repository": "http://apt-repo/ ./",
+                  "workflowId": "wf-e0-1789328064314-2",
+                  "assignedAt": "2026-09-13T19:34:24.361Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 1728,
+      "historicalHeaders": {
+        "ditto-originator": "nginx:ditto",
+        "correlation-id": "wf-e0-1789328074334-3",
+        "entity-revision": 1728
+      },
+      "twin": {
+        "features": {
+          "softwareManagement": {
+            "properties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.11-1~deb12u2",
+                  "installationStatus": "installed",
+                  "workflowId": "wf-e0-1789328064314-2",
+                  "verificationStatus": "passed",
+                  "monitoredVersion": "3.0.11-1~deb12u2",
+                  "monitoredAt": "2026-09-13T19:34:32.026Z",
+                  "installationFinishedAt": "2026-09-13T19:34:25.856Z",
+                  "installDurationMs": 1375,
+                  "verificationChecks": {
+                    "dpkgState": true,
+                    "fileIntegrity": true,
+                    "binaryVersion": true,
+                    "tlsHandshake": true
+                  },
+                  "restartRequired": [],
+                  "verificationFinishedAt": "2026-09-13T19:34:26.173Z",
+                  "verifyDurationMs": 316
+                }
+              }
+            },
+            "desiredProperties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "debs": [
+                    "openssl",
+                    "libssl3"
+                  ],
+                  "repository": "http://apt-repo/ ./",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "assignedAt": "2026-09-13T19:34:34.364Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 1729,
+      "historicalHeaders": {
+        "ditto-originator": "nginx:ditto",
+        "correlation-id": "wf-e0-1789328074334-3",
+        "entity-revision": 1729
+      },
+      "twin": {
+        "features": {
+          "softwareManagement": {
+            "properties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.11-1~deb12u2",
+                  "installationStatus": "installing",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "verificationStatus": "pending",
+                  "monitoredVersion": "3.0.11-1~deb12u2",
+                  "monitoredAt": "2026-09-13T19:34:32.026Z",
+                  "installationFinishedAt": "2026-09-13T19:34:25.856Z",
+                  "installDurationMs": 1375,
+                  "verificationChecks": {
+                    "dpkgState": true,
+                    "fileIntegrity": true,
+                    "binaryVersion": true,
+                    "tlsHandshake": true
+                  },
+                  "restartRequired": [],
+                  "verificationFinishedAt": "2026-09-13T19:34:26.173Z",
+                  "verifyDurationMs": 316
+                }
+              }
+            },
+            "desiredProperties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "debs": [
+                    "openssl",
+                    "libssl3"
+                  ],
+                  "repository": "http://apt-repo/ ./",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "assignedAt": "2026-09-13T19:34:34.364Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 1730,
+      "historicalHeaders": {
+        "ditto-originator": "nginx:ditto",
+        "correlation-id": "wf-e0-1789328074334-3",
+        "entity-revision": 1730
+      },
+      "twin": {
+        "features": {
+          "softwareManagement": {
+            "properties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "installationStatus": "installed",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "verificationStatus": "pending",
+                  "monitoredVersion": "3.0.11-1~deb12u2",
+                  "monitoredAt": "2026-09-13T19:34:32.026Z",
+                  "installationFinishedAt": "2026-09-13T19:34:35.798Z",
+                  "installDurationMs": 1362,
+                  "verificationChecks": {
+                    "dpkgState": true,
+                    "fileIntegrity": true,
+                    "binaryVersion": true,
+                    "tlsHandshake": true
+                  },
+                  "restartRequired": [],
+                  "verificationFinishedAt": "2026-09-13T19:34:26.173Z",
+                  "verifyDurationMs": 316
+                }
+              }
+            },
+            "desiredProperties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "debs": [
+                    "openssl",
+                    "libssl3"
+                  ],
+                  "repository": "http://apt-repo/ ./",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "assignedAt": "2026-09-13T19:34:34.364Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 1731,
+      "historicalHeaders": {
+        "ditto-originator": "nginx:ditto",
+        "correlation-id": "wf-e0-1789328074334-3",
+        "entity-revision": 1731
+      },
+      "twin": {
+        "features": {
+          "softwareManagement": {
+            "properties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "installationStatus": "installed",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "verificationStatus": "passed",
+                  "monitoredVersion": "3.0.11-1~deb12u2",
+                  "monitoredAt": "2026-09-13T19:34:32.026Z",
+                  "installationFinishedAt": "2026-09-13T19:34:35.798Z",
+                  "installDurationMs": 1362,
+                  "verificationChecks": {
+                    "dpkgState": true,
+                    "fileIntegrity": true,
+                    "binaryVersion": true,
+                    "tlsHandshake": true
+                  },
+                  "restartRequired": [],
+                  "verificationFinishedAt": "2026-09-13T19:34:36.123Z",
+                  "verifyDurationMs": 323
+                }
+              }
+            },
+            "desiredProperties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "debs": [
+                    "openssl",
+                    "libssl3"
+                  ],
+                  "repository": "http://apt-repo/ ./",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "assignedAt": "2026-09-13T19:34:34.364Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 1732,
+      "historicalHeaders": {
+        "ditto-originator": "nginx:ditto",
+        "correlation-id": "wf-e0-1789328074334-3",
+        "entity-revision": 1732
+      },
+      "twin": {
+        "features": {
+          "softwareManagement": {
+            "properties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "installationStatus": "installed",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "verificationStatus": "passed",
+                  "monitoredVersion": "3.0.14-1~deb12u2",
+                  "monitoredAt": "2026-09-13T19:34:41.033Z",
+                  "installationFinishedAt": "2026-09-13T19:34:35.798Z",
+                  "installDurationMs": 1362,
+                  "verificationChecks": {
+                    "dpkgState": true,
+                    "fileIntegrity": true,
+                    "binaryVersion": true,
+                    "tlsHandshake": true
+                  },
+                  "restartRequired": [],
+                  "verificationFinishedAt": "2026-09-13T19:34:36.123Z",
+                  "verifyDurationMs": 323
+                }
+              }
+            },
+            "desiredProperties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "debs": [
+                    "openssl",
+                    "libssl3"
+                  ],
+                  "repository": "http://apt-repo/ ./",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "assignedAt": "2026-09-13T19:34:34.364Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "revision": 1733,
+      "historicalHeaders": null,
+      "twin": {
+        "features": {
+          "softwareManagement": {
+            "properties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "installationStatus": "installed",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "verificationStatus": "passed",
+                  "monitoredVersion": "3.0.14-1~deb12u2",
+                  "monitoredAt": "2026-09-13T19:34:41.033Z",
+                  "installationFinishedAt": "2026-09-13T19:34:35.798Z",
+                  "installDurationMs": 1362,
+                  "verificationChecks": {
+                    "dpkgState": true,
+                    "fileIntegrity": true,
+                    "binaryVersion": true,
+                    "tlsHandshake": true
+                  },
+                  "restartRequired": [],
+                  "verificationFinishedAt": "2026-09-13T19:34:36.123Z",
+                  "verifyDurationMs": 323
+                }
+              }
+            },
+            "desiredProperties": {
+              "packages": {
+                "openssl": {
+                  "version": "3.0.14-1~deb12u2",
+                  "debs": [
+                    "openssl",
+                    "libssl3"
+                  ],
+                  "repository": "http://apt-repo/ ./",
+                  "workflowId": "wf-e0-1789328074334-3",
+                  "assignedAt": "2026-09-13T19:34:34.364Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
