@@ -97,7 +97,11 @@ export async function verifyPackageSet({ debs, version }, exec = runInTarget) {
   );
 
   const integrity = await exec(`dpkg --verify ${debs.join(" ")}`);
-  checks.fileIntegrity = integrity.code === 0 && integrity.stdout.trim() === "";
+  const integrityIssues = integrity.stdout
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  checks.fileIntegrity = integrity.code === 0 && integrityIssues.length === 0;
 
   if (debs.includes("openssl")) {
     const binary = await exec("openssl version");
@@ -116,9 +120,7 @@ export async function verifyPackageSet({ debs, version }, exec = runInTarget) {
     .filter(Boolean)
     .map(Number);
 
-  return {
-    passed: Object.values(checks).every(Boolean),
-    checks,
-    restartRequired,
-  };
+  const passed = Object.values(checks).every(Boolean);
+  if (integrityIssues.length > 0) checks.integrityIssues = integrityIssues.slice(0, 10);
+  return { passed, checks, restartRequired };
 }

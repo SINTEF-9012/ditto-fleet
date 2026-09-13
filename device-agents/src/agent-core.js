@@ -1,14 +1,15 @@
 import mqtt from "mqtt";
 
 /**
- * Persistent MQTT session (clean: false, QoS 1) so that update requests published
- * while a device is offline are delivered once it reconnects.
+ * Persistent MQTT session by default (clean: false, QoS 1) so that update requests
+ * published while a device is offline are delivered once it reconnects.
  */
 export function connect({
   brokerUrl,
   username,
   password,
   clientId,
+  clean = false,
   topics = [],
   onMessage,
   log = console,
@@ -17,7 +18,7 @@ export function connect({
     clientId,
     username,
     password,
-    clean: false,
+    clean,
     reconnectPeriod: 2000,
     connectTimeout: 30000,
   });

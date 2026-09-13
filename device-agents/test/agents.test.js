@@ -143,6 +143,7 @@ test("verifier fails when installed files do not match the package", async () =>
 
   assert.equal(out.reported(0).verificationStatus, "failed");
   assert.equal(out.reported(0).verificationChecks.fileIntegrity, false);
+  assert.deepEqual(out.reported(0).verificationChecks.integrityIssues, ["??5?????? c /etc/ssl/openssl.cnf"]);
 });
 
 test("verifier ignores statuses of other stages and devices", async () => {

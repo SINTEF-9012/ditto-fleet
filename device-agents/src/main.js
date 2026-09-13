@@ -120,6 +120,9 @@ async function startEmulator() {
     truth?.write(`${Date.now()},${runId},${thingId},${workflowId},${event}\n`);
   const sleep = (ms) =>
     ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+  // Persistent sessions of stopped emulators keep queueing messages for their devices'
+  // topics; runs that do not model offline devices use clean sessions instead.
+  const clean = env.EMU_CLEAN_SESSION === "true";
 
   const devices = [];
   let batch = [];
@@ -142,6 +145,7 @@ async function startEmulator() {
       brokerUrl,
       ...credentials,
       clientId: `emu-${runId}-${index}`,
+      clean,
       topics: [downstreamTopic(thingId, topicPrefix)],
       onMessage: (_topic, thing) => device.handleTwin(thing),
       log,
@@ -166,7 +170,7 @@ async function startEmulator() {
     }
   }
 
-  const control = connect({ brokerUrl, ...credentials, clientId: `emu-${runId}-control`, log });
+  const control = connect({ brokerUrl, ...credentials, clientId: `emu-${runId}-control`, clean: true, log });
   control.once("connect", () => {
     const readyTopic = `${topicPrefix}/emulator/${instance}/ready`;
     const announcement = {
