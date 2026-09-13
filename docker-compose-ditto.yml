@@ -1,37 +1,34 @@
+# Eclipse Ditto 3.x platform for ditto-fleet, derived from Eclipse Ditto's
+# deployment/docker/docker-compose.yml (release 3.9.7).
+#
 # Copyright (c) 2019 Contributors to the Eclipse Foundation
-#
-# See the NOTICE file(s) distributed with this work for additional
-# information regarding copyright ownership.
-#
-# This program and the accompanying materials are made available under the
-# terms of the Eclipse Public License 2.0 which is available at
-# http://www.eclipse.org/legal/epl-2.0
-#
 # SPDX-License-Identifier: EPL-2.0
-version: '2.4'
 
 services:
   mongodb:
-    image: docker.io/mongo:4.2
-    mem_limit: 256m
+    image: docker.io/mongo:7.0
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     restart: always
- #   network_mode: host
-    networks:
-      default:
-        aliases:
-          - mongodb
     command: mongod --storageEngine wiredTiger --noscripting
     user: mongodb
     ports:
       - 27017:27017
     environment:
-       TZ: Europe/Berlin
+      TZ: Europe/Berlin
+    logging:
+      options:
+        max-size: 50m
 
   policies:
     image: docker.io/eclipse/ditto-policies:${DITTO_VERSION:-latest}
-    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     restart: always
- #   network_mode: host
     networks:
       default:
         aliases:
@@ -39,29 +36,25 @@ services:
     environment:
       - TZ=Europe/Berlin
       - BIND_HOSTNAME=0.0.0.0
-      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dakka.coordinated-shutdown.exit-jvm=on -Dakka.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dakka.cluster.failure-detector.threshold=15.0 -Dakka.cluster.failure-detector.expected-response-after=10s -Dakka.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dakka.cluster.downing-provider-class=
+      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dpekko.coordinated-shutdown.exit-jvm=on -Dpekko.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dpekko.cluster.failure-detector.threshold=15.0 -Dpekko.cluster.failure-detector.expected-response-after=10s -Dpekko.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dpekko.cluster.downing-provider-class=
       - MONGO_DB_HOSTNAME=mongodb
-      # in order to write logs into a file you can enable this by setting the following env variable
-      # the log file(s) can be found in /var/log/ditto directory on the host machine
-      # - DITTO_LOGGING_FILE_APPENDER=true
-    # Set additional configuration options here
-    # -Dditto.policies...
-    #command: java -jar starter.jar
-    # only needed if DITTO_LOGGING_FILE_APPENDER is set
-    # volumes:
-    #  - ditto_log_files:/var/log/ditto
     healthcheck:
-      test: curl --fail `hostname`:8558/alive || exit 1
+      test: curl --fail `hostname`:7626/alive || exit 1
       interval: 30s
       timeout: 15s
       retries: 4
       start_period: 120s
+    logging:
+      options:
+        max-size: 50m
 
   things:
     image: docker.io/eclipse/ditto-things:${DITTO_VERSION:-latest}
-    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     restart: always
- #   network_mode: host
     networks:
       default:
         aliases:
@@ -71,29 +64,28 @@ services:
     environment:
       - TZ=Europe/Berlin
       - BIND_HOSTNAME=0.0.0.0
-      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dakka.coordinated-shutdown.exit-jvm=on -Dakka.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dakka.cluster.failure-detector.threshold=15.0 -Dakka.cluster.failure-detector.expected-response-after=10s -Dakka.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dakka.cluster.downing-provider-class=
+      # Lifecycle history (RQL-queryable twin revisions) must outlive an experiment campaign;
+      # the persisted headers record which workflow (correlation-id) and subject changed each revision.
+      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dpekko.coordinated-shutdown.exit-jvm=on -Dpekko.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dpekko.cluster.failure-detector.threshold=15.0 -Dpekko.cluster.failure-detector.expected-response-after=10s -Dpekko.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dpekko.cluster.downing-provider-class= -Dditto.things.thing.event.historical-headers-to-persist.0=ditto-originator -Dditto.things.thing.event.historical-headers-to-persist.1=correlation-id
+      - CLEANUP_HISTORY_RETENTION_DURATION=30d
       - MONGO_DB_HOSTNAME=mongodb
-      # in order to write logs into a file you can enable this by setting the following env variable
-      # the log file(s) can be found in /var/log/ditto directory on the host machine
-      # - DITTO_LOGGING_FILE_APPENDER=true
-    # Set additional configuration options here
-    # -Dditto.things...
-    #command: java -jar starter.jar
-    # only needed if DITTO_LOGGING_FILE_APPENDER is set
-    # volumes:
-    #  - ditto_log_files:/var/log/ditto
     healthcheck:
-      test: curl --fail `hostname`:8558/alive || exit 1
+      test: curl --fail `hostname`:7626/alive || exit 1
       interval: 30s
       timeout: 15s
       retries: 4
       start_period: 120s
+    logging:
+      options:
+        max-size: 50m
 
   things-search:
     image: docker.io/eclipse/ditto-things-search:${DITTO_VERSION:-latest}
-    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     restart: always
- #   network_mode: host
     networks:
       default:
         aliases:
@@ -103,175 +95,130 @@ services:
     environment:
       - TZ=Europe/Berlin
       - BIND_HOSTNAME=0.0.0.0
-      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dakka.coordinated-shutdown.exit-jvm=on -Dakka.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dakka.cluster.failure-detector.threshold=15.0 -Dakka.cluster.failure-detector.expected-response-after=10s -Dakka.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dakka.cluster.downing-provider-class=
+      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dpekko.coordinated-shutdown.exit-jvm=on -Dpekko.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dpekko.cluster.failure-detector.threshold=15.0 -Dpekko.cluster.failure-detector.expected-response-after=10s -Dpekko.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dpekko.cluster.downing-provider-class=
       - MONGO_DB_HOSTNAME=mongodb
-      # in order to write logs into a file you can enable this by setting the following env variable
-      # the log file(s) can be found in /var/log/ditto directory on the host machine
-      # - DITTO_LOGGING_FILE_APPENDER=true
-    # Set additional configuration options here
-    # -Dditto.things-search...
-    #command: java -jar starter.jar
-    # only needed if DITTO_LOGGING_FILE_APPENDER is set
-    # volumes:
-    #  - ditto_log_files:/var/log/ditto
     healthcheck:
-      test: curl --fail `hostname`:8558/alive || exit 1
+      test: curl --fail `hostname`:7626/alive || exit 1
       interval: 30s
       timeout: 15s
       retries: 4
       start_period: 120s
-
-  concierge:
-    image: docker.io/eclipse/ditto-concierge:${DITTO_VERSION:-latest}
-    mem_limit: 512m
-    restart: always
- #   network_mode: host
-    networks:
-      default:
-        aliases:
-          - ditto-cluster
-    depends_on:
-      - policies
-    environment:
-      - TZ=Europe/Berlin
-      - BIND_HOSTNAME=0.0.0.0
-      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dakka.coordinated-shutdown.exit-jvm=on -Dakka.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dakka.cluster.failure-detector.threshold=15.0 -Dakka.cluster.failure-detector.expected-response-after=10s -Dakka.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dakka.cluster.downing-provider-class=
-      - MONGO_DB_HOSTNAME=mongodb
-      # in order to write logs into a file you can enable this by setting the following env variable
-      # the log file(s) can be found in /var/log/ditto directory on the host machine
-      # - DITTO_LOGGING_FILE_APPENDER=true
-    # Set additional configuration options here
-    # -Dditto.concierge...
-   #command: java -jar starter.jar
-    # only needed if DITTO_LOGGING_FILE_APPENDER is set
-    # volumes:
-    #  - ditto_log_files:/var/log/ditto
-    healthcheck:
-      test: curl --fail `hostname`:8558/alive || exit 1
-      interval: 30s
-      timeout: 15s
-      retries: 4
-      start_period: 120s
+    logging:
+      options:
+        max-size: 50m
 
   connectivity:
     image: docker.io/eclipse/ditto-connectivity:${DITTO_VERSION:-latest}
-    mem_limit: 768m
+    deploy:
+      resources:
+        limits:
+          memory: 768m
     restart: always
- #   network_mode: host
     networks:
       default:
         aliases:
           - ditto-cluster
     depends_on:
       - policies
-      - concierge
     environment:
       - TZ=Europe/Berlin
       - BIND_HOSTNAME=0.0.0.0
-      # if connections to rabbitmq broker are used, you might want to disable ExitOnOutOfMemoryError, because the amqp-client has a bug throwing OOM exceptions and causing a restart loop
-      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dakka.coordinated-shutdown.exit-jvm=on -Dakka.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dakka.cluster.failure-detector.threshold=15.0 -Dakka.cluster.failure-detector.expected-response-after=10s -Dakka.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dakka.cluster.downing-provider-class=
+      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dpekko.coordinated-shutdown.exit-jvm=on -Dpekko.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dpekko.cluster.failure-detector.threshold=15.0 -Dpekko.cluster.failure-detector.expected-response-after=10s -Dpekko.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dpekko.cluster.downing-provider-class=
       - MONGO_DB_HOSTNAME=mongodb
-      # in order to write logs into a file you can enable this by setting the following env variable
-      # the log file(s) can be found in /var/log/ditto directory on the host machine
-      # - DITTO_LOGGING_FILE_APPENDER=true
-    # Set additional configuration options here
-    # -Dditto.connectivity...
-    #command: java -jar starter.jar
-    # only needed if DITTO_LOGGING_FILE_APPENDER is set
-    #volumes:
-    #  - ditto_log_files:/var/log/ditto
     healthcheck:
-      test: curl --fail `hostname`:8558/alive || exit 1
+      test: curl --fail `hostname`:7626/alive || exit 1
       interval: 30s
       timeout: 15s
       retries: 4
       start_period: 120s
+    logging:
+      options:
+        max-size: 50m
 
   gateway:
     image: docker.io/eclipse/ditto-gateway:${DITTO_VERSION:-latest}
-    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     restart: always
-#    network_mode: host
     networks:
       default:
         aliases:
           - ditto-cluster
     depends_on:
       - policies
-      - concierge
     ports:
       - "8081:8080"
     environment:
       - TZ=Europe/Berlin
       - BIND_HOSTNAME=0.0.0.0
       - ENABLE_PRE_AUTHENTICATION=true
-      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dakka.coordinated-shutdown.exit-jvm=on -Dakka.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dakka.cluster.failure-detector.threshold=15.0 -Dakka.cluster.failure-detector.expected-response-after=10s -Dakka.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dakka.cluster.downing-provider-class=
-      # in order to write logs into a file you can enable this by setting the following env variable
-      # the log file(s) can be found in /var/log/ditto directory on the host machine
-      # - DITTO_LOGGING_FILE_APPENDER=true
-      # You may use the environment for setting the devops password
-      #- DEVOPS_PASSWORD=foobar
-    # Set additional configuration options here
-    # -Dditto.gateway...
-    # Setting the devops password via java VM environment
-    #command: java -Dditto.gateway.authentication.devops.password=foobar -jar starter.jar
-    # only needed if DITTO_LOGGING_FILE_APPENDER is set
-    # volumes:
-    #  - ditto_log_files:/var/log/ditto
+      - JAVA_TOOL_OPTIONS=-XX:ActiveProcessorCount=2 -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:+UseStringDeduplication -Xss512k -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=150 -Dpekko.coordinated-shutdown.exit-jvm=on -Dpekko.cluster.shutdown-after-unsuccessful-join-seed-nodes=180s -Dpekko.cluster.failure-detector.threshold=15.0 -Dpekko.cluster.failure-detector.expected-response-after=10s -Dpekko.cluster.failure-detector.acceptable-heartbeat-pause=20s -Dpekko.cluster.downing-provider-class=
     healthcheck:
-      test: curl --fail `hostname`:8558/alive || exit 1
+      test: curl --fail `hostname`:7626/alive || exit 1
       interval: 30s
       timeout: 15s
       retries: 4
       start_period: 120s
+    logging:
+      options:
+        max-size: 50m
 
-  swagger-ui:
-    image: docker.io/swaggerapi/swagger-ui:v4.6.1
-    mem_limit: 32m
+  ditto-ui:
+    image: docker.io/eclipse/ditto-ui:${DITTO_VERSION:-latest}
+    deploy:
+      resources:
+        limits:
+          memory: 32m
     restart: always
-    environment:
-      - QUERY_CONFIG_ENABLED=true
-#    network_mode: host
-    volumes:
-       - ../../documentation/src/main/resources/openapi:/usr/share/nginx/html/openapi:ro
-       - ../../documentation/src/main/resources/images:/usr/share/nginx/html/images:ro
-       - ./swagger3-index.html:/usr/share/nginx/html/index.html:ro
-    command: nginx -g 'daemon off;'
+    logging:
+      options:
+        max-size: 10m
 
   nginx:
-    image: docker.io/nginx:1.21-alpine
-    mem_limit: 32m
+    image: docker.io/nginx:1.27-alpine
+    deploy:
+      resources:
+        limits:
+          memory: 32m
     restart: always
-#    network_mode: host
     volumes:
-       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-       - ./nginx.htpasswd:/etc/nginx/nginx.htpasswd:ro
-       - ./nginx-cors.conf:/etc/nginx/nginx-cors.conf:ro
-       - ./index.html:/etc/nginx/html/index.html:ro
-       - ../../documentation/src/main/resources/images:/etc/nginx/html/images:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.htpasswd:/etc/nginx/nginx.htpasswd:ro
+      - ./nginx-cors.conf:/etc/nginx/nginx-cors.conf:ro
+      - ./index.html:/etc/nginx/html/index.html:ro
     ports:
       - "${DITTO_EXTERNAL_PORT:-8080}:80"
     depends_on:
       - gateway
-      - swagger-ui
-  
+      - ditto-ui
+    logging:
+      options:
+        max-size: 10m
+
   mosquitto:
-    image: eclipse-mosquitto:1.6
+    image: docker.io/eclipse-mosquitto:2.0
     restart: always
-    #volumes:
-    #  - ./:/mosquitto/:rw
-    #networks:
-    #  default:
-    #    aliases:
-    #      - ditto-cluster
+    environment:
+      - MQTT_USERNAME=${MQTT_USERNAME:-lab}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-lab}
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+    command:
+      - sh
+      - -c
+      - mosquitto_passwd -b -c /mosquitto/data/passwd "$$MQTT_USERNAME" "$$MQTT_PASSWORD" && chown mosquitto:mosquitto /mosquitto/data/passwd && chmod 0700 /mosquitto/data/passwd && exec mosquitto -c /mosquitto/config/mosquitto.conf
     ports:
-      - 1883:1883
-      - 9001:9001
+      - "1883:1883"
+    logging:
+      options:
+        max-size: 10m
+
+networks:
+  default:
+    name: ditto-fleet
 
 volumes:
-  ditto_log_files:
-    driver: local
-    driver_opts:
-      type: none
-      device: /var/log/ditto
-      o: bind,uid=1000,gid=1000
+  mosquitto_data:
