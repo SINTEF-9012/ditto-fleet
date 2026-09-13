@@ -10,7 +10,7 @@ require_fresh e1
 stop_gateway_monitoring
 if [ "${CONTINUE:-0}" != 1 ]; then
   # E1 grows the population from its smallest size, so registered-only twins of earlier runs must go.
-  harness /harness/delete-twins.js --filter 'eq(attributes/registeredOnly,true)'
+  harness /harness/delete-twins.js --filter 'eq(attributes/registeredOnly,true)' --id-prefix reg- --id-count 10000
   restart_platform
 fi
 record_environment e1
