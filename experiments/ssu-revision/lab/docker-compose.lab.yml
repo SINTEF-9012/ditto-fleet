@@ -35,7 +35,7 @@ services:
       SW_EVENT_LOG: /results/${RUN_TAG:-lab}-lifecycle.csv
       SW_RECONCILE_INTERVAL_MS: ${SW_RECONCILE_INTERVAL_MS:-0}
       SW_STALE_AFTER_MS: ${SW_STALE_AFTER_MS:-30000}
-      SW_HTTP_CONCURRENCY: ${SW_HTTP_CONCURRENCY:-32}
+      SW_HTTP_CONCURRENCY: ${SW_HTTP_CONCURRENCY:-128}
     volumes:
       - ../results/raw:/results
 

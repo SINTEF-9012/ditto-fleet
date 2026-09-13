@@ -109,3 +109,9 @@ log; events `annotated` and `annotation_failed`).
 
 **`<run>-history.json`**: revision histories of sample devices (completed after being offline,
 failed installation, failed verification).
+
+## Sensitivity check
+
+**`sensitivity-e2-http-concurrency/`**: the DT-mediated E2 condition with 1000 devices and the
+calibrated profile, run before the E2 campaign with the lifecycle service limited to 32 and to 128
+concurrent requests to Ditto; its README compares the two.

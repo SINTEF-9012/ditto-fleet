@@ -103,6 +103,11 @@ python3 analysis/summarize.py   # "python" on Windows; writes results/summary/*.
   lifecycle service's `converged` event. In the direct baseline it is the time from the
   MQTT publish acknowledgement to the receipt of the verification status. *Fleet* times
   are measured from the first request.
+- **Lifecycle service concurrency:** the lifecycle service sends at most `SW_HTTP_CONCURRENCY`
+  requests to Ditto at a time; the lab uses 128. In a check with 1000 simultaneous devices, 32 left
+  status writes queued inside the service (device latency p50 10.8 s), while 128 moved the waiting into
+  the CPU-saturated Ditto gateway (p50 3.0 s) at about the same fleet time; see
+  `results/raw/sensitivity-e2-http-concurrency/`.
 - **E4 metadata:** assignments carry `cveIds` and an `sbomRef`. The SBOM is a minimal SPDX 2.3
   document that the repository builder generates for each OpenSSL version (package names,
   versions, SHA-256 checksums, purls). `harness/e4-check.js` checks that the reference resolves

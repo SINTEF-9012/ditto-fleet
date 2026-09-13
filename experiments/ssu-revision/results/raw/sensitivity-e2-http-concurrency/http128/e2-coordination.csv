@@ -1,0 +1,3 @@
+experiment,mode,profile,devices,rep,warmup,workflowId,queryMs,requestMs,completed,complete,fleet50Ms,fleet95Ms,fleet100Ms,deviceMeanMs,deviceP50Ms,deviceP95Ms,deviceMaxMs,failedEvents,startedAt,containerCpus,dittoVersion
+E2,dt,calibrated,1000,0,true,wf-e2-dt-calibrated-1000-0,2013.24,57413.14,1000,true,33407,57545,59429,3662.7,3455,5841,6650,0,2026-09-13T20:56:38.346Z,8,3.9.7
+E2,dt,calibrated,1000,1,false,wf-e2-dt-calibrated-1000-1,1479.30,41543.09,1000,true,24758,42431,43880,3044.8,3042,3653,4499,0,2026-09-13T20:58:12.062Z,8,3.9.7
