@@ -61,7 +61,10 @@ every E1 fleet size, and rep 0 of every E2/E4 condition.
 
 A campaign refuses to start while `results/raw/` holds files of an earlier campaign with the same
 ID (`e0-*` … `e4-*`). It writes `results/raw/<id>-environment.txt` with the git commit, the
-container images, the Docker resources and the broker's stored sessions.
+container images, the Docker resources and the broker's stored sessions. To complete an interrupted
+campaign, run it again with `CONTINUE=1` and parameters that cover only the missing part, for
+example `CONTINUE=1 COUNTS=10000 harness/run-e1.sh`; its results and a second environment record
+are appended to the same files.
 
 Summaries and pgfplots tables:
 

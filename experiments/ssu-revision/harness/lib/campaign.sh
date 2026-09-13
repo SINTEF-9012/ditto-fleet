@@ -21,8 +21,10 @@ wait_log() {
 }
 
 # require_fresh ID: refuses to start while results/raw holds files of an earlier campaign with the
-# same ID, so that runs of different campaigns never end up in the same raw files.
+# same ID, so that runs of different campaigns never end up in the same raw files. CONTINUE=1
+# deliberately appends to the files of an interrupted campaign instead.
 require_fresh() {
+  [ "${CONTINUE:-0}" = 1 ] && return 0
   local existing=("$RAW/$1"-*)
   if [ -e "${existing[0]}" ]; then
     echo "results/raw already contains $1-* files; move them away before starting the $1 campaign" >&2
@@ -86,7 +88,7 @@ finish_campaign() {
 # record_environment ID: code version, container images, Docker resources and broker state of a campaign.
 record_environment() {
   {
-    echo "campaign: $1"
+    echo "campaign: $1$([ "${CONTINUE:-0}" = 1 ] && echo " (continued)")"
     echo "started: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
     echo "git commit: $(git rev-parse HEAD)"
     echo "modified tracked files: $(git status --porcelain --untracked-files=no | wc -l)"
@@ -99,5 +101,5 @@ record_environment() {
       docker inspect --format "  ${name} {{.Config.Image}} {{.Image}}" "$name"
     done
     broker_sessions
-  } > "$RAW/$1-environment.txt"
+  } >> "$RAW/$1-environment.txt"
 }
