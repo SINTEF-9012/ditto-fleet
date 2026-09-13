@@ -51,6 +51,7 @@ test("pages through search results and writes desired state with the workflow as
     packageName: "openssl",
     fixedVersion: FIXED,
     debs: ["openssl", "libssl3"],
+    metadata: { cveIds: ["CVE-2024-4603"], version: "ignored" },
     workflowId: "wf-test",
     fetchImpl,
   });
@@ -75,6 +76,7 @@ test("pages through search results and writes desired state with the workflow as
   assert.equal(desired.version, FIXED);
   assert.deepEqual(desired.debs, ["openssl", "libssl3"]);
   assert.equal(desired.workflowId, "wf-test");
+  assert.deepEqual(desired.cveIds, ["CVE-2024-4603"]);
 });
 
 test("never exceeds the configured write concurrency", async () => {

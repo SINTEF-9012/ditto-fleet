@@ -224,20 +224,29 @@ export function startSoftwareLifecycle({
     }
     const thing = JSON.parse(response.text);
     const feature = thing?.features?.[FEATURE] ?? {};
-    await publish(`${topicPrefix}/downstream/${thingId}`, thing);
+    const packages = Object.entries(feature.desiredProperties?.packages ?? {});
+    // Tracked before publishing: with QoS 1 the device can report back before the broker's PUBACK arrives.
     const dispatchedAt = Date.now();
-    for (const [packageName, desired] of Object.entries(feature.desiredProperties?.packages ?? {})) {
+    for (const [packageName, desired] of packages) {
       const entry = entryFor(thingId, packageName);
+      // A re-dispatch of the same workflow keeps the statuses applied since the twin was fetched.
+      if (entry.desired.workflowId !== desired?.workflowId) {
+        entry.reported = { ...(feature.properties?.packages?.[packageName] ?? {}) };
+      }
       entry.desired = desired ?? {};
-      entry.reported = { ...(feature.properties?.packages?.[packageName] ?? {}) };
       entry.dispatchedAt = dispatchedAt;
+    }
+    await publish(`${topicPrefix}/downstream/${thingId}`, thing);
+    const pubackMs = Date.now() - dispatchedAt;
+    for (const [packageName, desired] of packages) {
       eventLog({
+        ts: dispatchedAt,
         component: "lifecycle",
         event: "dispatched",
         thingId,
         package: packageName,
         workflowId: desired?.workflowId,
-        detail: { reason, fetchMs: Math.round(response.ms) },
+        detail: { reason, fetchMs: Math.round(response.ms), pubackMs },
       });
     }
   }
@@ -265,6 +274,8 @@ export function startSoftwareLifecycle({
       entry.desired = status.desired;
     }
     const workflowId = status.workflowId ?? entry.desired.workflowId;
+    const reportedStatus =
+      stage === "verification" ? status.reported?.verificationStatus : status.reported?.installationStatus;
     eventLog({
       component: "lifecycle",
       event: "status_received",
@@ -272,7 +283,7 @@ export function startSoftwareLifecycle({
       package: packageName,
       stage,
       workflowId,
-      detail: status.timing,
+      detail: { ...status.timing, status: reportedStatus },
     });
 
     if (
@@ -309,6 +320,7 @@ export function startSoftwareLifecycle({
       stage,
       workflowId,
       detail: {
+        status: reportedStatus,
         httpStatus: response.status,
         patchMs: Math.round(response.ms),
         sinceReceivedMs: Date.now() - receivedAt,

@@ -73,6 +73,7 @@ export async function assign({
   debs = [packageName],
   repository,
   sha256,
+  metadata = {},
   targetFilter = 'eq(attributes/type,"physical_device")',
   concurrency = 10,
   pageSize = 200,
@@ -93,7 +94,13 @@ export async function assign({
   const queried = clock();
   const { targets, upToDate, alreadyAssigned } = selectTargets(items, packageName, fixedVersion);
 
-  const desired = { version: fixedVersion, debs, workflowId, assignedAt: new Date().toISOString() };
+  const desired = {
+    ...metadata,
+    version: fixedVersion,
+    debs,
+    workflowId,
+    assignedAt: new Date().toISOString(),
+  };
   if (repository) desired.repository = repository;
   if (sha256) desired.sha256 = sha256;
   const body = JSON.stringify(desired);
@@ -154,6 +161,7 @@ async function main() {
       version: { type: "string" },
       debs: { type: "string" },
       repository: { type: "string" },
+      metadata: { type: "string" },
       filter: { type: "string", default: 'eq(attributes/type,"physical_device")' },
       concurrency: { type: "string", default: "10" },
       workflow: { type: "string" },
@@ -173,6 +181,7 @@ async function main() {
     fixedVersion: values.version,
     debs: values.debs ? values.debs.split(",") : undefined,
     repository: values.repository,
+    metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
     targetFilter: values.filter,
     concurrency: Number(values.concurrency),
     workflowId: values.workflow,

@@ -88,14 +88,15 @@ test("convergence requires the desired version, installed and verified, for the 
   assert.ok(!isTerminalFailure(desired, { ...done, installationStatus: "failed", workflowId: "wf-1" }));
 });
 
-function fakeMqtt() {
+function fakeMqtt({ ackDelayMs = 0 } = {}) {
   const client = new EventEmitter();
   client.connected = true;
   client.published = [];
   client.subscribe = () => {};
   client.publish = (topic, payload, options, callback) => {
-    client.published.push({ topic, message: JSON.parse(payload) });
-    callback?.();
+    client.published.push({ topic, message: JSON.parse(payload), at: Date.now() });
+    if (ackDelayMs > 0) setTimeout(() => callback?.(), ackDelayMs);
+    else callback?.();
   };
   return client;
 }
@@ -187,7 +188,43 @@ test("dispatches the changed twin and applies device statuses in order until con
     ["installing", "installed", "passed"],
   );
   assert.ok(ditto.patches.every((p) => p.correlationId === "wf-1"));
+  assert.deepEqual(
+    events.filter((e) => e.event === "status_applied").map((e) => e.detail.status),
+    ["installing", "installed", "passed"],
+  );
   assert.equal(events.filter((e) => e.event === "converged").length, 1);
+  lifecycle.close();
+});
+
+test("timestamps a dispatch at hand-off and accepts statuses that arrive before the broker's PUBACK", async () => {
+  const twin = twinWanting("wf-1");
+  const mqttClient = fakeMqtt({ ackDelayMs: 40 });
+  const ditto = fakeDitto(twin);
+  const events = [];
+  const lifecycle = startSoftwareLifecycle({
+    dittoUrl: "http://ditto",
+    wsUrl: null,
+    mqttClient,
+    fetchImpl: ditto.fetchImpl,
+    eventLog: (entry) => events.push({ ts: Date.now(), ...entry }),
+    logger: silent,
+  });
+
+  await lifecycle.handleEventFrame(DESIRED_EVENT);
+  twin.features.softwareManagement.desiredProperties.packages.openssl.workflowId = "wf-2";
+  const dispatching = lifecycle.handleEventFrame({ ...DESIRED_EVENT, headers: { "correlation-id": "wf-2" } });
+  while (mqttClient.published.length < 2) await new Promise((resolve) => setTimeout(resolve, 1));
+  await lifecycle.handleStatusMessage(
+    STATUS_TOPIC,
+    statusPayload("installation", { installationStatus: "installing", verificationStatus: "pending", workflowId: "wf-2" }, "wf-2"),
+  );
+  await dispatching;
+
+  assert.equal(events.filter((e) => e.event === "status_stale").length, 0);
+  assert.deepEqual(ditto.patches.map((p) => p.correlationId), ["wf-2"]);
+  const dispatched = events.find((e) => e.event === "dispatched" && e.workflowId === "wf-2");
+  assert.ok(dispatched.ts <= mqttClient.published[1].at);
+  assert.ok(dispatched.detail.pubackMs >= 30);
   lifecycle.close();
 });
 
